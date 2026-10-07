@@ -2,7 +2,7 @@ name: Deploy na Cloudflare
 
 # Publica o site estático (public/) como Worker com Static Assets.
 # Requer os secrets CLOUDFLARE_API_TOKEN (permissão Workers Scripts: Edit)
-# e CLOUDFLARE_ACCOUNT_ID.
+# e CLOUDFLARE_ACCOUNT_ID. Sem o token, o deploy é pulado (não é falha).
 on:
   workflow_dispatch:
   push:
@@ -20,7 +20,14 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - name: Verifica se o token da Cloudflare está configurado
+        id: check
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -n "$TOKEN" ]; then echo "has=true" >> "$GITHUB_OUTPUT"; else echo "has=false" >> "$GITHUB_OUTPUT"; echo "::notice::CLOUDFLARE_API_TOKEN não configurado: deploy pulado."; fi
       - name: Publicar com wrangler
+        if: steps.check.outputs.has == 'true'
         run: npx wrangler deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
