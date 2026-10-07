@@ -1,19 +1,24 @@
 // Menus: principal, partida rápida (configurações), ajuda, opções, pausa e tela final.
-import { DIFFICULTY } from '../core/config.js';
+import { DIFFICULTY } from '../core/config.ts';
+import { $ } from './dom.ts';
+import type { Game, EndInfo } from '../game.ts';
+import type { DifficultyKey, MapSizeKey, Settings } from '../types.ts';
 
 const SETUP_KEY = 'aoe.setup';
-const DEFAULTS = { size: 'medio', bots: 1, difficulty: 'normal', seed: '' };
-const $ = (id) => document.getElementById(id);
+const DEFAULTS: Settings = { size: 'medio', bots: 1, difficulty: 'normal', seed: '' };
 
-function loadSetup() {
+type ScreenName = 'main' | 'setup' | 'help' | 'options';
+const SCREEN_NAMES: ScreenName[] = ['main', 'setup', 'help', 'options'];
+
+function loadSetup(): Settings {
   try {
-    return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(SETUP_KEY) || '{}') };
+    return { ...DEFAULTS, ...(JSON.parse(localStorage.getItem(SETUP_KEY) || '{}') as Partial<Settings>) };
   } catch {
     return { ...DEFAULTS };
   }
 }
 
-function saveSetup(setup) {
+function saveSetup(setup: Settings): void {
   try {
     localStorage.setItem(SETUP_KEY, JSON.stringify(setup));
   } catch {
@@ -21,16 +26,25 @@ function saveSetup(setup) {
   }
 }
 
-function formatTime(seconds) {
+function formatTime(seconds: number): string {
   const s = Math.floor(seconds);
   return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 }
 
+// Valor marcado num grupo de rádio do formulário de partida.
+function checkedValue(name: string): string | undefined {
+  return document.querySelector<HTMLInputElement>(`input[name="${name}"]:checked`)?.value;
+}
+
 export class Menus {
-  constructor(game) {
+  game: Game;
+  setup: Settings;
+  lastStart: Settings | null = null;
+  screens: Record<ScreenName, HTMLElement>;
+
+  constructor(game: Game) {
     this.game = game;
     this.setup = loadSetup();
-    this.lastStart = null;
     this.screens = {
       main: $('screen-main'),
       setup: $('screen-setup'),
@@ -43,15 +57,19 @@ export class Menus {
     this.refreshContinue();
   }
 
-  bind() {
-    document.querySelectorAll('[data-go]').forEach((b) => {
-      b.addEventListener('click', () => this.showScreen(b.dataset.go));
+  bind(): void {
+    document.querySelectorAll<HTMLElement>('[data-go]').forEach((b) => {
+      b.addEventListener('click', () => {
+        const target = b.dataset.go as ScreenName | undefined;
+        if (target) this.showScreen(target);
+      });
     });
     $('btn-play').addEventListener('click', () => this.showScreen('setup'));
     $('btn-continue').addEventListener('click', () => this.continueGame());
     $('btn-start').addEventListener('click', () => this.startGame());
-    $('volume').addEventListener('input', (e) => this.game.sound.setVolume(Number(e.target.value) / 100));
-    $('volume').value = Math.round(this.game.sound.volume * 100);
+    const volume = $<HTMLInputElement>('volume');
+    volume.addEventListener('input', () => this.game.sound.setVolume(Number(volume.value) / 100));
+    volume.value = String(Math.round(this.game.sound.volume * 100));
 
     $('btn-resume').addEventListener('click', () => this.game.resume());
     $('btn-pause-help').addEventListener('click', () => this.openHelpFromPause());
@@ -61,74 +79,73 @@ export class Menus {
     $('btn-menu-hud').addEventListener('click', () => this.game.togglePause());
   }
 
-  showScreen(name) {
-    for (const [key, el] of Object.entries(this.screens)) el.classList.toggle('hidden', key !== name);
+  showScreen(name: ScreenName): void {
+    for (const key of SCREEN_NAMES) this.screens[key].classList.toggle('hidden', key !== name);
     $('menus').classList.remove('hidden');
     $('overlay-pause').classList.add('hidden');
     $('overlay-end').classList.add('hidden');
     this.refreshContinue();
   }
 
-  refreshContinue() {
+  refreshContinue(): void {
     const running = this.game.running && !this.game.ended;
     $('btn-continue').classList.toggle('hidden', !running);
   }
 
-  continueGame() {
+  continueGame(): void {
     $('menus').classList.add('hidden');
     this.game.resume();
   }
 
-  readSetupForm() {
-    const pick = (name) => document.querySelector(`input[name="${name}"]:checked`)?.value;
+  readSetupForm(): Settings {
     return {
-      size: pick('size') || DEFAULTS.size,
-      bots: Number(pick('bots') || DEFAULTS.bots),
-      difficulty: pick('difficulty') || DEFAULTS.difficulty,
-      seed: $('seed').value.trim(),
+      size: (checkedValue('size') as MapSizeKey | undefined) || DEFAULTS.size,
+      bots: Number(checkedValue('bots') || DEFAULTS.bots),
+      difficulty: (checkedValue('difficulty') as DifficultyKey | undefined) || DEFAULTS.difficulty,
+      seed: $<HTMLInputElement>('seed').value.trim(),
     };
   }
 
-  syncSetupForm() {
-    const set = (name, value) => {
-      const input = document.querySelector(`input[name="${name}"][value="${value}"]`);
+  syncSetupForm(): void {
+    const set = (name: string, value: string): void => {
+      const input = document.querySelector<HTMLInputElement>(`input[name="${name}"][value="${value}"]`);
       if (input) input.checked = true;
     };
     set('size', this.setup.size);
     set('bots', String(this.setup.bots));
     set('difficulty', this.setup.difficulty);
-    $('seed').value = this.setup.seed;
+    $<HTMLInputElement>('seed').value = String(this.setup.seed);
   }
 
-  startGame() {
+  startGame(): void {
     const settings = this.readSetupForm();
     if (!settings.seed) settings.seed = String(Math.floor(Math.random() * 1e9));
-    this.setup = { ...settings, seed: $('seed').value.trim() };
+    this.setup = { ...settings, seed: $<HTMLInputElement>('seed').value.trim() };
     saveSetup(this.setup);
     this.lastStart = settings;
     this.launch(settings);
   }
 
-  restart() {
+  restart(): void {
     if (this.lastStart) this.launch(this.lastStart);
   }
 
-  launch(settings) {
+  launch(settings: Settings): void {
     $('menus').classList.add('hidden');
     $('overlay-pause').classList.add('hidden');
     $('overlay-end').classList.add('hidden');
     this.game.start(settings);
   }
 
-  openHelpFromPause() {
+  openHelpFromPause(): void {
     $('overlay-pause').classList.add('hidden');
     $('menus').classList.remove('hidden');
-    for (const [key, el] of Object.entries(this.screens)) el.classList.toggle('hidden', key !== 'help');
+    for (const key of SCREEN_NAMES) this.screens[key].classList.toggle('hidden', key !== 'help');
   }
 
   // ---------- Hooks do jogo ----------
 
-  onPause(paused) {
+  onPause(paused: boolean): void {
     if (paused) {
       $('menus').classList.add('hidden');
       $('overlay-pause').classList.remove('hidden');
@@ -138,13 +155,13 @@ export class Menus {
     }
   }
 
-  onEnd(info) {
+  onEnd(info: EndInfo): void {
     const title = $('end-title');
     title.textContent = info.won ? 'Vitória!' : 'Derrota';
     title.className = info.won ? 'win' : 'lose';
     const s = info.stats;
     const g = s.gathered;
-    const rows = [
+    const rows: [string, string | number][] = [
       ['Tempo de partida', formatTime(info.time)],
       ['Dificuldade', DIFFICULTY[info.difficulty].name],
       ['Inimigos abatidos', s.kills],
@@ -164,10 +181,9 @@ export class Menus {
     $('overlay-end').classList.remove('hidden');
   }
 
-  onQuit() {
+  onQuit(): void {
     $('overlay-pause').classList.add('hidden');
     $('overlay-end').classList.add('hidden');
     this.showScreen('main');
   }
 }
-

@@ -1,7 +1,9 @@
 // Geração procedural de mapas: terreno, lagos, florestas e recursos iniciais.
-import { createRng } from './rng.js';
-import { createNoise } from './noise.js';
-import { NODES, BUILDINGS } from './config.js';
+import { createRng } from './rng.ts';
+import type { Rng } from './rng.ts';
+import { createNoise } from './noise.ts';
+import { NODES, BUILDINGS } from './config.ts';
+import type { GameMap, MapNodeSpawn, NodeType, Point } from '../types.ts';
 
 export const GRASS = 0;
 export const WATER = 1;
@@ -9,7 +11,13 @@ export const WATER = 1;
 const MAX_ATTEMPTS = 30;
 const TC = BUILDINGS.towncenter;
 
-export function generateMap({ size, playerCount, seed }) {
+export interface MapOptions {
+  size: number;
+  playerCount: number;
+  seed: number;
+}
+
+export function generateMap({ size, playerCount, seed }: MapOptions): GameMap {
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     const map = buildCandidate(size, playerCount, (seed + attempt * 7919) >>> 0);
     if (map) return map;
@@ -17,7 +25,8 @@ export function generateMap({ size, playerCount, seed }) {
   throw new Error('Não foi possível gerar um mapa jogável com esta semente.');
 }
 
-function buildCandidate(size, playerCount, seed) {
+// Uma tentativa de mapa. Devolve null se alguma base ficou isolada do resto do mapa.
+function buildCandidate(size: number, playerCount: number, seed: number): GameMap | null {
   const rng = createRng(seed);
   const terrainNoise = createNoise(rng);
   const forestNoise = createNoise(rng);
@@ -26,7 +35,7 @@ function buildCandidate(size, playerCount, seed) {
 
   const starts = pickStarts(size, playerCount, rng);
   const centers = starts.map((s) => ({ x: s.x + TC.w / 2, y: s.y + TC.h / 2 }));
-  const distToBase = (x, y) => {
+  const distToBase = (x: number, y: number): number => {
     let best = Infinity;
     for (const c of centers) best = Math.min(best, Math.hypot(x - c.x, y - c.y));
     return best;
@@ -66,8 +75,8 @@ function buildCandidate(size, playerCount, seed) {
   const reserved = new Uint8Array(size * size);
   for (const s of starts) markRect(reserved, size, s.x - 2, s.y - 2, TC.w + 4, TC.h + 4);
 
-  const nodes = [];
-  const canPlace = (x, y, w, h) => {
+  const nodes: MapNodeSpawn[] = [];
+  const canPlace = (x: number, y: number, w: number, h: number): boolean => {
     for (let j = y; j < y + h; j++) {
       for (let i = x; i < x + w; i++) {
         if (i < 0 || j < 0 || i >= size || j >= size) return false;
@@ -77,7 +86,7 @@ function buildCandidate(size, playerCount, seed) {
     }
     return true;
   };
-  const place = (type, x, y) => {
+  const place = (type: NodeType, x: number, y: number): boolean => {
     const def = NODES[type];
     if (!canPlace(x, y, def.w, def.h)) return false;
     markRect(occupied, size, x, y, def.w, def.h);
@@ -85,7 +94,15 @@ function buildCandidate(size, playerCount, seed) {
     return true;
   };
   // Tenta posicionar um recurso em um ângulo/distância perto de um ponto.
-  const placeAround = (type, cx, cy, angle, rMin, rMax, tries) => {
+  const placeAround = (
+    type: NodeType,
+    cx: number,
+    cy: number,
+    angle: number,
+    rMin: number,
+    rMax: number,
+    tries: number,
+  ): boolean => {
     for (let t = 0; t < tries; t++) {
       const a = angle + rng.float(-0.6, 0.6);
       const r = rng.float(rMin, rMax);
@@ -114,7 +131,7 @@ function buildCandidate(size, playerCount, seed) {
 
   // Minas neutras espalhadas pelo mapa.
   for (let k = 0; k < 2 + playerCount; k++) {
-    const type = k % 2 === 0 ? 'gold' : 'stone';
+    const type: NodeType = k % 2 === 0 ? 'gold' : 'stone';
     for (let t = 0; t < 40; t++) {
       const x = rng.int(4, size - 6);
       const y = rng.int(4, size - 6);
@@ -156,11 +173,11 @@ function buildCandidate(size, playerCount, seed) {
   return { size, seed, terrain, tint, heights, nodes: keptNodes, starts };
 }
 
-function pickStarts(size, count, rng) {
+function pickStarts(size: number, count: number, rng: Rng): Point[] {
   const c = size / 2;
   const r = size * 0.32;
   const a0 = rng.next() * Math.PI * 2;
-  const out = [];
+  const out: Point[] = [];
   for (let k = 0; k < count; k++) {
     const a = a0 + (k * Math.PI * 2) / count;
     const x = Math.round(c + Math.cos(a) * r - TC.w / 2);
@@ -173,15 +190,15 @@ function pickStarts(size, count, rng) {
   return out;
 }
 
-function markRect(arr, size, x, y, w, h) {
+function markRect(arr: Uint8Array, size: number, x: number, y: number, w: number, h: number): void {
   for (let j = Math.max(0, y); j < Math.min(size, y + h); j++) {
     for (let i = Math.max(0, x); i < Math.min(size, x + w); i++) arr[j * size + i] = 1;
   }
 }
 
 // Tiles encostados (8 direções, sem o interior) de um retângulo.
-function ringTiles(x, y, w, h, size) {
-  const out = [];
+function ringTiles(x: number, y: number, w: number, h: number, size: number): number[] {
+  const out: number[] = [];
   for (let j = y - 1; j <= y + h; j++) {
     for (let i = x - 1; i <= x + w; i++) {
       if (i < 0 || j < 0 || i >= size || j >= size) continue;
@@ -193,9 +210,9 @@ function ringTiles(x, y, w, h, size) {
 }
 
 // Flood fill em 4 direções a partir dos tiles de início que são caminháveis.
-function floodFrom(size, walk, seeds) {
+function floodFrom(size: number, walk: Uint8Array, seeds: number[]): Uint8Array {
   const reached = new Uint8Array(size * size);
-  const queue = [];
+  const queue: number[] = [];
   for (const k of seeds) {
     if (walk[k] && !reached[k]) {
       reached[k] = 1;
@@ -206,7 +223,7 @@ function floodFrom(size, walk, seeds) {
     const k = queue[head];
     const x = k % size;
     const y = (k - x) / size;
-    const neighbours = [];
+    const neighbours: number[] = [];
     if (x > 0) neighbours.push(k - 1);
     if (x < size - 1) neighbours.push(k + 1);
     if (y > 0) neighbours.push(k - size);

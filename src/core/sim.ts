@@ -1,27 +1,94 @@
 // Simulação do jogo: economia, idades, técnicas, comandos, coleta, construção, treino, combate e névoa.
 // Não depende de DOM nem de three.js, então roda em testes no Node.
-import { World, defOf, rectOf, centerOf, distToRect } from './world.js';
-import { findPath } from './pathfind.js';
+import { World, defOf, rectOf, centerOf, distToRect } from './world.ts';
+import { findPath } from './pathfind.ts';
 import {
   UNITS, BUILDINGS, NODES, TECHS, AGE_UP, AGE_NAMES, START_RESOURCES, START_VILLAGERS,
   CARRY_CAPACITY, MAX_POP, MAX_QUEUE, DIFFICULTY,
-} from './config.js';
+} from './config.ts';
+import type {
+  AgeNumber,
+  AgeUpJob,
+  BuildingEntity,
+  BuildingType,
+  Command,
+  Cost,
+  Entity,
+  GameEvent,
+  GameMap,
+  GameOver,
+  Goal,
+  MessageLevel,
+  NextAge,
+  NodeEntity,
+  NodeType,
+  Order,
+  Player,
+  PlayerConfig,
+  PlaceOutcome,
+  Point,
+  Rect,
+  ResearchJob,
+  Resume,
+  ResourceName,
+  Outcome,
+  SmartTarget,
+  TechDef,
+  TechId,
+  UnitEntity,
+  UnitType,
+} from '../types.ts';
 
 const FOG_INTERVAL = 0.25;
 const SEPARATION_RADIUS = 0.42;
 const UNIT_RADIUS = 0.3;
 const ATTACK_WARNING_COOLDOWN = 12;
 
-const fail = (reason) => ({ ok: false, reason });
-const ok = (extra = {}) => ({ ok: true, ...extra });
+// Resultados de recusa e de sucesso. `reason` só existe na recusa.
+const fail = (reason: string) => ({ ok: false as const, reason });
+const succeed = () => ({ ok: true as const });
+
+export interface SimulationOptions {
+  map: GameMap;
+  players: PlayerConfig[];
+  humanIndex?: number;
+}
+
+// Entidades vivas, separadas por tipo. Reconstruídas a cada tick em rebuildLists.
+export interface EntityLists {
+  units: UnitEntity[];
+  buildings: BuildingEntity[];
+  nodes: NodeEntity[];
+}
+
+// Recurso que um aldeão pode coletar: árvore, mina, fruta ou fazenda.
+type Source = NodeEntity | BuildingEntity;
+// Entidade que pode levar dano (unidade ou edifício; recursos naturais não têm vida).
+type Combatant = UnitEntity | BuildingEntity;
+// Modo de movimento: `null` anda até o ponto; `attackmove` ataca o que encontrar no caminho.
+type OrderMode = 'attackmove' | null;
 
 export class Simulation {
-  constructor({ map, players, humanIndex = 0 }) {
+  readonly map: GameMap;
+  readonly size: number;
+  readonly world: World;
+  readonly humanIndex: number;
+  readonly players: Player[];
+  // 0 inexplorado, 1 explorado, 2 visível (só para o jogador humano).
+  readonly fog: Uint8Array;
+  time = 0;
+  events: GameEvent[] = [];
+  gameOver: GameOver | null = null;
+  fogTimer = 0;
+  lists: EntityLists = { units: [], buildings: [], nodes: [] };
+  lastWarn = -Infinity;
+
+  constructor({ map, players, humanIndex = 0 }: SimulationOptions) {
     this.map = map;
     this.size = map.size;
     this.world = new World(map.size, map.terrain);
     this.humanIndex = humanIndex;
-    this.players = players.map((p, index) => ({
+    this.players = players.map((p, index): Player => ({
       index,
       name: p.name,
       color: p.color,
@@ -41,20 +108,14 @@ export class Simulation {
         gathered: { food: 0, wood: 0, gold: 0, stone: 0 },
       },
     }));
-    this.time = 0;
-    this.events = [];
-    this.gameOver = null;
-    this.fog = new Uint8Array(map.size * map.size); // 0 inexplorado, 1 explorado, 2 visível
-    this.fogTimer = 0;
-    this.lists = { units: [], buildings: [], nodes: [] };
-    this.lastWarn = -Infinity;
+    this.fog = new Uint8Array(map.size * map.size);
     this.spawnInitial();
     this.updateFog();
   }
 
   // ---------- Criação de entidades ----------
 
-  spawnInitial() {
+  spawnInitial(): void {
     this.map.starts.forEach((s, owner) => {
       const tc = this.spawnBuilding('towncenter', owner, s.x, s.y, true);
       for (const p of this.freeTilesAround(tc, START_VILLAGERS)) {
@@ -64,9 +125,9 @@ export class Simulation {
     for (const n of this.map.nodes) this.spawnNode(n.type, n.x, n.y);
   }
 
-  spawnUnit(type, owner, x, y) {
+  spawnUnit(type: UnitType, owner: number, x: number, y: number): UnitEntity {
     const def = UNITS[type];
-    return this.world.add({
+    return this.world.add<UnitEntity>({
       kind: 'unit', type, owner, x, y,
       hp: def.hp, maxHp: def.hp, lastHitBy: -1,
       order: 'idle', path: null, pi: 0, target: null, dest: null, resume: null,
@@ -76,9 +137,9 @@ export class Simulation {
     });
   }
 
-  spawnBuilding(type, owner, x, y, built = false) {
+  spawnBuilding(type: BuildingType, owner: number, x: number, y: number, built = false): BuildingEntity {
     const def = BUILDINGS[type];
-    return this.world.add({
+    return this.world.add<BuildingEntity>({
       kind: 'building', type, owner, x, y,
       hp: built ? def.hp : Math.round(def.hp * 0.1), maxHp: def.hp, lastHitBy: -1,
       built, progress: built ? 1 : 0, builders: 0, queue: [], rally: null,
@@ -86,22 +147,22 @@ export class Simulation {
     });
   }
 
-  spawnNode(type, x, y) {
-    return this.world.add({
+  spawnNode(type: NodeType, x: number, y: number): NodeEntity {
+    return this.world.add<NodeEntity>({
       kind: 'node', type, owner: -1, x, y, amount: NODES[type].amount, lastHitBy: -1,
     });
   }
 
   // Tiles caminháveis encostados num edifício/unidade, sem unidades em cima.
-  freeTilesAround(e, count) {
-    const r = e.kind === 'unit'
+  freeTilesAround(e: Entity, count: number): Point[] {
+    const r: Rect = e.kind === 'unit'
       ? { x: Math.floor(e.x), y: Math.floor(e.y), w: 1, h: 1 }
       : rectOf(e);
-    const occupied = new Set();
+    const occupied = new Set<string>();
     for (const u of this.world.entities.values()) {
       if (u.kind === 'unit' && !u.dead) occupied.add(`${Math.floor(u.x)},${Math.floor(u.y)}`);
     }
-    const out = [];
+    const out: Point[] = [];
     for (let y = r.y - 1; y <= r.y + r.h && out.length < count; y++) {
       for (let x = r.x - 1; x <= r.x + r.w && out.length < count; x++) {
         if (x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h) continue;
@@ -118,38 +179,38 @@ export class Simulation {
 
   // ---------- Consultas ----------
 
-  player(owner) {
+  player(owner: number): Player {
     return this.players[owner];
   }
 
-  canAfford(owner, cost) {
+  canAfford(owner: number, cost: Cost): boolean {
     const res = this.players[owner].res;
-    return Object.entries(cost).every(([k, v]) => res[k] >= v);
+    return costEntries(cost).every(([k, v]) => res[k] >= v);
   }
 
-  spend(owner, cost) {
+  spend(owner: number, cost: Cost): void {
     const res = this.players[owner].res;
-    for (const [k, v] of Object.entries(cost)) res[k] -= v;
+    for (const [k, v] of costEntries(cost)) res[k] -= v;
   }
 
   // Multiplicador de coleta do dono para um recurso (técnicas somam).
-  gatherBonus(owner, res) {
+  gatherBonus(owner: number, res: ResourceName): number {
     let bonus = 1;
-    for (const id of Object.keys(this.players[owner].techs)) {
+    for (const id of techIdsOf(this.players[owner])) {
       bonus += TECHS[id].effect.gather?.[res] ?? 0;
     }
     return bonus;
   }
 
-  attackBonus(owner) {
+  attackBonus(owner: number): number {
     let bonus = 1;
-    for (const id of Object.keys(this.players[owner].techs)) {
+    for (const id of techIdsOf(this.players[owner])) {
       bonus += TECHS[id].effect.attack ?? 0;
     }
     return bonus;
   }
 
-  popUsed(owner) {
+  popUsed(owner: number): number {
     let n = 0;
     for (const e of this.world.entities.values()) {
       if (e.owner !== owner || e.dead) continue;
@@ -159,7 +220,7 @@ export class Simulation {
     return n;
   }
 
-  popCap(owner) {
+  popCap(owner: number): number {
     let cap = 0;
     for (const e of this.world.entities.values()) {
       if (e.kind === 'building' && e.owner === owner && e.built) cap += BUILDINGS[e.type].pop || 0;
@@ -167,15 +228,16 @@ export class Simulation {
     return Math.min(MAX_POP, cap);
   }
 
-  gatherersOf(id) {
+  gatherersOf(id: number): number {
     let n = 0;
     for (const u of this.lists.units) if (u.order === 'gather' && u.target === id && !u.dead) n++;
     return n;
   }
 
   // Coleta: encontra o recurso mais próximo de (x, y) que o dono consegue usar.
-  findSource(owner, x, y, res) {
-    let best = null;
+  // `res` null nunca casa com nada (é o caso de um aldeão que perdeu o tipo de recurso).
+  findSource(owner: number, x: number, y: number, res: ResourceName | null): Source | null {
+    let best: Source | null = null;
     let bestD = Infinity;
     for (const n of this.lists.nodes) {
       if (n.dead || n.amount <= 0 || NODES[n.type].resource !== res) continue;
@@ -185,7 +247,8 @@ export class Simulation {
     }
     for (const b of this.lists.buildings) {
       if (b.dead || b.owner !== owner || !b.built || BUILDINGS[b.type].gather !== res) continue;
-      if (this.gatherersOf(b.id) >= BUILDINGS[b.type].maxGatherers) continue;
+      // Só fazendas têm limite de coletores; sem limite definido, nunca lota.
+      if (this.gatherersOf(b.id) >= (BUILDINGS[b.type].maxGatherers ?? Infinity)) continue;
       const c = centerOf(b);
       const d = Math.hypot(c.x - x, c.y - y);
       if (d < bestD) { best = b; bestD = d; }
@@ -193,8 +256,8 @@ export class Simulation {
     return best;
   }
 
-  nearestDropoff(owner, x, y, res) {
-    let best = null;
+  nearestDropoff(owner: number, x: number, y: number, res: ResourceName): BuildingEntity | null {
+    let best: BuildingEntity | null = null;
     let bestD = Infinity;
     for (const b of this.lists.buildings) {
       if (b.dead || b.owner !== owner || !b.built) continue;
@@ -206,7 +269,7 @@ export class Simulation {
   }
 
   // Checa se um edifício pode ser colocado. Retorna null se OK, ou o motivo.
-  checkPlacement(type, x, y) {
+  checkPlacement(type: BuildingType, x: number, y: number): string | null {
     const def = BUILDINGS[type];
     if (!def) return 'Construção desconhecida';
     for (let j = y; j < y + def.h; j++) {
@@ -224,7 +287,7 @@ export class Simulation {
 
   // ---------- Comandos (usados pelo jogador e pelos bots) ----------
 
-  placeBuilding(owner, type, x, y) {
+  placeBuilding(owner: number, type: BuildingType, x: number, y: number): PlaceOutcome {
     if (type === 'towncenter' || !BUILDINGS[type]) return fail('Não é possível construir isso');
     if (BUILDINGS[type].age > this.players[owner].age) return fail(`Requer ${AGE_NAMES[BUILDINGS[type].age]}`);
     const reason = this.checkPlacement(type, x, y);
@@ -232,11 +295,11 @@ export class Simulation {
     const cost = BUILDINGS[type].cost;
     if (!this.canAfford(owner, cost)) return fail('Recursos insuficientes');
     this.spend(owner, cost);
-    return ok({ building: this.spawnBuilding(type, owner, x, y, false) });
+    return { ok: true, building: this.spawnBuilding(type, owner, x, y, false) };
   }
 
-  train(owner, id, type) {
-    const b = this.world.get(id);
+  train(owner: number, id: number, type: UnitType): Outcome {
+    const b = this.buildingById(id);
     if (!b || b.dead || b.owner !== owner || !b.built) return fail('Edifício indisponível');
     if (!BUILDINGS[b.type].trains?.includes(type)) return fail('Este edifício não treina isso');
     if (UNITS[type].age > this.players[owner].age) return fail(`Requer ${AGE_NAMES[UNITS[type].age]}`);
@@ -246,38 +309,40 @@ export class Simulation {
     if (this.popUsed(owner) >= this.popCap(owner)) return fail('População máxima — construa casas');
     this.spend(owner, def.cost);
     b.queue.push({ type, time: def.time, elapsed: 0 });
-    return ok();
+    return succeed();
   }
 
-  cancelTraining(owner, id) {
-    const b = this.world.get(id);
+  cancelTraining(owner: number, id: number): Outcome {
+    const b = this.buildingById(id);
     if (!b || b.dead || b.owner !== owner || b.queue.length === 0) return fail('Nada para cancelar');
     const item = b.queue.pop();
-    const refund = UNITS[item.type].cost;
+    // Inalcançável: a fila foi conferida acima.
+    if (!item) return fail('Nada para cancelar');
     const res = this.players[owner].res;
-    for (const [k, v] of Object.entries(refund)) res[k] += v;
-    return ok();
+    for (const [k, v] of costEntries(UNITS[item.type].cost)) res[k] += v;
+    return succeed();
   }
 
   // Avança para a próxima idade no Centro da Vila.
-  startAgeUp(owner, id) {
-    const b = this.world.get(id);
+  startAgeUp(owner: number, id: number): Outcome {
+    const b = this.buildingById(id);
     if (!b || b.dead || b.owner !== owner || !b.built || b.type !== 'towncenter') return fail('Use o Centro da Vila');
     const p = this.players[owner];
-    if (p.age >= 4) return fail('Já está na última idade');
+    const to = nextAgeOf(p.age);
+    if (to === null) return fail('Já está na última idade');
     if (b.ageUp) return fail('Já avançando de idade');
-    const next = AGE_UP[p.age + 1];
+    const next = AGE_UP[to];
     if (!this.canAfford(owner, next.cost)) return fail('Recursos insuficientes');
     this.spend(owner, next.cost);
-    b.ageUp = { elapsed: 0, time: next.time, to: p.age + 1 };
-    this.notify(owner, `Avançando para ${AGE_NAMES[p.age + 1]}`, 'info');
-    return ok();
+    b.ageUp = { elapsed: 0, time: next.time, to };
+    this.notify(owner, `Avançando para ${AGE_NAMES[to]}`, 'info');
+    return succeed();
   }
 
   // Pesquisa uma técnica num edifício que a oferece (uma por vez em cada edifício).
-  research(owner, id, techId) {
-    const b = this.world.get(id);
-    const tech = TECHS[techId];
+  research(owner: number, id: number, techId: TechId): Outcome {
+    const b = this.buildingById(id);
+    const tech: TechDef | undefined = TECHS[techId];
     if (!b || b.dead || b.owner !== owner || !b.built) return fail('Edifício indisponível');
     if (!tech || tech.building !== b.type) return fail('Esta técnica não é deste edifício');
     const p = this.players[owner];
@@ -289,19 +354,19 @@ export class Simulation {
     this.spend(owner, tech.cost);
     b.research = { id: techId, elapsed: 0, time: tech.time };
     this.notify(owner, `${tech.name} em pesquisa`, 'info');
-    return ok();
+    return succeed();
   }
 
-  setRally(owner, id, x, y, targetId = null) {
+  setRally(owner: number, id: number, x: number, y: number, targetId: number | null = null): Outcome {
     const b = this.world.get(id);
     if (!b || b.dead || b.owner !== owner || b.kind !== 'building') return fail('Não é possível definir');
     b.rally = { x, y, target: targetId };
-    return ok();
+    return succeed();
   }
 
   // Ordens para um grupo de unidades do mesmo dono.
-  command(owner, unitIds, cmd) {
-    const units = [];
+  command(owner: number, unitIds: number[], cmd: Command): void {
+    const units: UnitEntity[] = [];
     for (const id of unitIds) {
       const u = this.world.get(id);
       if (u && u.kind === 'unit' && !u.dead && u.owner === owner) units.push(u);
@@ -324,11 +389,12 @@ export class Simulation {
         break;
       }
       case 'gather': {
+        // Alvo que não é recurso (unidade) não tem o que coletar.
         const t = this.world.get(cmd.target);
-        if (!t || t.dead) return;
+        if (!t || t.dead || t.kind === 'unit') return;
         const res = t.kind === 'node' ? NODES[t.type].resource : BUILDINGS[t.type].gather;
         if (!res) return;
-        if (t.kind === 'building' && this.gatherersOf(t.id) >= BUILDINGS[t.type].maxGatherers) {
+        if (t.kind === 'building' && this.gatherersOf(t.id) >= (BUILDINGS[t.type].maxGatherers ?? Infinity)) {
           this.say('Esta fazenda já está lotada', 'warn');
           return;
         }
@@ -336,8 +402,9 @@ export class Simulation {
         break;
       }
       case 'build': {
+        // Só edifícios em construção podem receber aldeões para construir.
         const b = this.world.get(cmd.target);
-        if (!b || b.dead || b.built || b.owner !== owner) return;
+        if (!b || b.kind !== 'building' || b.dead || b.built || b.owner !== owner) return;
         for (const u of units) {
           if (!UNITS[u.type].civil) continue;
           this.setIdle(u);
@@ -352,7 +419,7 @@ export class Simulation {
   }
 
   // Clique direito: decide a ação conforme o alvo.
-  smartCommand(owner, unitIds, target) {
+  smartCommand(owner: number, unitIds: number[], target: SmartTarget): void {
     if (target.entity) {
       const e = target.entity;
       if (e.owner !== owner && e.owner !== -1) {
@@ -368,11 +435,13 @@ export class Simulation {
         return;
       }
     }
+    // Sem ponto (entidade sem ação), não há para onde andar.
+    if (target.x === undefined || target.y === undefined) return;
     this.command(owner, unitIds, { type: 'move', x: target.x, y: target.y });
   }
 
-  orderMove(u, x, y, mode) {
-    const order = mode === 'attackmove' ? 'attackmove' : 'move';
+  orderMove(u: UnitEntity, x: number, y: number, mode: OrderMode): void {
+    const order: Order = mode === 'attackmove' ? 'attackmove' : 'move';
     // Já está indo para lá: não refaz o caminho à toa (bots repetem ordens a cada ciclo).
     if (u.order === order && u.dest && Math.hypot(u.dest.x - x, u.dest.y - y) < 0.5) return;
     u.order = order;
@@ -384,7 +453,7 @@ export class Simulation {
     u.inSite = false;
   }
 
-  orderGather(u, src, res) {
+  orderGather(u: UnitEntity, src: Source, res: ResourceName): void {
     u.order = 'gather';
     u.target = src.id;
     u.resKind = res;
@@ -393,7 +462,7 @@ export class Simulation {
     u.inSite = false;
   }
 
-  startAttack(u, t, resume) {
+  startAttack(u: UnitEntity, t: Entity, resume: Resume | null): void {
     u.order = 'attack';
     u.target = t.id;
     u.path = null;
@@ -403,7 +472,7 @@ export class Simulation {
     u.inSite = false;
   }
 
-  setIdle(u) {
+  setIdle(u: UnitEntity): void {
     u.order = 'idle';
     u.target = null;
     u.path = null;
@@ -417,7 +486,7 @@ export class Simulation {
 
   // ---------- Atualização ----------
 
-  update(dt) {
+  update(dt: number): void {
     if (this.gameOver) return;
     this.time += dt;
     this.rebuildLists();
@@ -433,10 +502,10 @@ export class Simulation {
     this.checkDefeats();
   }
 
-  rebuildLists() {
-    const units = [];
-    const buildings = [];
-    const nodes = [];
+  rebuildLists(): void {
+    const units: UnitEntity[] = [];
+    const buildings: BuildingEntity[] = [];
+    const nodes: NodeEntity[] = [];
     for (const e of this.world.entities.values()) {
       if (e.kind === 'unit') units.push(e);
       else if (e.kind === 'building') {
@@ -453,7 +522,7 @@ export class Simulation {
     this.lists = { units, buildings, nodes };
   }
 
-  updateBuilding(b, dt) {
+  updateBuilding(b: BuildingEntity, dt: number): void {
     const def = BUILDINGS[b.type];
     if (!b.built) {
       if (b.builders > 0) {
@@ -463,13 +532,15 @@ export class Simulation {
       }
       return;
     }
-    if (b.ageUp) {
-      b.ageUp.elapsed += dt;
-      if (b.ageUp.elapsed >= b.ageUp.time) this.finishAgeUp(b);
+    const ageUp = b.ageUp;
+    if (ageUp) {
+      ageUp.elapsed += dt;
+      if (ageUp.elapsed >= ageUp.time) this.finishAgeUp(b, ageUp);
     }
-    if (b.research) {
-      b.research.elapsed += dt;
-      if (b.research.elapsed >= b.research.time) this.finishResearch(b);
+    const research = b.research;
+    if (research) {
+      research.elapsed += dt;
+      if (research.elapsed >= research.time) this.finishResearch(b, research);
     }
     const q = b.queue[0];
     if (q) {
@@ -483,12 +554,14 @@ export class Simulation {
   }
 
   // Torre: atira no inimigo mais próximo dentro do alcance.
-  towerFire(b, dt) {
+  towerFire(b: BuildingEntity, dt: number): void {
     const def = BUILDINGS[b.type];
+    // Só torres atiram (são as únicas com ataque, alcance e recarga definidos).
+    if (def.attack === undefined || def.range === undefined || def.cooldown === undefined) return;
     b.cooldown = Math.max(0, b.cooldown - dt);
     if (b.cooldown > 0) return;
     const c = centerOf(b);
-    let best = null;
+    let best: UnitEntity | null = null;
     let bestD = def.range;
     for (const u of this.lists.units) {
       if (u.dead || u.owner === b.owner || u.owner === -1) continue;
@@ -506,7 +579,7 @@ export class Simulation {
     }
   }
 
-  completeBuilding(b) {
+  completeBuilding(b: BuildingEntity): void {
     b.built = true;
     b.progress = 1;
     b.hp = b.maxHp;
@@ -520,23 +593,23 @@ export class Simulation {
     }
   }
 
-  finishAgeUp(b) {
+  finishAgeUp(b: BuildingEntity, job: AgeUpJob): void {
     const p = this.players[b.owner];
-    p.age = b.ageUp.to;
+    p.age = job.to;
     b.ageUp = null;
     this.notify(b.owner, `${AGE_NAMES[p.age]} alcançada!`, 'good');
   }
 
-  finishResearch(b) {
+  finishResearch(b: BuildingEntity, job: ResearchJob): void {
     const p = this.players[b.owner];
-    const id = b.research.id;
+    const id = job.id;
     p.techs[id] = true;
     p.stats.researched++;
     b.research = null;
     this.notify(b.owner, `${TECHS[id].name} concluída`, 'good');
   }
 
-  finishTraining(b, type) {
+  finishTraining(b: BuildingEntity, type: UnitType): void {
     const spot = this.freeTilesAround(b, 1)[0];
     const u = this.spawnUnit(type, b.owner, spot.x, spot.y);
     this.players[b.owner].stats.trained++;
@@ -544,31 +617,32 @@ export class Simulation {
     const rally = b.rally;
     if (!rally) return;
     const t = rally.target !== null && rally.target !== undefined ? this.world.get(rally.target) : null;
-    if (t && !t.dead && t.kind === 'node' && UNITS[type].civil) {
-      this.orderGather(u, t, NODES[t.type].resource);
-    } else if (t && !t.dead && t.kind === 'building' && BUILDINGS[t.type].gather && UNITS[type].civil) {
-      this.orderGather(u, t, BUILDINGS[t.type].gather);
+    // Só aldeões coletam; a fonte precisa ser um recurso natural ou uma fazenda com recurso.
+    const src = t && !t.dead && UNITS[type].civil && (t.kind === 'node' || t.kind === 'building') ? t : null;
+    const res = src ? gatherResourceOf(src) : undefined;
+    if (src && res) {
+      this.orderGather(u, src, res);
     } else {
       this.orderMove(u, rally.x, rally.y, UNITS[type].civil ? null : 'attackmove');
     }
   }
 
-  updateUnit(u, dt) {
+  updateUnit(u: UnitEntity, dt: number): void {
     u.cooldown = Math.max(0, u.cooldown - dt);
     u.repath -= dt;
     u.moved = false;
     switch (u.order) {
-      case 'idle': return this.idleBehaviour(u, dt);
-      case 'move': return this.moveBehaviour(u, dt);
-      case 'attackmove': return this.attackMoveBehaviour(u, dt);
-      case 'attack': return this.attackBehaviour(u, dt);
-      case 'gather': return this.gatherBehaviour(u, dt);
-      case 'build': return this.buildBehaviour(u, dt);
-      default: return undefined;
+      case 'idle': this.idleBehaviour(u, dt); break;
+      case 'move': this.moveBehaviour(u, dt); break;
+      case 'attackmove': this.attackMoveBehaviour(u, dt); break;
+      case 'attack': this.attackBehaviour(u, dt); break;
+      case 'gather': this.gatherBehaviour(u, dt); break;
+      case 'build': this.buildBehaviour(u, dt); break;
+      default: break;
     }
   }
 
-  idleBehaviour(u, dt) {
+  idleBehaviour(u: UnitEntity, dt: number): void {
     u.scanT -= dt;
     if (u.scanT > 0) return;
     u.scanT = 0.5;
@@ -577,32 +651,40 @@ export class Simulation {
     if (foe) this.startAttack(u, foe, null);
   }
 
-  moveBehaviour(u, dt) {
+  moveBehaviour(u: UnitEntity, dt: number): void {
     if (!u.path) {
-      const p = findPath(this.world, u.x, u.y, { type: 'tile', x: Math.floor(u.dest.x), y: Math.floor(u.dest.y) });
-      if (!p || p.length === 0) return this.setIdle(u);
+      const dest = destOf(u);
+      const p = findPath(this.world, u.x, u.y, { type: 'tile', x: Math.floor(dest.x), y: Math.floor(dest.y) });
+      if (!p || p.length === 0) {
+        this.setIdle(u);
+        return;
+      }
       u.path = p;
       u.pi = 0;
     }
     if (!this.followPath(u, dt)) this.setIdle(u);
   }
 
-  attackMoveBehaviour(u, dt) {
+  attackMoveBehaviour(u: UnitEntity, dt: number): void {
     u.scanT -= dt;
     if (u.scanT <= 0) {
       u.scanT = 0.4;
       const foe = this.findFoe(u, UNITS[u.type].sight, true);
       if (foe) {
-        this.startAttack(u, foe, { order: 'attackmove', dest: { x: u.dest.x, y: u.dest.y } });
+        const dest = destOf(u);
+        this.startAttack(u, foe, { order: 'attackmove', dest: { x: dest.x, y: dest.y } });
         return;
       }
     }
     this.moveBehaviour(u, dt);
   }
 
-  attackBehaviour(u, dt) {
+  attackBehaviour(u: UnitEntity, dt: number): void {
     const t = this.world.get(u.target);
-    if (!t || t.dead || t.hp <= 0 || t.kind === 'node') return this.afterTarget(u);
+    if (!t || t.dead || t.kind === 'node' || t.hp <= 0) {
+      this.afterTarget(u);
+      return;
+    }
     const def = UNITS[u.type];
     const gap = this.gapTo(u, t);
     if (gap <= def.range + 0.05) {
@@ -619,7 +701,7 @@ export class Simulation {
       u.repath = 0.6;
       u.gx = t.x;
       u.gy = t.y;
-      const goal = t.kind === 'unit'
+      const goal: Goal = t.kind === 'unit'
         ? { type: 'tile', x: Math.floor(t.x), y: Math.floor(t.y) }
         : { type: 'rect', ...rectOf(t) };
       const p = findPath(this.world, u.x, u.y, goal);
@@ -627,7 +709,8 @@ export class Simulation {
         // Alvo inalcançável: ignora por um tempo em vez de tentar de novo a cada tick.
         u.skipId = t.id;
         u.skipUntil = this.time + 6;
-        return this.afterTarget(u);
+        this.afterTarget(u);
+        return;
       }
       u.path = p;
       u.pi = 0;
@@ -635,7 +718,7 @@ export class Simulation {
     if (!this.followPath(u, dt)) u.path = null;
   }
 
-  afterTarget(u) {
+  afterTarget(u: UnitEntity): void {
     const resume = u.resume;
     if (resume && resume.order === 'attackmove') {
       u.order = 'attackmove';
@@ -649,12 +732,12 @@ export class Simulation {
     this.setIdle(u);
   }
 
-  gapTo(u, t) {
+  gapTo(u: UnitEntity, t: Combatant): number {
     if (t.kind === 'unit') return Math.hypot(t.x - u.x, t.y - u.y) - UNIT_RADIUS;
     return distToRect(u.x, u.y, rectOf(t));
   }
 
-  strike(u, t) {
+  strike(u: UnitEntity, t: Combatant): void {
     const def = UNITS[u.type];
     let dmg = def.attack * this.attackBonus(u.owner);
     if (t.kind === 'unit') dmg *= def.bonus?.[t.type] ?? 1;
@@ -668,7 +751,11 @@ export class Simulation {
       owner: u.owner,
     });
     if (t.kind === 'unit' && (t.order === 'idle' || t.order === 'attackmove')) {
-      const resume = t.order === 'attackmove' ? { order: 'attackmove', dest: { x: t.dest.x, y: t.dest.y } } : null;
+      let resume: Resume | null = null;
+      if (t.order === 'attackmove') {
+        const dest = destOf(t);
+        resume = { order: 'attackmove', dest: { x: dest.x, y: dest.y } };
+      }
       this.startAttack(t, u, resume);
     }
     if (t.owner === this.humanIndex && this.time - this.lastWarn > ATTACK_WARNING_COOLDOWN) {
@@ -678,16 +765,21 @@ export class Simulation {
   }
 
   // Coleta: o aldeão anda até o recurso, coleta, entrega e volta ao recurso.
-  gatherBehaviour(u, dt) {
-    if (u.phase === 'toDrop') return this.deliverBehaviour(u, dt);
+  gatherBehaviour(u: UnitEntity, dt: number): void {
+    if (u.phase === 'toDrop') {
+      this.deliverBehaviour(u, dt);
+      return;
+    }
     const src = this.validSource(u.target, u);
     if (!src) {
       if (u.carry && u.carry.amt > 0) {
         u.phase = 'toDrop';
         u.path = null;
-        return this.deliverBehaviour(u, dt);
+        this.deliverBehaviour(u, dt);
+        return;
       }
-      return this.seekSource(u);
+      this.seekSource(u);
+      return;
     }
     const gap = distToRect(u.x, u.y, rectOf(src));
     const reach = u.phase === 'chop' ? 1.1 : 0.85;
@@ -695,69 +787,83 @@ export class Simulation {
       u.phase = 'toRes';
       if (!u.path || u.pi >= u.path.length) {
         const p = findPath(this.world, u.x, u.y, { type: 'rect', ...rectOf(src) });
-        if (!p) return this.setIdle(u);
+        if (!p) {
+          this.setIdle(u);
+          return;
+        }
         if (p.length === 0) {
           u.phase = 'chop';
           u.gt = 0;
           u.path = null;
-          return undefined;
+          return;
         }
         u.path = p;
         u.pi = 0;
       }
       if (!this.followPath(u, dt)) u.path = null;
-      return undefined;
+      return;
     }
 
     u.phase = 'chop';
     u.path = null;
-    const isNode = src.kind === 'node';
-    const res = isNode ? NODES[src.type].resource : BUILDINGS[src.type].gather;
-    const per = isNode ? NODES[src.type].gatherTime : BUILDINGS[src.type].gatherTime;
+    const res = gatherResourceOf(src);
+    const per = src.kind === 'node' ? NODES[src.type].gatherTime : BUILDINGS[src.type].gatherTime;
+    // Invariante: só nós e fazendas chegam aqui; os dois têm recurso e tempo de coleta.
+    if (res === undefined || per === undefined) {
+      this.setIdle(u);
+      return;
+    }
     if (!u.carry || u.carry.res !== res) u.carry = { res, amt: 0 };
     u.gt += dt * this.econMult(u.owner) * this.gatherBonus(u.owner, res);
     while (u.gt >= per) {
       u.gt -= per;
       u.carry.amt++;
-      if (isNode) src.amount--;
-      const depleted = isNode && src.amount <= 0;
+      if (src.kind === 'node') src.amount--;
+      const depleted = src.kind === 'node' && src.amount <= 0;
       if (depleted) this.world.remove(src);
       if (u.carry.amt >= CARRY_CAPACITY || depleted) {
         u.phase = 'toDrop';
         u.gt = 0;
-        return undefined;
+        return;
       }
     }
-    return undefined;
   }
 
-  deliverBehaviour(u, dt) {
+  deliverBehaviour(u: UnitEntity, dt: number): void {
     if (!u.carry || u.carry.amt <= 0) {
       u.carry = null;
-      return this.afterDeliver(u);
+      this.afterDeliver(u);
+      return;
     }
     const drop = this.nearestDropoff(u.owner, u.x, u.y, u.carry.res);
-    if (!drop) return this.setIdle(u);
+    if (!drop) {
+      this.setIdle(u);
+      return;
+    }
     const rect = rectOf(drop);
     if (distToRect(u.x, u.y, rect) <= 0.9) {
       this.depositCarry(u);
-      return this.afterDeliver(u);
+      this.afterDeliver(u);
+      return;
     }
     if (!u.path || u.pi >= u.path.length) {
       const p = findPath(this.world, u.x, u.y, { type: 'rect', ...rect });
-      if (!p) return this.setIdle(u);
+      if (!p) {
+        this.setIdle(u);
+        return;
+      }
       if (p.length === 0) {
         this.depositCarry(u);
-        return this.afterDeliver(u);
+        this.afterDeliver(u);
+        return;
       }
       u.path = p;
       u.pi = 0;
     }
     if (!this.followPath(u, dt)) u.path = null;
-    return undefined;
   }
 
-  depositCarry(u) {
+  depositCarry(u: UnitEntity): void {
     const c = u.carry;
     if (!c) return;
     const p = this.players[u.owner];
@@ -766,16 +872,16 @@ export class Simulation {
     u.carry = null;
   }
 
-  afterDeliver(u) {
+  afterDeliver(u: UnitEntity): void {
     u.path = null;
     if (this.validSource(u.target, u)) {
       u.phase = 'toRes';
-      return undefined;
+      return;
     }
-    return this.seekSource(u);
+    this.seekSource(u);
   }
 
-  validSource(id, u) {
+  validSource(id: number | null, u: UnitEntity): Source | null {
     const e = this.world.get(id);
     if (!e || e.dead) return null;
     if (e.kind === 'node') return e.amount > 0 ? e : null;
@@ -783,19 +889,24 @@ export class Simulation {
     return null;
   }
 
-  seekSource(u) {
+  seekSource(u: UnitEntity): void {
     const src = this.findSource(u.owner, u.x, u.y, u.resKind);
-    if (!src) return this.setIdle(u);
+    if (!src) {
+      this.setIdle(u);
+      return;
+    }
     u.target = src.id;
     u.phase = 'toRes';
     u.path = null;
     u.pi = 0;
-    return undefined;
   }
 
-  buildBehaviour(u, dt) {
-    const b = this.world.get(u.target);
-    if (!b || b.dead || b.built) return this.setIdle(u);
+  buildBehaviour(u: UnitEntity, dt: number): void {
+    const b = this.buildingById(u.target);
+    if (!b || b.dead || b.built) {
+      this.setIdle(u);
+      return;
+    }
     const rect = rectOf(b);
     if (distToRect(u.x, u.y, rect) <= 1.0) {
       u.inSite = true;
@@ -805,7 +916,10 @@ export class Simulation {
     u.inSite = false;
     if (!u.path || u.pi >= u.path.length) {
       const p = findPath(this.world, u.x, u.y, { type: 'rect', ...rect });
-      if (!p) return this.setIdle(u);
+      if (!p) {
+        this.setIdle(u);
+        return;
+      }
       if (p.length === 0) {
         u.inSite = true;
         return;
@@ -817,7 +931,7 @@ export class Simulation {
   }
 
   // Anda pelo caminho armazenado. Retorna false quando o caminho termina.
-  followPath(u, dt) {
+  followPath(u: UnitEntity, dt: number): boolean {
     const speed = UNITS[u.type].speed;
     let budget = speed * dt;
     const sx = u.x;
@@ -842,10 +956,10 @@ export class Simulation {
     return !!u.path && u.pi < u.path.length;
   }
 
-  findFoe(u, radius, withBuildings) {
-    let best = null;
+  findFoe(u: UnitEntity, radius: number, withBuildings: boolean): UnitEntity | BuildingEntity | null {
+    let best: UnitEntity | BuildingEntity | null = null;
     let bestD = radius;
-    const skipping = (o) => o.id === u.skipId && this.time < u.skipUntil;
+    const skipping = (o: Entity): boolean => o.id === u.skipId && this.time < u.skipUntil;
     for (const o of this.lists.units) {
       if (o.dead || o.owner === u.owner || skipping(o)) continue;
       const d = Math.hypot(o.x - u.x, o.y - u.y);
@@ -862,7 +976,7 @@ export class Simulation {
 
   // Afasta unidades paradas que estão sobrepostas. Unidades em movimento
   // atravessam umas às outras: separar quem anda causaria impasses em corredores.
-  separateUnits() {
+  separateUnits(): void {
     const us = this.lists.units.filter((u) => !u.dead);
     for (const u of us) { u.sx = 0; u.sy = 0; }
     const R = SEPARATION_RADIUS;
@@ -899,7 +1013,7 @@ export class Simulation {
 
   // ---------- Morte, derrota e vitória ----------
 
-  resolveDeaths() {
+  resolveDeaths(): void {
     for (const e of [...this.world.entities.values()]) {
       if (e.dead || e.kind === 'node' || e.hp > 0) continue;
       const c = centerOf(e);
@@ -917,8 +1031,8 @@ export class Simulation {
     }
   }
 
-  checkDefeats() {
-    const hasBuilding = new Set();
+  checkDefeats(): void {
+    const hasBuilding = new Set<number>();
     for (const e of this.world.entities.values()) {
       if (e.kind === 'building') hasBuilding.add(e.owner);
     }
@@ -941,12 +1055,13 @@ export class Simulation {
 
   // ---------- Névoa de guerra (só para o jogador humano) ----------
 
-  updateFog() {
+  updateFog(): void {
     const size = this.size;
     const fog = this.fog;
     for (let i = 0; i < fog.length; i++) if (fog[i] === 2) fog[i] = 1;
     for (const e of this.world.entities.values()) {
-      if (e.owner !== this.humanIndex || e.dead) continue;
+      // Recursos naturais são neutros (owner -1), então nunca enxergam.
+      if (e.owner !== this.humanIndex || e.dead || e.kind === 'node') continue;
       const r = defOf(e).sight;
       const c = centerOf(e);
       const x0 = Math.max(0, Math.floor(c.x - r));
@@ -965,7 +1080,7 @@ export class Simulation {
   }
 
   // Pode o jogador humano ver esta entidade?
-  canSee(e) {
+  canSee(e: Entity): boolean {
     if (e.owner === this.humanIndex) return true;
     if (e.kind === 'unit') {
       return this.fog[Math.floor(e.y) * this.size + Math.floor(e.x)] === 2;
@@ -976,29 +1091,29 @@ export class Simulation {
 
   // ---------- Economia auxiliar, mensagens e eventos ----------
 
-  econMult(owner) {
+  econMult(owner: number): number {
     const p = this.players[owner];
     return p.isBot ? DIFFICULTY[p.difficulty].gather : 1;
   }
 
-  say(text, level = 'info') {
+  say(text: string, level: MessageLevel = 'info'): void {
     this.events.push({ type: 'msg', text, level });
   }
 
-  notify(owner, text, level = 'info') {
+  notify(owner: number, text: string, level: MessageLevel = 'info'): void {
     if (owner === this.humanIndex) this.say(text, level);
   }
 
-  drainEvents() {
+  drainEvents(): GameEvent[] {
     const out = this.events;
     this.events = [];
     return out;
   }
 
   // Entidades do jogador para a UI e a IA.
-  entitiesOf(owner) {
-    const units = [];
-    const buildings = [];
+  entitiesOf(owner: number): { units: UnitEntity[]; buildings: BuildingEntity[] } {
+    const units: UnitEntity[] = [];
+    const buildings: BuildingEntity[] = [];
     for (const e of this.world.entities.values()) {
       if (e.owner !== owner || e.dead) continue;
       if (e.kind === 'unit') units.push(e);
@@ -1006,4 +1121,38 @@ export class Simulation {
     }
     return { units, buildings };
   }
+
+  // Edifício vivo pelo id (null se o id for de outro tipo de entidade ou não existir).
+  buildingById(id: number | null | undefined): BuildingEntity | undefined {
+    const e = this.world.get(id);
+    return e?.kind === 'building' ? e : undefined;
+  }
+}
+
+// ---------- Auxiliares de tipo (sem alterar a lógica) ----------
+
+// Object.entries perde o tipo das chaves; as chaves vêm das tabelas de custo, só com recursos válidos.
+function costEntries(cost: Cost): [ResourceName, number][] {
+  return Object.entries(cost) as [ResourceName, number][];
+}
+
+// As chaves de `techs` só recebem ids de TECHS (ver finishResearch).
+function techIdsOf(p: Player): TechId[] {
+  return Object.keys(p.techs) as TechId[];
+}
+
+// Ordens move/attackmove sempre têm destino: orderMove e afterTarget definem os dois juntos.
+function destOf(u: UnitEntity): Point {
+  if (!u.dest) throw new Error(`Unidade ${u.id} sem destino na ordem ${u.order}`);
+  return u.dest;
+}
+
+// Próxima idade a alcançar, ou null na última (Imperial).
+export function nextAgeOf(age: AgeNumber): NextAge | null {
+  return age === 1 ? 2 : age === 2 ? 3 : age === 3 ? 4 : null;
+}
+
+// Recurso coletável de um recurso natural ou de um edifício (fazenda); undefined se não há.
+function gatherResourceOf(e: NodeEntity | BuildingEntity): ResourceName | undefined {
+  return e.kind === 'node' ? NODES[e.type].resource : BUILDINGS[e.type].gather;
 }

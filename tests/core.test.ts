@@ -1,13 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { generateMap } from '../public/js/core/mapgen.js';
-import { findPath } from '../public/js/core/pathfind.js';
-import { World } from '../public/js/core/world.js';
-import { Simulation } from '../public/js/core/sim.js';
-import { BotBrain } from '../public/js/core/ai.js';
+import { generateMap } from '../src/core/mapgen.ts';
+import { findPath } from '../src/core/pathfind.ts';
+import { World } from '../src/core/world.ts';
+import { Simulation } from '../src/core/sim.ts';
+import { BotBrain } from '../src/core/ai.ts';
+import type { BuildingType, DifficultyKey, Entity, Outcome, PlayerConfig } from '../src/types.ts';
 
-function makeSim({ size = 64, bots = 1, seed = 42, difficulty = 'normal' } = {}) {
-  const players = [{ name: 'Você', color: '#2f7de1' }];
+function makeSim({ size = 64, bots = 1, seed = 42, difficulty = 'normal' as DifficultyKey } = {}) {
+  const players: PlayerConfig[] = [{ name: 'Você', color: '#2f7de1' }];
   for (let i = 0; i < bots; i++) {
     players.push({ name: `Bot ${i + 1}`, color: '#e04848', isBot: true, difficulty });
   }
@@ -17,14 +18,14 @@ function makeSim({ size = 64, bots = 1, seed = 42, difficulty = 'normal' } = {})
   return { sim, map, brains };
 }
 
-function runFor(sim, seconds, brains = [], step = 0.1) {
+function runFor(sim: Simulation, seconds: number, brains: (BotBrain | null)[] = [], step = 0.1) {
   for (let t = 0; t < seconds; t += step) {
     for (const b of brains) b?.update(step);
     sim.update(step);
   }
 }
 
-function findFreeSite(sim, type, tc) {
+function findFreeSite(sim: Simulation, type: BuildingType, tc: Entity) {
   for (let y = tc.y - 6; y < tc.y + 8; y++) {
     for (let x = tc.x - 6; x < tc.x + 8; x++) {
       if (sim.checkPlacement(type, x, y) === null) return { x, y };
@@ -33,10 +34,10 @@ function findFreeSite(sim, type, tc) {
   return null;
 }
 
-function tcOf(sim, owner) {
+function tcOf(sim: Simulation, owner: number): Entity {
   return [...sim.world.entities.values()].find(
     (e) => e.kind === 'building' && e.type === 'towncenter' && e.owner === owner,
-  );
+  )!;
 }
 
 test('mapa é determinístico para a mesma semente', () => {
@@ -76,7 +77,7 @@ test('pathfinding contorna obstáculos e para ao lado de um retângulo', () => {
   assert.ok(p.some((wp) => Math.floor(wp.y) >= 18), 'o caminho precisa passar pela abertura');
 
   // Alvo retângulo: chega a um tile encostado nele, nunca dentro.
-  const r = findPath(world, 2.5, 2.5, { type: 'rect', x: 5, y: 5, w: 2, h: 2 });
+  const r = findPath(world, 2.5, 2.5, { type: 'rect', x: 5, y: 5, w: 2, h: 2 })!;
   const end = r[r.length - 1];
   const ex = Math.floor(end.x);
   const ey = Math.floor(end.y);
@@ -116,7 +117,7 @@ test('aldeão coleta madeira e entrega no centro da vila', () => {
   const tc = tcOf(sim, 0);
   const trees = [...sim.world.entities.values()].filter((e) => e.kind === 'node' && e.type === 'tree');
   assert.ok(trees.length > 0);
-  const villager = [...sim.world.entities.values()].find((e) => e.kind === 'unit' && e.type === 'villager');
+  const villager = [...sim.world.entities.values()].find((e) => e.kind === 'unit' && e.type === 'villager')!;
   const before = sim.players[0].res.wood;
   sim.command(0, [villager.id], { type: 'gather', target: trees[0].id });
   runFor(sim, 60);
@@ -153,16 +154,16 @@ test('fila de treino tem limite', () => {
   const { sim } = makeSim({ bots: 0, seed: 11 });
   const tc = tcOf(sim, 0);
   sim.players[0].res.food = 10000;
-  let last = null;
+  let last = null as Outcome | null;
   for (let i = 0; i < 10; i++) last = sim.train(0, tc.id, 'villager');
-  assert.equal(last.ok, false);
-  assert.match(last.reason, /Fila/);
+  assert.equal(last!.ok, false);
+  assert.match(last!.reason!, /Fila/);
 });
 
 test('aldeão constrói uma casa e a população máxima sobe', () => {
   const { sim } = makeSim({ bots: 0, seed: 21 });
   const capBefore = sim.popCap(0);
-  const villager = [...sim.world.entities.values()].find((e) => e.kind === 'unit' && e.type === 'villager');
+  const villager = [...sim.world.entities.values()].find((e) => e.kind === 'unit' && e.type === 'villager')!;
   const site = findFreeSite(sim, 'house', tcOf(sim, 0));
   assert.ok(site, 'há espaço para uma casa');
   const r = sim.placeBuilding(0, 'house', site.x, site.y);
@@ -176,7 +177,7 @@ test('aldeão constrói uma casa e a população máxima sobe', () => {
 test('recursos insuficientes impedem construção', () => {
   const { sim } = makeSim({ bots: 0, seed: 21 });
   sim.players[0].res.wood = 0;
-  const site = findFreeSite(sim, 'house', tcOf(sim, 0));
+  const site = findFreeSite(sim, 'house', tcOf(sim, 0))!;
   const r = sim.placeBuilding(0, 'house', site.x, site.y);
   assert.equal(r.ok, false);
   assert.match(r.reason, /Recursos/);
@@ -212,7 +213,7 @@ test('partida só com bots avança sem erros e gera economia e tropas', () => {
 test('avançar de idade exige centro da vila, recursos e libera edifícios', () => {
   const { sim } = makeSim({ bots: 0, seed: 21 });
   const tc = tcOf(sim, 0);
-  const site = findFreeSite(sim, 'stable', tc);
+  const site = findFreeSite(sim, 'stable', tc)!;
   assert.equal(sim.placeBuilding(0, 'stable', site.x, site.y).ok, false, 'estábulo exige Idade Feudal');
   sim.players[0].res = { food: 900, wood: 900, gold: 900, stone: 0 };
   assert.equal(sim.startAgeUp(0, tc.id).ok, true);
@@ -226,9 +227,9 @@ test('técnica só pesquisa no edifício certo e com a idade correta', () => {
   const { sim } = makeSim({ bots: 0, seed: 21 });
   sim.players[0].res = { food: 900, wood: 900, gold: 900, stone: 0 };
   const tc = tcOf(sim, 0);
-  const site = findFreeSite(sim, 'mill', tc);
-  const mill = sim.placeBuilding(0, 'mill', site.x, site.y).building;
-  const villager = [...sim.world.entities.values()].find((e) => e.kind === 'unit' && e.type === 'villager');
+  const site = findFreeSite(sim, 'mill', tc)!;
+  const mill = sim.placeBuilding(0, 'mill', site.x, site.y).building!;
+  const villager = [...sim.world.entities.values()].find((e) => e.kind === 'unit' && e.type === 'villager')!;
   sim.command(0, [villager.id], { type: 'build', target: mill.id });
   runFor(sim, 40);
   assert.equal(mill.built, true);
@@ -260,9 +261,9 @@ test('torre atira no inimigo mais próximo dentro do alcance', () => {
   sim.players[0].age = 2;
   sim.players[0].res = { food: 0, wood: 900, gold: 0, stone: 900 };
   const tc = tcOf(sim, 0);
-  const site = findFreeSite(sim, 'tower', tc);
-  const tower = sim.placeBuilding(0, 'tower', site.x, site.y).building;
-  const villager = [...sim.world.entities.values()].find((e) => e.kind === 'unit' && e.type === 'villager');
+  const site = findFreeSite(sim, 'tower', tc)!;
+  const tower = sim.placeBuilding(0, 'tower', site.x, site.y).building!;
+  const villager = [...sim.world.entities.values()].find((e) => e.kind === 'unit' && e.type === 'villager')!;
   sim.command(0, [villager.id], { type: 'build', target: tower.id });
   runFor(sim, 45);
   assert.equal(tower.built, true);

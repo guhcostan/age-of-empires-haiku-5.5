@@ -1,6 +1,7 @@
 // Terreno (malha com cor por vértice) e a camada de névoa de guerra.
 import * as THREE from 'three';
-import { WATER } from '../core/mapgen.js';
+import { WATER } from '../core/mapgen.ts';
+import type { GameMap, Point } from '../types.ts';
 
 const GRASS_A = new THREE.Color(0x5f8f3d);
 const GRASS_B = new THREE.Color(0x8fb35a);
@@ -8,7 +9,7 @@ const DIRT = new THREE.Color(0x9b7a4e);
 const WATER_DEEP = new THREE.Color(0x1f5f9e);
 const WATER_SHALLOW = new THREE.Color(0x3a86c4);
 
-export function heightAt(map, x, z) {
+export function heightAt(map: GameMap, x: number, z: number): number {
   const vs = map.size + 1;
   const cx = Math.min(Math.max(x, 0), map.size - 0.001);
   const cz = Math.min(Math.max(z, 0), map.size - 0.001);
@@ -25,9 +26,9 @@ export function heightAt(map, x, z) {
 }
 
 // Cor de cada tile: grama com variação, terra perto das bases, água.
-function tileColors(map, baseCenters) {
+function tileColors(map: GameMap, baseCenters: Point[]): THREE.Color[] {
   const { size, terrain, tint } = map;
-  const out = new Array(size * size);
+  const out: THREE.Color[] = new Array<THREE.Color>(size * size);
   const c = new THREE.Color();
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
@@ -47,7 +48,7 @@ function tileColors(map, baseCenters) {
 }
 
 // Malha de terreno: (size+1)² vértices com cor média dos tiles vizinhos.
-function gridGeometry(map, lift, colors) {
+function gridGeometry(map: GameMap, lift: number, colors: THREE.Color[] | null): THREE.BufferGeometry {
   const { size, heights } = map;
   const vs = size + 1;
   const positions = new Float32Array(vs * vs * 3);
@@ -61,7 +62,7 @@ function gridGeometry(map, lift, colors) {
       positions[v * 3 + 2] = j;
       uvs[v * 2] = i / size;
       uvs[v * 2 + 1] = j / size;
-      if (vcol) {
+      if (vcol && colors) {
         const acc = new THREE.Color(0, 0, 0);
         let n = 0;
         for (const [tx, ty] of [[i - 1, j - 1], [i, j - 1], [i - 1, j], [i, j]]) {
@@ -76,7 +77,7 @@ function gridGeometry(map, lift, colors) {
       }
     }
   }
-  const indices = [];
+  const indices: number[] = [];
   for (let j = 0; j < size; j++) {
     for (let i = 0; i < size; i++) {
       const a = j * vs + i;
@@ -95,7 +96,7 @@ function gridGeometry(map, lift, colors) {
   return geo;
 }
 
-export function buildTerrain(map, baseCenters) {
+export function buildTerrain(map: GameMap, baseCenters: Point[]): THREE.Mesh {
   const colors = tileColors(map, baseCenters);
   const mesh = new THREE.Mesh(
     gridGeometry(map, 0, colors),
@@ -106,8 +107,14 @@ export function buildTerrain(map, baseCenters) {
   return mesh;
 }
 
+export interface FogLayer {
+  mesh: THREE.Mesh;
+  tex: THREE.DataTexture;
+  data: Uint8Array;
+}
+
 // Névoa: textura RGBA preta com alfa por tile (2 = visível, 1 = explorado, 0 = inexplorado).
-export function buildFog(map) {
+export function buildFog(map: GameMap): FogLayer {
   const size = map.size;
   const data = new Uint8Array(size * size * 4);
   for (let i = 0; i < size * size; i++) data[i * 4 + 3] = 255;
@@ -124,9 +131,10 @@ export function buildFog(map) {
   return { mesh, tex, data };
 }
 
+// Alfa da névoa por nível de visibilidade (índice = 0 inexplorado, 1 explorado, 2 visível).
 const ALPHA = [255, 110, 0];
 
-export function updateFog(fog, visibility) {
+export function updateFog(fog: FogLayer, visibility: Uint8Array): void {
   const { data, tex } = fog;
   for (let i = 0; i < visibility.length; i++) data[i * 4 + 3] = ALPHA[visibility[i]];
   tex.needsUpdate = true;

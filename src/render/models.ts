@@ -1,11 +1,14 @@
 // Modelos 3D procedurais: tudo é montado com primitivas do three.js, sem arquivos externos.
 // Convenção: a frente de cada modelo aponta para +Z; os pés ficam em y = 0.
 import * as THREE from 'three';
+import type { BuildingType, NodeType, UnitType } from '../types.ts';
 
-const geoCache = new Map();
-const matCache = new Map();
+const geoCache = new Map<string, THREE.BufferGeometry>();
+const matCache = new Map<number, THREE.MeshLambertMaterial>();
 
-export function mat(color) {
+export type Vec3 = [number, number, number];
+
+export function mat(color: number): THREE.MeshLambertMaterial {
   let m = matCache.get(color);
   if (!m) {
     m = new THREE.MeshLambertMaterial({ color });
@@ -14,7 +17,7 @@ export function mat(color) {
   return m;
 }
 
-function cached(key, make) {
+function cached<T extends THREE.BufferGeometry>(key: string, make: () => T): THREE.BufferGeometry {
   let g = geoCache.get(key);
   if (!g) {
     g = make();
@@ -23,18 +26,29 @@ function cached(key, make) {
   return g;
 }
 
-const box = (w, h, d) => cached(`b${w},${h},${d}`, () => new THREE.BoxGeometry(w, h, d));
-const cyl = (rt, rb, h, seg = 8) => cached(`c${rt},${rb},${h},${seg}`, () => new THREE.CylinderGeometry(rt, rb, h, seg));
-const sph = (r, seg = 8) => cached(`s${r},${seg}`, () => new THREE.SphereGeometry(r, seg, Math.max(5, seg - 2)));
-const cone = (r, h, seg = 8) => cached(`k${r},${h},${seg}`, () => new THREE.ConeGeometry(r, h, seg));
-const dodeca = (r) => cached(`d${r}`, () => new THREE.DodecahedronGeometry(r, 0));
-const ico = (r) => cached(`i${r}`, () => new THREE.IcosahedronGeometry(r, 0));
-const arc = (r, tube) => cached(`a${r},${tube}`, () => new THREE.TorusGeometry(r, tube, 4, 12, Math.PI));
+const box = (w: number, h: number, d: number) => cached(`b${w},${h},${d}`, () => new THREE.BoxGeometry(w, h, d));
+const cyl = (rt: number, rb: number, h: number, seg = 8) =>
+  cached(`c${rt},${rb},${h},${seg}`, () => new THREE.CylinderGeometry(rt, rb, h, seg));
+const sph = (r: number, seg = 8) =>
+  cached(`s${r},${seg}`, () => new THREE.SphereGeometry(r, seg, Math.max(5, seg - 2)));
+const cone = (r: number, h: number, seg = 8) => cached(`k${r},${h},${seg}`, () => new THREE.ConeGeometry(r, h, seg));
+const dodeca = (r: number) => cached(`d${r}`, () => new THREE.DodecahedronGeometry(r, 0));
+const ico = (r: number) => cached(`i${r}`, () => new THREE.IcosahedronGeometry(r, 0));
+const arc = (r: number, tube: number) =>
+  cached(`a${r},${tube}`, () => new THREE.TorusGeometry(r, tube, 4, 12, Math.PI));
 
 export const G = { box, cyl, sph, cone, dodeca, ico, arc };
 
 // Adiciona uma peça ao pai.
-export function part(parent, geometry, color, x = 0, y = 0, z = 0, rot = [0, 0, 0]) {
+export function part(
+  parent: THREE.Object3D,
+  geometry: THREE.BufferGeometry,
+  color: number,
+  x = 0,
+  y = 0,
+  z = 0,
+  rot: Vec3 = [0, 0, 0],
+): THREE.Mesh {
   const m = new THREE.Mesh(geometry, mat(color));
   m.position.set(x, y, z);
   m.rotation.set(rot[0], rot[1], rot[2]);
@@ -44,7 +58,7 @@ export function part(parent, geometry, color, x = 0, y = 0, z = 0, rot = [0, 0, 
   return m;
 }
 
-export function pivot(parent, x, y, z) {
+export function pivot(parent: THREE.Object3D, x: number, y: number, z: number): THREE.Group {
   const g = new THREE.Group();
   g.position.set(x, y, z);
   parent.add(g);
@@ -60,7 +74,20 @@ const STEEL_DARK = 0x5b6470;
 const WOOD = 0x8b5a2b;
 const GOLD = 0xe6b93a;
 
-function buildVillager(root, team) {
+// Articulações de uma unidade: o corpo balança, as pernas andam e os braços trabalham/atacam.
+export interface UnitRig {
+  body: THREE.Group;
+  legs: THREE.Group[];
+  armL: THREE.Group;
+  armR: THREE.Group;
+}
+
+// Cavalos têm a articulação do cavalo além das do cavaleiro.
+export interface HorseRig extends UnitRig {
+  horse: THREE.Group;
+}
+
+function buildVillager(root: THREE.Group, team: number): UnitRig {
   const body = pivot(root, 0, 0, 0);
   const legL = pivot(body, -0.1, 0.42, 0);
   const legR = pivot(body, 0.1, 0.42, 0);
@@ -81,7 +108,7 @@ function buildVillager(root, team) {
   return { body, legs: [legL, legR], armL, armR };
 }
 
-function buildSwordsman(root, team) {
+function buildSwordsman(root: THREE.Group, team: number): UnitRig {
   const body = pivot(root, 0, 0, 0);
   const legL = pivot(body, -0.11, 0.44, 0);
   const legR = pivot(body, 0.11, 0.44, 0);
@@ -103,7 +130,7 @@ function buildSwordsman(root, team) {
   return { body, legs: [legL, legR], armL, armR };
 }
 
-function buildArcher(root, team) {
+function buildArcher(root: THREE.Group, team: number): UnitRig {
   const body = pivot(root, 0, 0, 0);
   const legL = pivot(body, -0.1, 0.42, 0);
   const legR = pivot(body, 0.1, 0.42, 0);
@@ -124,14 +151,14 @@ function buildArcher(root, team) {
   return { body, legs: [legL, legR], armL, armR };
 }
 
-function buildScout(root, team) {
+function buildScout(root: THREE.Group, team: number): HorseRig {
   const body = pivot(root, 0, 0, 0);
   const horse = pivot(body, 0, 0, 0);
   part(horse, box(0.52, 0.42, 1.0), WOOD, 0, 0.72, 0);
   part(horse, box(0.22, 0.5, 0.24), WOOD, 0, 1.0, 0.5, [-0.35, 0, 0]);
   part(horse, box(0.22, 0.22, 0.38), 0x6b4420, 0, 1.22, 0.78);
   part(horse, box(0.06, 0.3, 0.06), 0x3a2414, 0, 0.82, -0.6, [0.5, 0, 0]);
-  const legs = [];
+  const legs: THREE.Group[] = [];
   for (const [x, z] of [[-0.17, 0.36], [0.17, 0.36], [-0.17, -0.36], [0.17, -0.36]]) {
     const leg = pivot(horse, x, 0.5, z);
     part(leg, box(0.09, 0.5, 0.09), 0x6d4420, 0, -0.25, 0);
@@ -148,42 +175,43 @@ function buildScout(root, team) {
   return { body, legs, armL: armR, armR, horse };
 }
 
-export function createUnit(type, teamColor) {
+export interface CreatedUnit {
+  root: THREE.Group;
+  rig: UnitRig;
+}
+
+export function createUnit(type: UnitType, teamColor: string): CreatedUnit {
   const root = new THREE.Group();
   const team = new THREE.Color(teamColor).getHex();
-  let rig;
+  let rig: UnitRig;
   if (type === 'villager') rig = buildVillager(root, team);
   else if (type === 'swordsman') rig = buildSwordsman(root, team);
   else if (type === 'archer') rig = buildArcher(root, team);
   else if (type === 'scout') rig = buildScout(root, team);
   else rig = buildAdvancedUnit(type, root, team);
-  return { root, rig, type };
+  return { root, rig };
 }
 
 // Animação: andar (pernas), trabalhar/atacar (braço direito) e balanço do corpo.
-export function animateUnit(view, t, moving, acting) {
-  const rig = view.rig;
-  const ph = t * (isHorse(view.type) ? 14 : 9);
+export function animateUnit(rig: UnitRig, type: UnitType, t: number, moving: boolean, acting: boolean): void {
+  const horse = isHorse(type);
+  const ph = t * (horse ? 14 : 9);
   const k = moving ? 1 : 0;
   rig.legs.forEach((leg, i) => {
-    leg.rotation.x = Math.sin(ph + (i % 2 ? Math.PI : 0)) * (isHorse(view.type) ? 0.25 : 0.7) * k;
+    leg.rotation.x = Math.sin(ph + (i % 2 ? Math.PI : 0)) * (horse ? 0.25 : 0.7) * k;
   });
-  if (isHorse(view.type)) {
-    rig.body.position.y = k * Math.abs(Math.sin(ph)) * 0.05;
-  } else {
-    rig.body.position.y = k * Math.abs(Math.sin(ph)) * 0.035;
-  }
+  rig.body.position.y = k * Math.abs(Math.sin(ph)) * (horse ? 0.05 : 0.035);
   if (acting) {
     rig.armR.rotation.x = -1.1 + Math.sin(t * 10) * 0.8;
   } else {
-    rig.armR.rotation.x = moving && !isHorse(view.type) ? Math.sin(ph + Math.PI) * 0.5 : 0;
+    rig.armR.rotation.x = moving && !horse ? Math.sin(ph + Math.PI) * 0.5 : 0;
   }
-  if (!isHorse(view.type)) rig.armL.rotation.x = moving ? Math.sin(ph) * 0.4 : 0;
+  if (!horse) rig.armL.rotation.x = moving ? Math.sin(ph) * 0.4 : 0;
 }
 
 // ---------- Edifícios (origem no centro da área ocupada) ----------
 
-export function createBuilding(type, teamColor) {
+export function createBuilding(type: BuildingType, teamColor: string): THREE.Group {
   const root = new THREE.Group();
   const team = new THREE.Color(teamColor).getHex();
   const g = root;
@@ -255,7 +283,7 @@ export function createBuilding(type, teamColor) {
 
 // ---------- Recursos naturais ----------
 
-export function createBerry() {
+export function createBerry(): THREE.Group {
   const root = new THREE.Group();
   part(root, sph(0.32, 8), 0x4f8f3a, 0, 0.22, 0).scale.set(1, 0.7, 1);
   for (const [x, z] of [[0.15, 0.1], [-0.12, 0.14], [0.05, -0.16], [-0.2, -0.05]]) {
@@ -264,7 +292,7 @@ export function createBerry() {
   return root;
 }
 
-export function createMine(type) {
+export function createMine(type: NodeType): THREE.Group {
   const root = new THREE.Group();
   if (type === 'gold') {
     part(root, dodeca(0.9), 0x8a8580, 0, 0.35, 0).scale.set(1.2, 0.7, 1.1);
@@ -279,8 +307,11 @@ export function createMine(type) {
   return root;
 }
 
+// Peça de árvore: geometria, cor, posição.
+type TreePart = [THREE.BufferGeometry, number, number, number, number];
+
 // Geometrias de árvores prontas para instancing: pinheiro e árvore redonda.
-export function treeGeometries() {
+export function treeGeometries(): [THREE.BufferGeometry, THREE.BufferGeometry] {
   const pine = mergeTree([
     [cyl(0.08, 0.12, 0.5, 6), 0x6b4423, 0, 0.25, 0],
     [cone(0.45, 0.55, 7), 0x2f6b2f, 0, 0.7, 0],
@@ -296,11 +327,11 @@ export function treeGeometries() {
 }
 
 // Junta peças em uma só geometria com cor por vértice (para instancing).
-function mergeTree(parts) {
-  const positions = [];
-  const normals = [];
-  const colors = [];
-  const indices = [];
+function mergeTree(parts: TreePart[]): THREE.BufferGeometry {
+  const positions: number[] = [];
+  const normals: number[] = [];
+  const colors: number[] = [];
+  const indices: number[] = [];
   let offset = 0;
   for (const [g, color, x, y, z] of parts) {
     const c = new THREE.Color(color);
@@ -325,13 +356,15 @@ function mergeTree(parts) {
   return out;
 }
 
-export function makeGhost(object, opacity = 0.5) {
+// Prévia translúcida: troca os materiais por cópias transparentes.
+export function makeGhost(object: THREE.Object3D, opacity = 0.5): THREE.Object3D {
   object.traverse((o) => {
-    if (o.isMesh) {
-      o.material = o.material.clone();
-      o.material.transparent = true;
-      o.material.opacity = opacity;
-      o.material.depthWrite = false;
+    if (o instanceof THREE.Mesh) {
+      const m = (o.material as THREE.Material).clone();
+      m.transparent = true;
+      m.opacity = opacity;
+      m.depthWrite = false;
+      o.material = m;
       o.castShadow = false;
     }
   });
@@ -340,11 +373,11 @@ export function makeGhost(object, opacity = 0.5) {
 
 // ---------- Unidades e edifícios da Idade Feudal em diante ----------
 
-export function isHorse(type) {
+export function isHorse(type: UnitType): boolean {
   return type === 'scout' || type === 'knight';
 }
 
-function buildSpearman(root, team) {
+function buildSpearman(root: THREE.Group, team: number): UnitRig {
   const body = pivot(root, 0, 0, 0);
   const legL = pivot(body, -0.11, 0.44, 0);
   const legR = pivot(body, 0.11, 0.44, 0);
@@ -364,7 +397,7 @@ function buildSpearman(root, team) {
   return { body, legs: [legL, legR], armL, armR };
 }
 
-function buildCrossbow(root, team) {
+function buildCrossbow(root: THREE.Group, team: number): UnitRig {
   const body = pivot(root, 0, 0, 0);
   const legL = pivot(body, -0.1, 0.42, 0);
   const legR = pivot(body, 0.1, 0.42, 0);
@@ -383,7 +416,7 @@ function buildCrossbow(root, team) {
   return { body, legs: [legL, legR], armL, armR };
 }
 
-function buildKnight(root, team) {
+function buildKnight(root: THREE.Group, team: number): HorseRig {
   const rig = buildScout(root, team);
   // Armadura de placas sobre o cavalo e o cavaleiro.
   part(rig.horse, box(0.6, 0.5, 1.12), STEEL, 0, 0.72, 0);
@@ -394,14 +427,14 @@ function buildKnight(root, team) {
 }
 
 // Monta unidades desta fase; chamado por createUnit.
-export function buildAdvancedUnit(type, root, team) {
+export function buildAdvancedUnit(type: UnitType, root: THREE.Group, team: number): UnitRig {
   if (type === 'spearman') return buildSpearman(root, team);
   if (type === 'crossbow') return buildCrossbow(root, team);
   return buildKnight(root, team);
 }
 
 // Monta edifícios desta fase; chamado por createBuilding.
-export function buildAdvancedBuilding(type, g, team) {
+export function buildAdvancedBuilding(type: BuildingType, g: THREE.Group, team: number): void {
   switch (type) {
     case 'mill': {
       part(g, box(1.8, 1.2, 1.8), 0xb89a6a, 0, 0.6, 0);

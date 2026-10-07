@@ -1,22 +1,25 @@
 // A* em grade com 8 direções. Alvos podem ser um tile ou um retângulo
 // (prédio/recurso), caso em que qualquer tile livre encostado nele serve.
+import type { World, PathScratch } from './world.ts';
+import type { Goal, Point, Rect } from '../types.ts';
+
 const SQRT2 = Math.SQRT2;
-const DIRS = [
+// [dx, dy, custo do passo]
+const DIRS: ReadonlyArray<readonly [number, number, number]> = [
   [1, 0, 1], [-1, 0, 1], [0, 1, 1], [0, -1, 1],
   [1, 1, SQRT2], [1, -1, SQRT2], [-1, 1, SQRT2], [-1, -1, SQRT2],
 ];
 
+// Fila de prioridade mínima com chaves e valores em arrays paralelos (sem objetos por nó).
 class MinHeap {
-  constructor() {
-    this.k = [];
-    this.v = [];
-  }
+  private readonly k: number[] = [];
+  private readonly v: number[] = [];
 
-  get size() {
+  get size(): number {
     return this.k.length;
   }
 
-  push(key, val) {
+  push(key: number, val: number): void {
     const k = this.k;
     const v = this.v;
     let i = k.length;
@@ -33,12 +36,13 @@ class MinHeap {
     v[i] = val;
   }
 
-  pop() {
+  pop(): number {
     const k = this.k;
     const v = this.v;
     const top = v[0];
-    const lastK = k.pop();
-    const lastV = v.pop();
+    // Só é chamado com a fila não vazia (ver findPath).
+    const lastK = k.pop() as number;
+    const lastV = v.pop() as number;
     const n = k.length;
     if (n > 0) {
       let i = 0;
@@ -58,7 +62,7 @@ class MinHeap {
   }
 }
 
-function scratchFor(world) {
+function scratchFor(world: World): PathScratch {
   const n = world.size * world.size;
   if (!world.scratch) {
     world.scratch = {
@@ -72,20 +76,20 @@ function scratchFor(world) {
   return world.scratch;
 }
 
-function octile(dx, dy) {
+function octile(dx: number, dy: number): number {
   const ax = Math.abs(dx);
   const ay = Math.abs(dy);
   return Math.max(ax, ay) + (SQRT2 - 1) * Math.min(ax, ay);
 }
 
-function isGoal(target, x, y) {
+function isGoal(target: Goal, x: number, y: number): boolean {
   if (target.type === 'tile') return x === target.x && y === target.y;
   const r = target;
   const inside = x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h;
   return !inside && x >= r.x - 1 && x <= r.x + r.w && y >= r.y - 1 && y <= r.y + r.h;
 }
 
-function heuristic(target, x, y) {
+function heuristic(target: Goal, x: number, y: number): number {
   if (target.type === 'tile') return octile(target.x - x, target.y - y);
   const px = Math.min(Math.max(x, target.x), target.x + target.w - 1);
   const py = Math.min(Math.max(y, target.y), target.y + target.h - 1);
@@ -93,7 +97,7 @@ function heuristic(target, x, y) {
 }
 
 // Tile caminhável mais próximo de (x, y) dentro da região `label` (ou qualquer região se label < 0).
-function nearestWalkable(world, x, y, radius, label = -1) {
+function nearestWalkable(world: World, x: number, y: number, radius: number, label = -1): Point | null {
   const comp = world.components();
   const n = world.size;
   for (let r = 0; r <= radius; r++) {
@@ -112,7 +116,7 @@ function nearestWalkable(world, x, y, radius, label = -1) {
 }
 
 // Algum tile encostado no retângulo está na região `label`?
-function rectReachable(world, label, r) {
+function rectReachable(world: World, label: number, r: Rect): boolean {
   const comp = world.components();
   const n = world.size;
   for (let y = r.y - 1; y <= r.y + r.h; y++) {
@@ -127,7 +131,13 @@ function rectReachable(world, label, r) {
 
 // Retorna a lista de waypoints (centros de tiles) ou null se não há caminho.
 // Retorna [] quando a origem já satisfaz o objetivo.
-export function findPath(world, sx, sy, goal, maxNodes = 15000) {
+export function findPath(
+  world: World,
+  sx: number,
+  sy: number,
+  goal: Goal,
+  maxNodes = 15000,
+): Point[] | null {
   const size = world.size;
   const comp = world.components();
   let startX = Math.min(Math.max(Math.floor(sx), 0), size - 1);
@@ -141,7 +151,7 @@ export function findPath(world, sx, sy, goal, maxNodes = 15000) {
   }
   const label = comp[startY * size + startX];
 
-  let target = goal;
+  let target: Goal = goal;
   if (goal.type === 'tile') {
     const t = nearestWalkable(world, Math.floor(goal.x), Math.floor(goal.y), 5, label);
     if (!t) return null;
@@ -192,8 +202,8 @@ export function findPath(world, sx, sy, goal, maxNodes = 15000) {
   return null;
 }
 
-function reconstruct(size, S, goalIdx, startIdx) {
-  const out = [];
+function reconstruct(size: number, S: PathScratch, goalIdx: number, startIdx: number): Point[] {
+  const out: Point[] = [];
   let cur = goalIdx;
   while (cur !== startIdx && cur !== -1) {
     out.push({ x: (cur % size) + 0.5, y: Math.floor(cur / size) + 0.5 });

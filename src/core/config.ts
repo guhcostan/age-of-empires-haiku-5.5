@@ -1,40 +1,64 @@
 // Dados e balanceamento do jogo. Todo o resto do código lê daqui.
 // Inspirado no Age of Empires IV: quatro idades, coleta com técnicas, edifícios de apoio
 // (moinho, acampamentos e ferreiro) e unidades liberadas por idade.
+import type {
+  AgeNumber,
+  AgeUpDef,
+  BuildingDef,
+  BuildingType,
+  DifficultyDef,
+  DifficultyKey,
+  MapSizeKey,
+  NextAge,
+  NodeDef,
+  NodeType,
+  ResourceName,
+  Resources,
+  TechDef,
+  TechId,
+  UnitDef,
+  UnitType,
+} from '../types.ts';
 
-export const RESOURCES = ['food', 'wood', 'gold', 'stone'];
+export const RESOURCES: readonly ResourceName[] = ['food', 'wood', 'gold', 'stone'];
 
-export const RESOURCE_INFO = {
+export const RESOURCE_INFO: Record<ResourceName, { name: string; color: string }> = {
   food: { name: 'Comida', color: '#e7a53b' },
   wood: { name: 'Madeira', color: '#a06d3a' },
   gold: { name: 'Ouro', color: '#f2c94c' },
   stone: { name: 'Pedra', color: '#aeb8c2' },
 };
 
-export const START_RESOURCES = { food: 200, wood: 200, gold: 100, stone: 0 };
+export const START_RESOURCES: Resources = { food: 200, wood: 200, gold: 100, stone: 0 };
 export const START_VILLAGERS = 4;
 export const CARRY_CAPACITY = 10;
 export const MAX_POP = 200;
 export const MAX_QUEUE = 6;
 
-export const PLAYER_COLORS = ['#2f7de1', '#e04848', '#e8c23a', '#9b59d0'];
-export const PLAYER_NAMES = ['Você', 'Vermelhos', 'Amarelos', 'Roxos'];
+export const PLAYER_COLORS: readonly string[] = ['#2f7de1', '#e04848', '#e8c23a', '#9b59d0'];
+export const PLAYER_NAMES: readonly string[] = ['Você', 'Vermelhos', 'Amarelos', 'Roxos'];
 
-export const MAP_SIZES = {
+export const MAP_SIZES: Record<MapSizeKey, { name: string; size: number }> = {
   pequeno: { name: 'Pequeno (64×64)', size: 64 },
   medio: { name: 'Médio (96×96)', size: 96 },
   grande: { name: 'Grande (128×128)', size: 128 },
 };
 
-export const DIFFICULTY = {
+export const DIFFICULTY: Record<DifficultyKey, DifficultyDef> = {
   facil: { name: 'Fácil', think: 2.5, villagers: 14, attackArmy: 10, gather: 0.8 },
   normal: { name: 'Normal', think: 1.5, villagers: 22, attackArmy: 14, gather: 1.0 },
   dificil: { name: 'Difícil', think: 0.8, villagers: 30, attackArmy: 18, gather: 1.2 },
 };
 
 // Idades: 1 Idade das Trevas, 2 Feudal, 3 dos Castelos, 4 Imperial.
-export const AGE_NAMES = { 1: 'Idade das Trevas', 2: 'Idade Feudal', 3: 'Idade dos Castelos', 4: 'Idade Imperial' };
-export const AGE_UP = {
+export const AGE_NAMES: Record<AgeNumber, string> = {
+  1: 'Idade das Trevas',
+  2: 'Idade Feudal',
+  3: 'Idade dos Castelos',
+  4: 'Idade Imperial',
+};
+
+export const AGE_UP: Record<NextAge, AgeUpDef> = {
   2: { cost: { food: 500, gold: 200 }, time: 60 },
   3: { cost: { food: 800, gold: 400 }, time: 75 },
   4: { cost: { food: 1000, gold: 700, stone: 300 }, time: 90 },
@@ -42,7 +66,7 @@ export const AGE_UP = {
 
 // Unidades. `civil` = coleta e constrói. `ranged` = dispara. `bonus` = multiplicador de dano
 // contra classes específicas. `age` = idade mínima. `from` = edifício que treina.
-export const UNITS = {
+export const UNITS: Record<UnitType, UnitDef> = {
   villager: {
     name: 'Aldeão', civil: true, hp: 25, attack: 2, cooldown: 1.5, range: 1.0,
     speed: 1.8, sight: 7, cost: { food: 50 }, time: 8, age: 1, from: 'towncenter',
@@ -75,7 +99,7 @@ export const UNITS = {
 
 // Edifícios. `dropoff` = recursos aceitos aqui. `gather` = recurso coletável no próprio prédio.
 // `attack`/`range`/`cooldown` = torres que atiram sozinhas. `age` = idade mínima.
-export const BUILDINGS = {
+export const BUILDINGS: Record<BuildingType, BuildingDef> = {
   towncenter: {
     name: 'Centro da Vila', w: 4, h: 4, hp: 2000, sight: 11, pop: 20, cost: {}, time: 0, age: 1,
     trains: ['villager'], dropoff: ['food', 'wood', 'gold', 'stone'],
@@ -120,7 +144,7 @@ export const BUILDINGS = {
 };
 
 // Recursos naturais.
-export const NODES = {
+export const NODES: Record<NodeType, NodeDef> = {
   tree: { name: 'Árvore', resource: 'wood', amount: 100, gatherTime: 1.0, w: 1, h: 1 },
   berry: { name: 'Frutas silvestres', resource: 'food', amount: 200, gatherTime: 0.9, w: 1, h: 1 },
   gold: { name: 'Mina de ouro', resource: 'gold', amount: 800, gatherTime: 1.2, w: 2, h: 2 },
@@ -128,7 +152,7 @@ export const NODES = {
 };
 
 // Técnicas. `effect.gather` soma ao multiplicador de coleta; `effect.attack` soma ao ataque.
-export const TECHS = {
+export const TECHS: Record<TechId, TechDef> = {
   horticulture: {
     name: 'Horticultura', building: 'mill', age: 2, cost: { wood: 50, gold: 100 }, time: 45,
     effect: { gather: { food: 0.10 } },
@@ -163,16 +187,19 @@ export const TECHS = {
   },
 };
 
-export const BUILD_MENU = [
+export const BUILD_MENU: readonly BuildingType[] = [
   'house', 'storehouse', 'farm', 'mill', 'lumberCamp', 'miningCamp',
   'barracks', 'stable', 'blacksmith', 'tower',
 ];
 
 // Teclas de atalho (exibidas nos botões e na ajuda).
-export const UNIT_KEYS = { villager: 'v', swordsman: 'z', archer: 'x', spearman: 'g', crossbow: 'd', scout: 'c', knight: 'r' };
-export const BUILD_KEYS = {
+export const UNIT_KEYS: Record<UnitType, string> = {
+  villager: 'v', swordsman: 'z', archer: 'x', spearman: 'g', crossbow: 'd', scout: 'c', knight: 'r',
+};
+// O Centro da Vila não é construído pelo menu, então não tem tecla aqui.
+export const BUILD_KEYS: Partial<Record<BuildingType, string>> = {
   house: 'h', storehouse: 'm', farm: 'f', mill: 'n', lumberCamp: 'l', miningCamp: 'o',
   barracks: 'b', stable: 't', blacksmith: 'k', tower: 'y',
 };
-export const TECH_KEYS = ['j', 'i'];
+export const TECH_KEYS: readonly string[] = ['j', 'i'];
 export const AGE_KEY = 'u';

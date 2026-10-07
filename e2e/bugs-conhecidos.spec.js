@@ -25,7 +25,7 @@ test.describe('Regressões de bugs já corrigidos', () => {
   test('iniciar partida enquanto outra roda não duplica o loop de renderização', async ({ page }) => {
     // Bug: Game.start() chama stop() e depois define running = true enquanto ainda há um
     // requestAnimationFrame pendente de Game.frame(); esse frame antigo continua a cadeia,
-    // e a nova partida inicia outra. Ver public/js/game.js (start, linha ~101-105; frame, linha ~159-161).
+    // e a nova partida inicia outra. Ver src/game.ts (start, startLoop, frame).
     await startQuickGame(page);
     expect(await rendersPerTick(page)).toBeCloseTo(1, 1);
 
@@ -35,5 +35,17 @@ test.describe('Regressões de bugs já corrigidos', () => {
     await startFromMenu(page, {});
 
     expect(await rendersPerTick(page)).toBeCloseTo(1, 1);
+  });
+
+  test('evento de morte (que só tem x e y, sem "to") não lança erro na interface', async ({ page }) => {
+    // Bug: o game.js antigo lia ev.to.x também para o evento 'death', que não tem o campo `to`,
+    // então cada morte lançava TypeError no quadro. Ver src/game.ts (handleEvents).
+    await startQuickGame(page);
+    const handled = await page.evaluate(() => {
+      const g = window.aoe.game;
+      g.handleEvents([{ type: 'death', kind: 'unit', x: 5, y: 5, owner: 1 }]);
+      return true;
+    });
+    expect(handled).toBe(true);
   });
 });

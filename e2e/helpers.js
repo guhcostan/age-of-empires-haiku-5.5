@@ -1,6 +1,6 @@
 // Utilitários compartilhados pelos testes end-to-end.
 import { test as base, expect } from '@playwright/test';
-import { BUILDINGS, BUILD_MENU, START_RESOURCES, START_VILLAGERS, UNITS } from '../public/js/core/config.js';
+import { BUILDINGS, BUILD_MENU, START_RESOURCES, START_VILLAGERS, UNITS } from '../src/core/config.ts';
 
 export const SEED = '12345';
 
@@ -123,7 +123,7 @@ export function commandButton(page, label) {
   });
 }
 
-// Valores de balanceamento lidos do próprio módulo do jogo (public/js/core/config.js, só leitura).
+// Valores de balanceamento lidos do próprio módulo do jogo (src/core/config.ts, só leitura).
 // Assim os testes acompanham mudanças de custo ou população sem ficarem desatualizados.
 export const CONFIG = {
   START_RESOURCES,

@@ -1,24 +1,44 @@
 // Bots: pensam a cada poucos segundos (depende da dificuldade) e usam
 // exatamente os mesmos comandos que o jogador humano.
-import {
-  BUILDINGS, UNITS, NODES, DIFFICULTY, MAX_POP, RESOURCES, AGE_UP, TECHS,
-} from './config.js';
-import { centerOf, rectOf, distToRect } from './world.js';
+import { BUILDINGS, UNITS, NODES, DIFFICULTY, MAX_POP, RESOURCES, AGE_UP, TECHS } from './config.ts';
+import { centerOf, rectOf, distToRect } from './world.ts';
+import { nextAgeOf, type Simulation } from './sim.ts';
+import type {
+  AgeNumber,
+  BuildingEntity,
+  BuildingType,
+  DifficultyDef,
+  Entity,
+  NextAge,
+  NodeEntity,
+  Point,
+  ResourceName,
+  UnitEntity,
+  UnitType,
+} from '../types.ts';
 
 // Divisão ideal dos aldeões entre recursos.
-const SHARE = { food: 0.4, wood: 0.35, gold: 0.15, stone: 0.1 };
+const SHARE: Record<ResourceName, number> = { food: 0.4, wood: 0.35, gold: 0.15, stone: 0.1 };
+
+// Aldeões mínimos antes de avançar para cada idade.
+const NEED_CIVIL: Record<NextAge, number> = { 2: 14, 3: 20, 4: 26 };
 
 export class BotBrain {
-  constructor(sim, owner) {
+  readonly sim: Simulation;
+  readonly owner: number;
+  readonly cfg: DifficultyDef;
+  timer: number;
+  attacking = false;
+  attackTargetId: number | null = null;
+
+  constructor(sim: Simulation, owner: number) {
     this.sim = sim;
     this.owner = owner;
     this.cfg = DIFFICULTY[sim.players[owner].difficulty];
     this.timer = 0.5 + owner * 0.37; // dessincroniza os bots
-    this.attacking = false;
-    this.attackTargetId = null;
   }
 
-  update(dt) {
+  update(dt: number): void {
     if (this.sim.players[this.owner].defeated) return;
     this.timer -= dt;
     if (this.timer > 0) return;
@@ -26,7 +46,7 @@ export class BotBrain {
     this.think();
   }
 
-  think() {
+  think(): void {
     const sim = this.sim;
     const o = this.owner;
     const player = sim.players[o];
@@ -36,8 +56,8 @@ export class BotBrain {
 
     const civil = units.filter((u) => UNITS[u.type].civil);
     const army = units.filter((u) => !UNITS[u.type].civil);
-    const built = (type) => buildings.filter((b) => b.type === type && b.built);
-    const planned = (type) => buildings.filter((b) => b.type === type && !b.built).length;
+    const built = (type: BuildingType): BuildingEntity[] => buildings.filter((b) => b.type === type && b.built);
+    const planned = (type: BuildingType): number => buildings.filter((b) => b.type === type && !b.built).length;
 
     // 1. Aldeões até a meta da dificuldade.
     const queuedVillagers = tc.queue.filter((q) => q.type === 'villager').length;
@@ -96,14 +116,15 @@ export class BotBrain {
       const def = BUILDINGS[b.type];
       if (!def.techs) continue;
       for (const id of def.techs) {
+        const req = TECHS[id].req;
         if (player.techs[id] || TECHS[id].age > player.age) continue;
-        if (TECHS[id].req && !player.techs[TECHS[id].req]) continue;
+        if (req && !player.techs[req]) continue;
         if (sim.research(o, b.id, id).ok) break;
       }
     }
 
     // 8. Treino militar: escolhe o melhor tipo desbloqueado para cada prédio.
-    const count = (type) => army.filter((u) => u.type === type).length;
+    const count = (type: UnitType): number => army.filter((u) => u.type === type).length;
     for (const b of built('barracks')) {
       if (b.queue.length >= 2) continue;
       for (const type of this.barracksPriority(count, player.age)) {
@@ -112,7 +133,9 @@ export class BotBrain {
     }
     for (const b of built('stable')) {
       if (b.queue.length >= 2 || army.length < 6) continue;
-      const order = player.age >= 3 && count('knight') < count('scout') * 2 + 1 ? ['knight', 'scout'] : ['scout', 'knight'];
+      const order: UnitType[] = player.age >= 3 && count('knight') < count('scout') * 2 + 1
+        ? ['knight', 'scout']
+        : ['scout', 'knight'];
       for (const type of order) if (sim.train(o, b.id, type).ok) break;
     }
 
@@ -121,12 +144,12 @@ export class BotBrain {
   }
 
   // Ordem de preferência de unidades do quartel conforme a idade e a composição do exército.
-  barracksPriority(count, age) {
+  barracksPriority(count: (type: UnitType) => number, age: AgeNumber): UnitType[] {
     const swords = count('swordsman');
     const bows = count('archer');
     const spears = count('spearman');
     const crossbows = count('crossbow');
-    const order = [];
+    const order: UnitType[] = [];
     if (age >= 3 && crossbows < bows * 0.5) order.push('crossbow');
     if (age >= 2 && spears < swords) order.push('spearman');
     if (bows < swords * 0.6) order.push('archer');
@@ -134,19 +157,18 @@ export class BotBrain {
     return [...new Set(order)];
   }
 
-  tryAgeUp(tc, civilCount, armyCount) {
+  tryAgeUp(tc: BuildingEntity, civilCount: number, armyCount: number): void {
     const player = this.sim.players[this.owner];
-    if (player.age >= 4 || tc.ageUp) return;
-    const next = player.age + 1;
-    const needCivil = { 2: 14, 3: 20, 4: 26 }[next];
-    if (civilCount < needCivil) return;
+    const next = nextAgeOf(player.age);
+    if (next === null || tc.ageUp) return;
+    if (civilCount < NEED_CIVIL[next]) return;
     if (next === 3 && armyCount < 4) return;
     if (!this.sim.canAfford(this.owner, AGE_UP[next].cost)) return;
     this.sim.startAgeUp(this.owner, tc.id);
   }
 
   // Constrói um edifício num local livre perto de uma âncora, com até 2 construtores.
-  build(type, civil, anchor, rMin, rMax) {
+  build(type: BuildingType, civil: UnitEntity[], anchor: Point, rMin: number, rMax: number): boolean {
     const sim = this.sim;
     if (BUILDINGS[type].age > sim.players[this.owner].age) return false;
     if (!sim.canAfford(this.owner, BUILDINGS[type].cost)) return false;
@@ -164,7 +186,7 @@ export class BotBrain {
     return true;
   }
 
-  findSpot(type, cx, cy, rMin, rMax) {
+  findSpot(type: BuildingType, cx: number, cy: number, rMin: number, rMax: number): Point | null {
     const def = BUILDINGS[type];
     for (let r = rMin; r <= rMax; r++) {
       const steps = Math.max(8, Math.round(r * 6));
@@ -178,8 +200,8 @@ export class BotBrain {
     return null;
   }
 
-  nearestNode(from, resource) {
-    let best = null;
+  nearestNode(from: Point, resource: ResourceName): NodeEntity | null {
+    let best: NodeEntity | null = null;
     let bestD = Infinity;
     for (const n of this.sim.lists.nodes) {
       if (n.dead || n.amount <= 0 || NODES[n.type].resource !== resource) continue;
@@ -190,7 +212,7 @@ export class BotBrain {
     return best;
   }
 
-  assignVillagers(civil, buildings) {
+  assignVillagers(civil: UnitEntity[], buildings: BuildingEntity[]): void {
     const sim = this.sim;
     const o = this.owner;
 
@@ -210,10 +232,10 @@ export class BotBrain {
     }
 
     // Coletores: aldeões ociosos vão para o recurso mais defasado.
-    const counts = { food: 0, wood: 0, gold: 0, stone: 0 };
+    const counts: Record<ResourceName, number> = { food: 0, wood: 0, gold: 0, stone: 0 };
     for (const u of civil) if (u.order === 'gather' && u.resKind) counts[u.resKind]++;
     const gathering = RESOURCES.reduce((n, r) => n + counts[r], 0);
-    const deficitOrder = (total) => [...RESOURCES].sort(
+    const deficitOrder = (total: number): ResourceName[] => [...RESOURCES].sort(
       (a, b) => (SHARE[b] * total - counts[b]) - (SHARE[a] * total - counts[a]),
     );
     for (const u of civil) {
@@ -244,7 +266,7 @@ export class BotBrain {
     }
   }
 
-  commandArmy(army, tc) {
+  commandArmy(army: UnitEntity[], tc: BuildingEntity): void {
     const sim = this.sim;
     const o = this.owner;
     if (army.length === 0) return;
@@ -270,7 +292,7 @@ export class BotBrain {
       if (army.length < Math.max(3, this.cfg.attackArmy * 0.35)) {
         this.attacking = false; // exército muito pequeno: recua
       } else {
-        let t = sim.world.get(this.attackTargetId);
+        let t: Entity | null | undefined = sim.world.get(this.attackTargetId);
         if (!t || t.dead) {
           t = this.pickTarget(centerOf(army[0]));
           this.attackTargetId = t ? t.id : null;
@@ -295,8 +317,8 @@ export class BotBrain {
     }
   }
 
-  nearestEnemyUnit(from, radius) {
-    let best = null;
+  nearestEnemyUnit(from: Point, radius: number): UnitEntity | null {
+    let best: UnitEntity | null = null;
     let bestD = radius;
     for (const u of this.sim.lists.units) {
       if (u.dead || u.owner === this.owner) continue;
@@ -307,8 +329,8 @@ export class BotBrain {
   }
 
   // Prefere centros de vila inimigos; senão, o edifício inimigo mais próximo.
-  pickTarget(from) {
-    let best = null;
+  pickTarget(from: Point): BuildingEntity | null {
+    let best: BuildingEntity | null = null;
     let bestScore = Infinity;
     for (const b of this.sim.lists.buildings) {
       if (b.dead || b.owner === this.owner || b.owner === -1) continue;

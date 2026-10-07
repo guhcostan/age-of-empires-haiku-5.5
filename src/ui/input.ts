@@ -1,22 +1,58 @@
 // Entrada: mouse e teclado viram seleção, comandos, construção e atalhos (no estilo do AoE).
-import { BUILDINGS, UNITS, PLAYER_COLORS } from '../core/config.js';
-import { heightAt } from '../render/terrain.js';
+import { BUILDINGS, UNITS, PLAYER_COLORS } from '../core/config.ts';
+import { heightAt } from '../render/terrain.ts';
+import { $ } from './dom.ts';
+import type { Game } from '../game.ts';
+import type { BuildingType, Entity, Point, SmartTarget, UnitEntity } from '../types.ts';
 
 const CLICK_PX = 5;
 const DOUBLE_MS = 350;
 const PICK_PX = 26;
 const ARROWS = ['arrowup', 'arrowdown', 'arrowleft', 'arrowright'];
 
+interface DragState {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+  moved: boolean;
+  shift: boolean;
+}
+
+// Local de construção em preparação: canto superior esquerdo e o motivo de não poder construir (ou null).
+export interface Placement {
+  type: BuildingType;
+  ox: number;
+  oy: number;
+  reason: string | null;
+}
+
+interface LastPick {
+  id: number;
+  t: number;
+}
+
 export class Input {
-  constructor(game) {
+  game: Game;
+  canvas: HTMLCanvasElement;
+  box: HTMLElement;
+  placement: Placement | null = null;
+  attackMode = false;
+  drag: DragState | null = null;
+  panning: Point | null = null;
+  rightDown: Point | null = null;
+  lastPick: LastPick | null = null;
+  mouse: Point = { x: 0, y: 0 };
+
+  constructor(game: Game) {
     this.game = game;
     this.canvas = game.canvas;
-    this.box = document.getElementById('sel-box');
+    this.box = $('sel-box');
     this.reset();
     this.bind();
   }
 
-  reset() {
+  reset(): void {
     this.placement = null;
     this.attackMode = false;
     this.drag = null;
@@ -28,7 +64,7 @@ export class Input {
     this.game.entities?.hideGhost();
   }
 
-  bind() {
+  bind(): void {
     const c = this.canvas;
     c.addEventListener('contextmenu', (e) => e.preventDefault());
     c.addEventListener('pointerdown', (e) => this.onDown(e));
@@ -37,7 +73,7 @@ export class Input {
     c.addEventListener('wheel', (e) => {
       if (!this.active()) return;
       e.preventDefault();
-      this.game.rts.zoom(Math.sign(e.deltaY) * 2.5);
+      this.game.rts?.zoom(Math.sign(e.deltaY) * 2.5);
     }, { passive: false });
     document.addEventListener('mouseleave', () => {
       if (this.game.rts) this.game.rts.mouse.inside = false;
@@ -47,13 +83,13 @@ export class Input {
     window.addEventListener('blur', () => this.game.rts?.keys.clear());
   }
 
-  active() {
+  active(): boolean {
     return this.game.running && !this.game.paused && !this.game.ended;
   }
 
   // ---------- Mouse ----------
 
-  onDown(e) {
+  onDown(e: PointerEvent): void {
     if (!this.active()) return;
     if (e.button === 0) {
       this.drag = { x0: e.clientX, y0: e.clientY, x1: e.clientX, y1: e.clientY, moved: false, shift: e.shiftKey };
@@ -65,7 +101,7 @@ export class Input {
     }
   }
 
-  onMove(e) {
+  onMove(e: PointerEvent): void {
     this.mouse = { x: e.clientX, y: e.clientY };
     const rts = this.game.rts;
     if (rts) rts.mouse = { x: e.clientX, y: e.clientY, inside: true };
@@ -81,7 +117,7 @@ export class Input {
     }
   }
 
-  onUp(e) {
+  onUp(e: PointerEvent): void {
     if (e.button === 0 && this.drag) {
       const d = this.drag;
       this.drag = null;
@@ -100,7 +136,7 @@ export class Input {
     }
   }
 
-  showBox(d) {
+  showBox(d: DragState): void {
     const x = Math.min(d.x0, d.x1);
     const y = Math.min(d.y0, d.y1);
     Object.assign(this.box.style, {
@@ -112,19 +148,20 @@ export class Input {
     });
   }
 
-  hideBox() {
+  hideBox(): void {
     if (this.box) this.box.style.display = 'none';
   }
 
   // Entidade sob o cursor: unidades têm prioridade (clique por distância na tela).
-  pickAt(x, y) {
+  pickAt(x: number, y: number): Entity | null {
     const g = this.game;
-    const sim = g.sim;
-    let best = null;
+    const { sim, map, entities } = g;
+    if (!sim || !map || !entities) return null;
+    let best: UnitEntity | null = null;
     let bestD = PICK_PX;
     for (const e of sim.world.entities.values()) {
       if (e.kind !== 'unit' || e.dead || !sim.canSee(e)) continue;
-      const p = g.worldToScreen(e.x, heightAt(g.map, e.x, e.y) + 1.0, e.y);
+      const p = g.worldToScreen(e.x, heightAt(map, e.x, e.y) + 1.0, e.y);
       if (p.z > 1) continue;
       const d = Math.hypot(p.x - x, p.y - y);
       if (d < bestD) {
@@ -134,11 +171,11 @@ export class Input {
     }
     if (best) return best;
     g.raycaster.setFromCamera(g.ndc(x, y), g.camera);
-    const e = g.entities.pickObjects(g.raycaster);
+    const e = entities.pickObjects(g.raycaster);
     return e && sim.canSee(e) ? e : null;
   }
 
-  click(x, y, shift) {
+  click(x: number, y: number, shift: boolean): void {
     const g = this.game;
     if (this.placement) {
       this.tryPlace(shift);
@@ -149,7 +186,7 @@ export class Input {
       g.hud.setHint('');
       const e = this.pickAt(x, y);
       const ground = g.groundAt(x, y);
-      if (e && e.owner !== 0 && e.owner !== -1 && g.sim.canSee(e)) {
+      if (e && e.owner !== 0 && e.owner !== -1 && g.sim?.canSee(e)) {
         g.issue({ type: 'attack', target: e.id });
       } else if (ground) {
         g.issue({ type: 'attackmove', x: ground.x, y: ground.y });
@@ -172,40 +209,41 @@ export class Input {
     else g.selectIds([e.id]);
   }
 
-  boxSelect(d) {
+  boxSelect(d: DragState): void {
     const g = this.game;
-    const sim = g.sim;
+    const { sim, map } = g;
+    if (!sim || !map) return;
     const x0 = Math.min(d.x0, d.x1);
     const x1 = Math.max(d.x0, d.x1);
     const y0 = Math.min(d.y0, d.y1);
     const y1 = Math.max(d.y0, d.y1);
-    const units = [];
-    let building = null;
+    const units: number[] = [];
+    let building: number | null = null;
     for (const e of sim.world.entities.values()) {
       if (e.dead || e.owner !== 0) continue;
       if (e.kind === 'unit') {
-        const p = g.worldToScreen(e.x, heightAt(g.map, e.x, e.y) + 1, e.y);
+        const p = g.worldToScreen(e.x, heightAt(map, e.x, e.y) + 1, e.y);
         if (p.z <= 1 && p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1) units.push(e.id);
       } else if (e.kind === 'building' && building === null) {
         const cx = e.x + BUILDINGS[e.type].w / 2;
         const cy = e.y + BUILDINGS[e.type].h / 2;
-        const p = g.worldToScreen(cx, heightAt(g.map, cx, cy) + 1, cy);
+        const p = g.worldToScreen(cx, heightAt(map, cx, cy) + 1, cy);
         if (p.z <= 1 && p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1) building = e.id;
       }
     }
-    let ids = units.length ? units : building !== null ? [building] : [];
+    let ids: number[] = units.length ? units : building !== null ? [building] : [];
     if (d.shift) ids = [...new Set([...g.selected, ...ids])];
     g.selectIds(ids);
   }
 
-  rightClick(x, y) {
+  rightClick(x: number, y: number): void {
     const g = this.game;
     if (this.cancelMode()) return;
     const ground = g.groundAt(x, y);
     const e = this.pickAt(x, y);
     const units = g.selectedOwnUnits();
     if (units.length) {
-      let target = null;
+      let target: SmartTarget | null = null;
       if (e && e.owner !== 0 && e.owner !== -1) target = { entity: e };
       else if (e && e.owner === 0 && (e.kind === 'node' || (e.kind === 'building' && (BUILDINGS[e.type].gather || !e.built)))) {
         target = { entity: e };
@@ -215,62 +253,67 @@ export class Input {
     }
     const buildings = g.selectedOwnBuildings().filter((b) => b.built && BUILDINGS[b.type].trains);
     if (buildings.length && ground) {
-      const gatherTarget = e && (e.kind === 'node' || (e.kind === 'building' && BUILDINGS[e.type].gather));
-      for (const b of buildings) g.sim.setRally(0, b.id, ground.x, ground.y, gatherTarget ? e.id : null);
-      g.entities.setRally(ground.x, ground.y);
+      // Recurso ou edifício de coleta sob o clique: as unidades novas vão coletar nele.
+      const gatherEntity = e && (e.kind === 'node' || (e.kind === 'building' && BUILDINGS[e.type].gather)) ? e : null;
+      for (const b of buildings) g.sim?.setRally(0, b.id, ground.x, ground.y, gatherEntity ? gatherEntity.id : null);
+      g.entities?.setRally(ground.x, ground.y);
       g.hud.toast('Ponto de encontro definido', 'info');
     }
   }
 
   // ---------- Construção ----------
 
-  startPlacement(type) {
+  startPlacement(type: BuildingType): void {
     if (!BUILDINGS[type]) return;
     this.placement = { type, ox: 0, oy: 0, reason: null };
     this.attackMode = false;
     this.game.hud.setHint(`Construir ${BUILDINGS[type].name}: clique num local livre (Esc cancela)`);
   }
 
-  startAttackMode() {
+  startAttackMode(): void {
     if (this.game.selectedOwnUnits().length === 0) return;
     this.attackMode = true;
     this.game.hud.setHint('Atacar-mover: clique no terreno ou em um inimigo (Esc cancela)');
   }
 
-  cancelMode() {
+  cancelMode(): boolean {
     if (!this.placement && !this.attackMode) return false;
     this.placement = null;
     this.attackMode = false;
-    this.game.entities.hideGhost();
+    this.game.entities?.hideGhost();
     this.game.hud.setHint('');
     return true;
   }
 
-  updatePlacement() {
+  updatePlacement(): void {
     const g = this.game;
     const p = this.placement;
+    if (!p) return;
     const def = BUILDINGS[p.type];
     const ground = g.groundAt(this.mouse.x, this.mouse.y);
-    if (!ground) {
-      g.entities.hideGhost();
+    const sim = g.sim;
+    if (!ground || !sim) {
+      g.entities?.hideGhost();
       return;
     }
     p.ox = Math.round(ground.x - def.w / 2);
     p.oy = Math.round(ground.y - def.h / 2);
-    const blocked = g.sim.checkPlacement(p.type, p.ox, p.oy);
-    const affordable = g.sim.canAfford(0, def.cost);
+    const blocked = sim.checkPlacement(p.type, p.ox, p.oy);
+    const affordable = sim.canAfford(0, def.cost);
     p.reason = blocked ?? (affordable ? null : 'Recursos insuficientes');
-    g.entities.setGhost(p.type, p.ox, p.oy, !p.reason, PLAYER_COLORS[0]);
+    g.entities?.setGhost(p.type, p.ox, p.oy, !p.reason, PLAYER_COLORS[0]);
   }
 
   // Aldeões que vão construir: os selecionados ou o mais próximo do local.
-  builderIds(cx, cy) {
+  builderIds(cx: number, cy: number): number[] {
     const g = this.game;
+    const sim = g.sim;
+    if (!sim) return [];
     const selected = g.selectedOwnUnits().filter((u) => UNITS[u.type].civil);
     if (selected.length) return selected.slice(0, 6).map((u) => u.id);
-    let best = null;
+    let best: UnitEntity | null = null;
     let bestD = Infinity;
-    for (const e of g.sim.world.entities.values()) {
+    for (const e of sim.world.entities.values()) {
       if (e.kind !== 'unit' || e.owner !== 0 || e.dead || !UNITS[e.type].civil) continue;
       const d = Math.hypot(e.x - cx, e.y - cy);
       if (d < bestD) {
@@ -281,9 +324,11 @@ export class Input {
     return best ? [best.id] : [];
   }
 
-  tryPlace(shift) {
+  tryPlace(shift: boolean): void {
     const g = this.game;
     const p = this.placement;
+    const sim = g.sim;
+    if (!p || !sim) return;
     const def = BUILDINGS[p.type];
     if (p.reason) {
       g.hud.toast(p.reason, 'bad');
@@ -296,13 +341,13 @@ export class Input {
       g.sound.play('error');
       return;
     }
-    const r = g.sim.placeBuilding(0, p.type, p.ox, p.oy);
+    const r = sim.placeBuilding(0, p.type, p.ox, p.oy);
     if (!r.ok) {
       g.hud.toast(r.reason, 'bad');
       g.sound.play('error');
       return;
     }
-    g.sim.command(0, builders, { type: 'build', target: r.building.id });
+    sim.command(0, builders, { type: 'build', target: r.building.id });
     g.sound.play('click');
     if (!shift) this.cancelMode();
     else this.updatePlacement();
@@ -310,15 +355,15 @@ export class Input {
 
   // ---------- Teclado ----------
 
-  onKeyDown(e) {
-    const tag = e.target && e.target.tagName;
+  onKeyDown(e: KeyboardEvent): void {
+    const tag = (e.target as HTMLElement | null)?.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
     const g = this.game;
     if (!g.running || g.ended) return;
     const k = e.key.toLowerCase();
 
     if (ARROWS.includes(k)) {
-      g.rts.keys.add(k);
+      g.rts?.keys.add(k);
       e.preventDefault();
       return;
     }
@@ -343,7 +388,7 @@ export class Input {
       return;
     }
     if (k === 'q' || k === 'e') {
-      g.rts.rotate(k === 'q' ? -1 : 1);
+      g.rts?.rotate(k === 'q' ? -1 : 1);
       return;
     }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -359,13 +404,13 @@ export class Input {
     g.hud.runHotkey(k);
   }
 
-  onKeyUp(e) {
+  onKeyUp(e: KeyboardEvent): void {
     const k = e.key.toLowerCase();
     if (ARROWS.includes(k)) this.game.rts?.keys.delete(k);
   }
 
   // Chamado a cada frame: prévia de construção.
-  update() {
+  update(): void {
     if (!this.active()) return;
     if (this.placement) this.updatePlacement();
   }

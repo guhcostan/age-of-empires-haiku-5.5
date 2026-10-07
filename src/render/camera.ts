@@ -1,42 +1,53 @@
 // Câmera estilo RTS: pan (teclado, borda da tela, botão do meio), zoom, rotação e foco.
 import * as THREE from 'three';
+import type { Point } from '../types.ts';
 
 const MIN_DIST = 10;
 const MAX_DIST = 75;
 const EDGE = 14; // pixels da borda que disparam o pan
 
+export interface PointerState {
+  x: number;
+  y: number;
+  inside: boolean;
+}
+
 export class RtsCamera {
-  constructor(camera, mapSize) {
+  camera: THREE.PerspectiveCamera;
+  mapSize: number;
+  target: THREE.Vector3;
+  dist = 42;
+  targetDist = 42;
+  pitch = 0.95;
+  yaw = Math.PI * 0.25;
+  targetYaw = this.yaw;
+  keys = new Set<string>();
+  mouse: PointerState = { x: -1, y: -1, inside: false };
+  panDrag: Point | null = null;
+  enabled = true;
+
+  constructor(camera: THREE.PerspectiveCamera, mapSize: number) {
     this.camera = camera;
     this.mapSize = mapSize;
     this.target = new THREE.Vector3(mapSize / 2, 0, mapSize / 2);
-    this.dist = 42;
-    this.targetDist = 42;
-    this.pitch = 0.95;
-    this.yaw = Math.PI * 0.25;
-    this.targetYaw = this.yaw;
-    this.keys = new Set();
-    this.mouse = { x: -1, y: -1, inside: false };
-    this.panDrag = null;
-    this.enabled = true;
     this.apply();
   }
 
-  focus(x, z, snap = false) {
+  focus(x: number, z: number, snap = false): void {
     this.target.x = Math.min(Math.max(x, 0), this.mapSize);
     this.target.z = Math.min(Math.max(z, 0), this.mapSize);
     if (snap) this.apply();
   }
 
-  zoom(delta) {
+  zoom(delta: number): void {
     this.targetDist = Math.min(MAX_DIST, Math.max(MIN_DIST, this.targetDist + delta));
   }
 
-  rotate(dir) {
+  rotate(dir: number): void {
     this.targetYaw += dir * (Math.PI / 4);
   }
 
-  update(dt, heightAtFn) {
+  update(dt: number, heightAtFn?: (x: number, z: number) => number): void {
     if (!this.enabled) return;
     // Forward e direita no plano do chão (a câmera olha para o alvo).
     const fx = -Math.sin(this.yaw);
@@ -73,7 +84,7 @@ export class RtsCamera {
     this.apply();
   }
 
-  apply() {
+  apply(): void {
     const cp = Math.cos(this.pitch);
     const sp = Math.sin(this.pitch);
     this.camera.position.set(
@@ -85,7 +96,7 @@ export class RtsCamera {
   }
 
   // Arrasta a câmera com o botão do meio: cada pixel vira uma fração da distância.
-  panBy(dxPx, dyPx) {
+  panBy(dxPx: number, dyPx: number): void {
     const k = this.dist * 0.0022;
     const fx = -Math.sin(this.yaw);
     const fz = -Math.cos(this.yaw);
@@ -96,7 +107,7 @@ export class RtsCamera {
   }
 
   // Limites visíveis aproximados no chão (para o minimapa).
-  viewRect() {
+  viewRect(): { x: number; z: number; half: number } {
     const half = this.dist * 0.62;
     return { x: this.target.x, z: this.target.z, half };
   }

@@ -1,12 +1,19 @@
 // Ruído de valor 2D com fBm. Usado para terreno, lagos e florestas.
-export function createNoise(rng) {
+import type { Rng } from './rng.ts';
+
+export interface Noise {
+  noise: (x: number, y: number) => number;
+  fbm: (x: number, y: number, octaves?: number) => number;
+}
+
+export function createNoise(rng: Rng): Noise {
   const SIZE = 256;
   const table = new Float32Array(SIZE * SIZE);
   for (let i = 0; i < table.length; i++) table[i] = rng.next();
 
-  const smooth = (t) => t * t * (3 - 2 * t);
+  const smooth = (t: number): number => t * t * (3 - 2 * t);
 
-  function noise(x, y) {
+  function noise(x: number, y: number): number {
     const xi = Math.floor(x);
     const yi = Math.floor(y);
     const tx = smooth(x - xi);
@@ -23,7 +30,7 @@ export function createNoise(rng) {
   }
 
   // Soma de oitavas, normalizada para ficar em [0, 1].
-  function fbm(x, y, octaves = 4) {
+  function fbm(x: number, y: number, octaves = 4): number {
     let sum = 0;
     let amp = 0.5;
     let freq = 1;

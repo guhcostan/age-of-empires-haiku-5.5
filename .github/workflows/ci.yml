@@ -18,6 +18,15 @@ jobs:
       - run: npm ci
       - name: Testes unitários da simulação
         run: npm test
+      - name: Build (tipos e empacotamento)
+        run: npm run build
+      - name: public/ precisa estar igual ao build do código
+        run: |
+          if [ -n "$(git status --porcelain -- public)" ]; then
+            echo "public/ está desatualizado em relação ao código: rode npm run build e faça commit de public/."
+            git status --porcelain -- public
+            exit 1
+          fi
       - name: Instalar Chromium para os testes E2E
         run: npx playwright install --with-deps chromium
       - name: Testes end-to-end

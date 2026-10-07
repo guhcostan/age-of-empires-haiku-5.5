@@ -1,5 +1,6 @@
 // Configuração dos testes end-to-end (Playwright) do clone de Age of Empires.
-// O servidor estático sobe a partir de public/; não há etapa de build.
+// Antes de cada execução o projeto é compilado (tsc + vite) e o build é servido pelo vite preview,
+// assim os testes sempre rodam o código-fonte atual, não um build antigo.
 import { defineConfig } from '@playwright/test';
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -40,9 +41,9 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   webServer: {
-    command: `python3 -m http.server ${PORT} --directory public`,
+    command: `npm run build && npx vite preview --host 127.0.0.1 --port ${PORT} --strictPort`,
     url: BASE_URL,
-    reuseExistingServer: true,
-    timeout: 30_000,
+    reuseExistingServer: false,
+    timeout: 120_000,
   },
 });

@@ -2,29 +2,68 @@
 import {
   BUILDINGS, UNITS, NODES, TECHS, AGE_UP, AGE_NAMES, BUILD_MENU, RESOURCES, RESOURCE_INFO,
   MAX_QUEUE, UNIT_KEYS, BUILD_KEYS, TECH_KEYS, AGE_KEY,
-} from '../core/config.js';
+} from '../core/config.ts';
+import { $ } from './dom.ts';
+import type { Game } from '../game.ts';
+import type { AgeNumber, BuildingEntity, Cost, Entity, MessageLevel, NextAge, ResourceName } from '../types.ts';
 
 const TOAST_MS = 4200;
 const MAX_TOASTS = 5;
 const GRID_SLOTS = 12;
 
-const $ = (id) => document.getElementById(id);
+// Um botão da grade de comandos: atalho, custo, condição de uso e ação.
+interface HudCommand {
+  key?: string;
+  label: string;
+  icon: string;
+  cost?: Cost;
+  tip: string;
+  enabled: () => boolean;
+  reason?: () => string;
+  run: () => void;
+  done?: boolean;
+}
 
-function costText(cost) {
-  const parts = Object.entries(cost).map(([r, v]) => `${v} ${RESOURCE_INFO[r].name.toLowerCase()}`);
+function costText(cost: Cost): string {
+  const parts = Object.entries(cost).map(([r, v]) => `${v} ${RESOURCE_INFO[r as ResourceName].name.toLowerCase()}`);
   return parts.length ? parts.join(', ') : 'grátis';
 }
 
 // Custo com o ícone do recurso (classes .ri.* do CSS).
-function costHtml(cost) {
+function costHtml(cost: Cost): string {
   return Object.entries(cost).map(([r, v]) => `<span class="ri ${r}"></span>${v}`).join(' ');
 }
 
+// Preenche uma barra (.bar) com a porcentagem e o rótulo dados.
+function setBar(bar: Element, pct: number, text: string): void {
+  const fill = bar.querySelector<HTMLElement>('i');
+  const label = bar.querySelector('em');
+  if (fill) fill.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+  if (label) label.textContent = text;
+}
+
 export class Hud {
-  constructor(game) {
+  game: Game;
+  root: HTMLElement;
+  res: Record<ResourceName, HTMLElement>;
+  pop: HTMLElement;
+  age: HTMLElement;
+  hint: HTMLElement;
+  toasts: HTMLElement;
+  selTitle: HTMLElement;
+  selSub: HTMLElement;
+  selBody: HTMLElement;
+  selQueue: HTMLElement;
+  selIcon: HTMLElement;
+  grid: HTMLElement;
+  commands: HudCommand[] = [];
+  buttons: HTMLButtonElement[] = [];
+  sigKey = '';
+
+  constructor(game: Game) {
     this.game = game;
     this.root = $('hud');
-    this.res = {};
+    this.res = {} as Record<ResourceName, HTMLElement>;
     for (const r of RESOURCES) this.res[r] = $(`res-${r}`);
     this.pop = $('res-pop');
     this.age = $('res-age');
@@ -36,43 +75,40 @@ export class Hud {
     this.selQueue = $('sel-queue');
     this.selIcon = $('sel-icon');
     this.grid = $('cmd-grid');
-    this.commands = [];
-    this.buttons = [];
-    this.sigKey = '';
     this.buildGrid();
   }
 
-  show() {
+  show(): void {
     this.root.classList.remove('hidden');
     this.sigKey = '';
   }
 
-  hide() {
+  hide(): void {
     this.root.classList.add('hidden');
   }
 
-  setHint(text) {
+  setHint(text: string): void {
     this.hint.textContent = text;
   }
 
-  toast(text, level = 'info') {
+  toast(text: string, level: MessageLevel = 'info'): void {
     const el = document.createElement('div');
     el.className = `toast ${level}`;
     el.textContent = text;
     this.toasts.prepend(el);
-    while (this.toasts.children.length > MAX_TOASTS) this.toasts.lastElementChild.remove();
+    while (this.toasts.children.length > MAX_TOASTS) this.toasts.lastElementChild?.remove();
     setTimeout(() => {
       el.classList.add('fade');
       setTimeout(() => el.remove(), 400);
     }, TOAST_MS);
   }
 
-  selectionChanged() {
+  selectionChanged(): void {
     this.sigKey = '';
   }
 
   // Atalho de teclado: executa o comando da grade que tem essa tecla.
-  runHotkey(key) {
+  runHotkey(key: string): boolean {
     const cmd = this.commands.find((c) => c.key === key);
     if (!cmd) return false;
     if (!cmd.enabled()) {
@@ -86,19 +122,26 @@ export class Hud {
 
   // ---------- Atualização por frame ----------
 
-  update() {
+  update(): void {
     const g = this.game;
-    if (!g.sim) return;
-    const player = g.sim.players[0];
-    for (const r of RESOURCES) this.res[r].textContent = Math.floor(player.res[r]);
-    const used = g.sim.popUsed(0);
-    const cap = g.sim.popCap(0);
+    const sim = g.sim;
+    if (!sim) return;
+    const player = sim.players[0];
+    for (const r of RESOURCES) this.res[r].textContent = String(Math.floor(player.res[r]));
+    const used = sim.popUsed(0);
+    const cap = sim.popCap(0);
     this.pop.textContent = `${used} / ${cap}`;
     this.pop.classList.toggle('warn', used >= cap);
     this.age.textContent = AGE_NAMES[player.age];
 
     const sel = g.selectedEntities();
-    const sig = sel.map((e) => `${e.id}:${e.type}:${e.built ? 1 : 0}:${e.queue ? e.queue.length : 0}:${e.owner}:${e.research ? e.research.id : ''}:${e.ageUp ? 1 : 0}:${player.age}:${Object.keys(player.techs).length}`).join('|');
+    const sig = sel.map((e) => {
+      const b = e.kind === 'building' ? e : null;
+      return [
+        e.id, e.type, b?.built ? 1 : 0, b?.queue.length ?? 0, e.owner,
+        b?.research?.id ?? '', b?.ageUp ? 1 : 0, player.age, Object.keys(player.techs).length,
+      ].join(':');
+    }).join('|');
     if (sig !== this.sigKey) {
       this.sigKey = sig;
       this.renderSelection(sel);
@@ -110,8 +153,10 @@ export class Hud {
 
   // ---------- Painel de seleção ----------
 
-  renderSelection(sel) {
+  renderSelection(sel: Entity[]): void {
     const g = this.game;
+    const sim = g.sim;
+    if (!sim) return;
     if (sel.length === 0) {
       this.selTitle.textContent = 'Nada selecionado';
       this.selSub.textContent = 'Clique em unidades ou edifícios';
@@ -119,12 +164,12 @@ export class Hud {
       this.selIcon.textContent = '';
       this.selBody.innerHTML = '';
       this.selQueue.innerHTML = '';
-      g.entities?.setRally(null);
+      g.entities?.clearRally();
       return;
     }
     if (sel.length === 1) {
       const e = sel[0];
-      const owner = g.sim.players[e.owner];
+      const owner = sim.players[e.owner];
       const name = this.nameOf(e);
       this.selTitle.textContent = name;
       this.selSub.textContent = e.owner >= 0 ? `${owner.name}${owner.isBot ? ' (bot)' : ''}` : 'Recurso natural';
@@ -133,10 +178,10 @@ export class Hud {
       this.selBody.innerHTML = this.detailsOf(e);
       this.renderQueue(e);
       if (e.kind === 'building' && e.owner === 0 && e.rally) g.entities?.setRally(e.rally.x, e.rally.y);
-      else g.entities?.setRally(null);
+      else g.entities?.clearRally();
       return;
     }
-    const counts = {};
+    const counts: Record<string, number> = {};
     for (const e of sel) {
       const key = this.nameOf(e);
       counts[key] = (counts[key] || 0) + 1;
@@ -144,19 +189,19 @@ export class Hud {
     this.selTitle.textContent = `${sel.length} unidades`;
     this.selSub.textContent = Object.entries(counts).map(([k, v]) => `${v}× ${k}`).join(' · ');
     this.selIcon.style.background = '#3d2e1d';
-    this.selIcon.textContent = sel.length;
+    this.selIcon.textContent = String(sel.length);
     this.selBody.innerHTML = '';
     this.selQueue.innerHTML = '';
-    g.entities?.setRally(null);
+    g.entities?.clearRally();
   }
 
-  nameOf(e) {
+  nameOf(e: Entity): string {
     if (e.kind === 'unit') return UNITS[e.type].name;
     if (e.kind === 'building') return BUILDINGS[e.type].name;
     return NODES[e.type].name;
   }
 
-  detailsOf(e) {
+  detailsOf(e: Entity): string {
     if (e.kind === 'unit') {
       const d = UNITS[e.type];
       const role = d.ranged ? 'Arqueiro · ataque à distância' : d.civil ? 'Civil · coleta e constrói' : 'Militar · combate corpo a corpo';
@@ -188,12 +233,12 @@ export class Hud {
       <div class="role">Recurso: ${RESOURCE_INFO[d.resource].name}</div>`;
   }
 
-  bar(value, max, cls) {
+  bar(value: number, max: number, cls: string): string {
     const pct = Math.max(0, Math.min(100, (value / max) * 100));
     return `<div class="bar ${cls}"><i style="width:${pct}%"></i><em>${Math.ceil(value)}/${max}</em></div>`;
   }
 
-  renderQueue(e) {
+  renderQueue(e: Entity): void {
     if (e.kind !== 'building' || e.owner !== 0 || !e.built || e.queue.length === 0) {
       this.selQueue.innerHTML = '';
       return;
@@ -206,14 +251,12 @@ export class Hud {
   }
 
   // Atualiza valores que mudam a cada frame (vida, progresso).
-  updateLive(sel) {
+  updateLive(sel: Entity[]): void {
     if (sel.length !== 1) return;
     const e = sel[0];
-    const hp = this.selBody.querySelector('.bar.hp');
-    if (hp && e.maxHp) {
-      const pct = Math.max(0, Math.min(100, (e.hp / e.maxHp) * 100));
-      hp.querySelector('i').style.width = `${pct}%`;
-      hp.querySelector('em').textContent = `${Math.ceil(e.hp)}/${e.maxHp}`;
+    if (e.kind !== 'node') {
+      const hp = this.selBody.querySelector('.bar.hp');
+      if (hp && e.maxHp) setBar(hp, (e.hp / e.maxHp) * 100, `${Math.ceil(e.hp)}/${e.maxHp}`);
     }
     if (e.kind === 'building' && !e.built) {
       const role = this.selBody.querySelector('.role');
@@ -221,14 +264,13 @@ export class Hud {
     }
     if (e.kind === 'building') {
       this.selBody.querySelectorAll('.bar.prog').forEach((bar) => {
-        const source = e.ageUp ? e.ageUp : e.research;
+        const source = e.ageUp ?? e.research;
         if (!source) return;
-        bar.querySelector('i').style.width = `${Math.min(100, (source.elapsed / source.time) * 100)}%`;
-        bar.querySelector('em').textContent = `${Math.floor(source.elapsed)}/${source.time}`;
+        setBar(bar, (source.elapsed / source.time) * 100, `${Math.floor(source.elapsed)}/${source.time}`);
       });
     }
     if (e.kind === 'building' && e.built && e.queue.length) {
-      const first = this.selQueue.querySelector('i[data-q="0"]');
+      const first = this.selQueue.querySelector<HTMLElement>('i[data-q="0"]');
       const def = UNITS[e.queue[0].type];
       if (first) first.style.width = `${Math.min(100, (e.queue[0].elapsed / def.time) * 100)}%`;
     }
@@ -236,7 +278,7 @@ export class Hud {
 
   // ---------- Grade de comandos ----------
 
-  buildGrid() {
+  buildGrid(): void {
     this.grid.innerHTML = '';
     this.buttons = [];
     for (let i = 0; i < GRID_SLOTS; i++) {
@@ -252,7 +294,7 @@ export class Hud {
     }
   }
 
-  clickSlot(i) {
+  clickSlot(i: number): void {
     const cmd = this.commands[i];
     if (!cmd || !cmd.enabled()) {
       if (cmd && cmd.reason) this.toast(cmd.reason(), 'bad');
@@ -264,21 +306,23 @@ export class Hud {
   }
 
   // Requisito de idade de um item: texto do motivo quando não está liberado.
-  ageReason(age) {
-    const player = this.game.sim.players[0];
+  ageReason(age: AgeNumber): string | null {
+    const player = this.game.sim?.players[0];
+    if (!player) return null;
     return age > player.age ? `Requer ${AGE_NAMES[age]}` : null;
   }
 
-  buildCommands(sel) {
+  buildCommands(sel: Entity[]): void {
     const g = this.game;
     const sim = g.sim;
+    if (!sim) return;
     const player = sim.players[0];
     const own = sel.filter((e) => e.owner === 0);
     const units = own.filter((e) => e.kind === 'unit');
     const civil = units.filter((u) => UNITS[u.type].civil);
     const military = units.filter((u) => !UNITS[u.type].civil);
-    const buildings = own.filter((e) => e.kind === 'building');
-    const cmds = [];
+    const buildings = own.filter((e): e is BuildingEntity => e.kind === 'building');
+    const cmds: HudCommand[] = [];
 
     if (units.length > 0 && units.length === own.length) {
       if (civil.length) {
@@ -320,7 +364,7 @@ export class Hud {
             tip: `${u.name} — ${costText(u.cost)} · ${u.time}s · ${AGE_NAMES[u.age]}`,
             enabled: () => !this.ageReason(u.age) && sim.canAfford(0, u.cost) && b.queue.length < MAX_QUEUE && sim.popUsed(0) < sim.popCap(0),
             reason: () => {
-              if (this.ageReason(u.age)) return this.ageReason(u.age);
+              if (this.ageReason(u.age)) return this.ageReason(u.age) ?? '';
               if (b.queue.length >= MAX_QUEUE) return 'Fila cheia';
               if (sim.popUsed(0) >= sim.popCap(0)) return 'População máxima — construa casas';
               return 'Recursos insuficientes';
@@ -342,14 +386,15 @@ export class Hud {
       }
       if (b.type === 'towncenter' && b.built) {
         const next = player.age + 1;
-        const cost = AGE_UP[next]?.cost;
+        const nextUp = AGE_UP[next as NextAge] as (typeof AGE_UP)[NextAge] | undefined;
+        const cost = nextUp?.cost;
         cmds.push({
           key: AGE_KEY,
           label: next <= 4 ? 'Avançar idade' : 'Idade máxima',
           icon: 'age',
           cost,
-          tip: cost ? `${AGE_NAMES[next]} — ${costText(cost)} · ${AGE_UP[next].time}s` : 'Idade máxima atingida',
-          enabled: () => next <= 4 && !b.ageUp && sim.canAfford(0, cost),
+          tip: nextUp && cost ? `${AGE_NAMES[next as AgeNumber]} — ${costText(cost)} · ${nextUp.time}s` : 'Idade máxima atingida',
+          enabled: () => next <= 4 && !b.ageUp && sim.canAfford(0, cost ?? {}),
           reason: () => (!cost ? 'Idade máxima atingida' : b.ageUp ? 'Já avançando' : 'Recursos insuficientes'),
           run: () => {
             const r = sim.startAgeUp(0, b.id);
@@ -361,7 +406,7 @@ export class Hud {
         def.techs.forEach((id, i) => {
           const tech = TECHS[id];
           const done = !!player.techs[id];
-          const blocked = done || (tech.req && !player.techs[tech.req]);
+          const blocked = done || (tech.req !== undefined && !player.techs[tech.req]);
           cmds.push({
             key: TECH_KEYS[i],
             label: tech.name,
@@ -371,8 +416,8 @@ export class Hud {
             enabled: () => !done && !blocked && !b.research && !this.ageReason(tech.age) && sim.canAfford(0, tech.cost),
             reason: () => {
               if (done) return 'Técnica já pesquisada';
-              if (this.ageReason(tech.age)) return this.ageReason(tech.age);
-              if (tech.req && !player.techs[tech.req]) return `Pesquise ${TECHS[tech.req].name} antes`;
+              if (this.ageReason(tech.age)) return this.ageReason(tech.age) ?? '';
+              if (tech.req !== undefined && !player.techs[tech.req]) return `Pesquise ${TECHS[tech.req].name} antes`;
               if (b.research) return 'Já pesquisando';
               return 'Recursos insuficientes';
             },
@@ -400,7 +445,7 @@ export class Hud {
     });
   }
 
-  updateButtons() {
+  updateButtons(): void {
     this.commands.forEach((cmd, i) => {
       const btn = this.buttons[i];
       if (btn) btn.classList.toggle('unavailable', !cmd.done && !cmd.enabled());
@@ -408,8 +453,8 @@ export class Hud {
   }
 }
 
-function iconGlyph(icon) {
-  const glyphs = {
+function iconGlyph(icon: string): string {
+  const glyphs: Record<string, string> = {
     house: '⌂', storehouse: '▦', farm: '✿', mill: '◍', lumberCamp: '▤', miningCamp: '◆',
     barracks: '⚔', stable: '♞', blacksmith: '⚒', tower: '♜',
     villager: '☺', swordsman: '🗡', archer: '➹', spearman: '↑', crossbow: '✜', scout: '➤', knight: '♘',
