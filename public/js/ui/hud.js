@@ -408,14 +408,12 @@ export class Hud {
   }
 }
 
-const TECHS_ICON = 'tech';
-
 function iconGlyph(icon) {
   const glyphs = {
     house: '⌂', storehouse: '▦', farm: '✿', mill: '◍', lumberCamp: '▤', miningCamp: '◆',
     barracks: '⚔', stable: '♞', blacksmith: '⚒', tower: '♜',
     villager: '☺', swordsman: '🗡', archer: '➹', spearman: '↑', crossbow: '✜', scout: '➤', knight: '♘',
-    attack: '⚔', stop: '■', cancel: '✕', age: '★', [TECHS_ICON]: '✦',
+    attack: '⚔', stop: '■', cancel: '✕', age: '★', tech: '✦',
   };
   return glyphs[icon] || '•';
 }

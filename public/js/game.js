@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { generateMap } from './core/mapgen.js';
 import { Simulation } from './core/sim.js';
 import { BotBrain } from './core/ai.js';
-import { MAP_SIZES, PLAYER_COLORS, PLAYER_NAMES, UNITS, BUILDINGS } from './core/config.js';
+import { MAP_SIZES, PLAYER_COLORS, PLAYER_NAMES } from './core/config.js';
 import { seedFromString } from './core/rng.js';
 import { buildTerrain, buildFog, updateFog, heightAt } from './render/terrain.js';
 import { EntityRenderer } from './render/entities.js';
@@ -369,11 +369,4 @@ export class Game {
     return this.sim ? this.sim.players[0].stats : null;
   }
 
-  static unitName(type) {
-    return UNITS[type]?.name ?? type;
-  }
-
-  static buildingName(type) {
-    return BUILDINGS[type]?.name ?? type;
-  }
 }
