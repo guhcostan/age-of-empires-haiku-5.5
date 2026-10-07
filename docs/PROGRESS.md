@@ -4,7 +4,7 @@
 - Fase 1 concluída no código: migração para TypeScript (strict) + Vite. Os módulos de render e de interface agora são `src/*.ts`; o three.js vem do npm (0.160.0). Não há mais JavaScript de jogo em `public/js`.
 - Fase 0 concluída parcialmente: SPEC com incertezas (ver docs/SPEC.md).
 - Publicado: https://age-of-empires-haiku.guhcostan.workers.dev (Worker que serve `public/` da branch `claude/admiring-feynman-bxzdp3`). Após o push, a versão nova aparece em até 5 minutos.
-- PR: guhcostan/age-of-empires-haiku-5.5#1 (mesclado) e o PR da fase 1 (ver histórico do GitHub).
+- PRs: guhcostan/age-of-empires-haiku-5.5#1 e #2 (mesclados); #3 é a fase 1 (rascunho, TypeScript + Vite).
 - Testes: 19 unitários (`npm test`), 18 E2E (`npx playwright test`, compila antes e roda contra `vite preview`).
 - Verificações: `npm run build` (tsc strict + vite) limpo; CI checa que `public/` é igual ao build do código.
 - CI: `main` verde no commit 456d443 (job CI e job de deploy). O job de deploy pula a publicação enquanto `CLOUDFLARE_API_TOKEN` não existir.
