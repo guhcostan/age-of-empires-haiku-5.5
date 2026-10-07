@@ -1,8 +1,8 @@
-import { test, expect, startQuickGame, gameState, waitForRunning, loadConfig } from './helpers.js';
+import { test, expect, startQuickGame, gameState, waitForRunning, CONFIG } from './helpers.js';
 
 test.describe('Partida: início e pausa', () => {
   test('iniciar partida mostra o HUD com recursos e população iniciais', async ({ page }) => {
-    const cfg = await loadConfig(page);
+    const cfg = CONFIG;
     await startQuickGame(page);
 
     await expect(page.locator('#hud')).toBeVisible();

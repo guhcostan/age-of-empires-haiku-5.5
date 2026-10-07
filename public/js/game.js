@@ -16,6 +16,8 @@ import { Sound } from './ui/audio.js';
 const SKY = 0xa9cfe9;
 const FOG_INTERVAL = 0.2;
 const MINIMAP_INTERVAL = 0.2;
+const SIM_STEP = 1 / 20;
+const MAX_FRAME_SIM = 0.5;
 
 // Chão além das bordas do mapa, para não aparecer céu no horizonte.
 function buildSurround(mapSize) {
@@ -82,6 +84,7 @@ export class Game {
     this.fog = buildFog(map);
     this.scene.add(this.fog.mesh);
     this.fogAcc = FOG_INTERVAL;
+    this.simAcc = 0;
     this.minimapAcc = MINIMAP_INTERVAL;
 
     this.entities = new EntityRenderer({ scene: this.scene, sim: this.sim, map, camera: this.camera });
@@ -159,9 +162,14 @@ export class Game {
     const dt = Math.min(0.1, Math.max(0, (now - this.last) / 1000));
     this.last = now;
 
+    // Passos fixos de simulação: o tempo de jogo acompanha o relógio mesmo com quadros lentos.
     if (!this.paused && !this.sim.gameOver) {
-      for (const b of this.bots) b?.update(dt);
-      this.sim.update(dt);
+      this.simAcc += Math.min(dt, MAX_FRAME_SIM);
+      while (this.simAcc >= SIM_STEP && !this.sim.gameOver) {
+        for (const b of this.bots) b?.update(SIM_STEP);
+        this.sim.update(SIM_STEP);
+        this.simAcc -= SIM_STEP;
+      }
     }
     this.handleEvents(this.sim.drainEvents());
     this.rts.update(dt, (x, z) => heightAt(this.map, x, z));

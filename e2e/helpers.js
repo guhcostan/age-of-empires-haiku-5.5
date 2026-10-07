@@ -1,5 +1,6 @@
 // Utilitários compartilhados pelos testes end-to-end.
 import { test as base, expect } from '@playwright/test';
+import { BUILDINGS, BUILD_MENU, START_RESOURCES, START_VILLAGERS, UNITS } from '../public/js/core/config.js';
 
 export const SEED = '12345';
 
@@ -24,10 +25,15 @@ export async function openGame(page) {
   await page.waitForFunction(() => Boolean(window.aoe?.menus));
 }
 
-// Menu principal -> Partida rápida -> preenche o setup -> Iniciar.
+// Abre a página e inicia uma partida rápida.
 export async function startQuickGame(page, opts = {}) {
-  const { size = 'pequeno', bots = '1', difficulty = 'facil', seed = SEED } = opts;
   await openGame(page);
+  await startFromMenu(page, opts);
+}
+
+// A partir do menu já aberto: Partida rápida -> preenche o setup -> Iniciar (sem recarregar a página).
+export async function startFromMenu(page, opts = {}) {
+  const { size = 'pequeno', bots = '1', difficulty = 'facil', seed = SEED } = opts;
   await page.locator('#btn-play').click();
   await expect(page.locator('#screen-setup')).toBeVisible();
   await page.locator(`input[name="size"][value="${size}"]`).check();
@@ -117,31 +123,27 @@ export function commandButton(page, label) {
   });
 }
 
-// Valores de balanceamento lidos do próprio módulo do jogo (public/js/core/config.js).
+// Valores de balanceamento lidos do próprio módulo do jogo (public/js/core/config.js, só leitura).
 // Assim os testes acompanham mudanças de custo ou população sem ficarem desatualizados.
-export function loadConfig(page) {
-  return page.evaluate(async () => {
-    const c = await import('/js/core/config.js');
-    return {
-      START_RESOURCES: c.START_RESOURCES,
-      START_VILLAGERS: c.START_VILLAGERS,
-      villagerCost: c.UNITS.villager.cost,
-      houseCost: c.BUILDINGS.house.cost,
-      houseName: c.BUILDINGS.house.name,
-      townCenterPop: c.BUILDINGS.towncenter.pop,
-      buildMenuNames: c.BUILD_MENU.map((t) => c.BUILDINGS[t].name),
-      size: { house: [c.BUILDINGS.house.w, c.BUILDINGS.house.h] },
-    };
-  });
-}
+export const CONFIG = {
+  START_RESOURCES,
+  START_VILLAGERS,
+  villager: UNITS.villager,
+  villagerName: UNITS.villager.name,
+  villagerCost: UNITS.villager.cost,
+  houseDef: BUILDINGS.house,
+  houseName: BUILDINGS.house.name,
+  houseCost: BUILDINGS.house.cost,
+  townCenterPop: BUILDINGS.towncenter.pop,
+  buildMenuNames: BUILD_MENU.map((t) => BUILDINGS[t].name),
+};
 
 // Ponto da tela (dentro do canvas) onde um prédio pode ser colocado, usando a mesma
 // conversão do jogo (groundAt + arredondamento de Input.updatePlacement). Não clica.
-export function findPlacementPoint(page, type, near) {
-  return page.evaluate(async ({ type, near }) => {
-    const { BUILDINGS } = await import('/js/core/config.js');
+export function findPlacementPoint(page, type, near = null) {
+  const def = BUILDINGS[type];
+  return page.evaluate(({ type, near, w, h }) => {
     const g = window.aoe.game;
-    const def = BUILDINGS[type];
     const cx = near ? near.x : innerWidth / 2;
     const cy = near ? near.y : innerHeight / 2;
     for (let r = 0; r <= 400; r += 12) {
@@ -154,11 +156,11 @@ export function findPlacementPoint(page, type, near) {
         if (document.elementFromPoint(x, y)?.id !== 'game-canvas') continue;
         const ground = g.groundAt(x, y);
         if (!ground) continue;
-        const ox = Math.round(ground.x - def.w / 2);
-        const oy = Math.round(ground.y - def.h / 2);
+        const ox = Math.round(ground.x - w / 2);
+        const oy = Math.round(ground.y - h / 2);
         if (g.sim.checkPlacement(type, ox, oy) === null) return { x, y };
       }
     }
     return null;
-  }, { type, near });
+  }, { type, near, w: def.w, h: def.h });
 }

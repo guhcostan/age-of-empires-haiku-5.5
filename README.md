@@ -9,9 +9,15 @@ de arte ou áudio de terceiros.
 
 - **Economia**: aldeões coletam comida (frutas e fazendas), madeira, ouro e pedra e levam
   para o Centro da Vila ou para o Armazém.
-- **Construções**: Centro da Vila, Casa (população), Armazém, Fazenda, Quartel e Estábulo.
+- **Idades**: Idade das Trevas, Feudal, dos Castelos e Imperial. Avança-se no Centro da Vila
+  pagando comida, ouro e (na última) pedra. Cada idade libera edifícios e unidades.
+- **Construções**: Centro da Vila, Casa (+10 população, limite 200), Armazém, Fazenda, Moinho,
+  Serraria, Acampamento de Mineração, Quartel, Estábulo, Ferreiro e Torre (ataca sozinha).
   Construção por aldeões, com mais construtores acelerando a obra.
-- **Militares**: Espadachim, Arqueiro (ataque à distância com projéteis) e Batedor (cavalaria).
+- **Técnicas**: horticultura e fertilização (comida), machados e serras (madeira),
+  picaretas e carrinhos (ouro e pedra), forja de armas e armaduras (ataque).
+- **Militares**: Espadachim, Arqueiro, Lanceiro (bônus contra cavalaria), Besteiro,
+  Batedor e Cavaleiro.
 - **Combate**: vida, alcance, cooldown, perseguição, ataque-mover, defesa automática e
   destruição de edifícios.
 - **Névoa de guerra**: explorado / visível / inexplorado, com unidades inimigas ocultas.
@@ -34,8 +40,10 @@ de arte ou áudio de terceiros.
 | Câmera | Setas ou borda da tela; roda para zoom; botão do meio arrasta; Q / E giram |
 | Centralizar | Espaço (seleção) ou Home (Centro da Vila) |
 | Grupos | 0–9 seleciona; Ctrl + 0–9 define |
-| Construir (aldeão) | H casa, M armazém, F fazenda, B quartel, T estábulo |
-| Treinar | V aldeão, Z espadachim, X arqueiro, C batedor; Del cancela |
+| Construir (aldeão) | H casa, M armazém, F fazenda, N moinho, L serraria, O acampamento de mineração, B quartel, T estábulo, K ferreiro, Y torre |
+| Avançar de idade | U (Centro da Vila) |
+| Treinar | V aldeão, Z espadachim, X arqueiro, G lanceiro, D besteiro, C batedor, R cavaleiro; Del cancela |
+| Técnicas | J e I (no edifício de apoio correspondente) |
 | Pausa | Esc |
 
 ## Desenvolvimento
@@ -79,7 +87,8 @@ e2e/                  testes end-to-end (Playwright)
 
 ## Limitações conhecidas
 
-- Não há reconhecimento de idades (Feudal/Castelo), tecnologias, torres, muralhas, cerco nem
-  unidades de suporte como monges. Esses pontos ficam para as próximas versões.
+- Idades são avançadas direto no Centro da Vila, sem os marcos (landmarks) do AoE IV.
+- Não há muralhas, cerco, monges, caça de animais nem civilizações diferentes.
+- Os valores de custo e tempo são aproximações, não os do jogo original.
 - Os bots enxergam o mapa inteiro (sem névoa).
 - O visual é low-poly, com modelos montados por primitivas. Não há animações de esqueleto.
