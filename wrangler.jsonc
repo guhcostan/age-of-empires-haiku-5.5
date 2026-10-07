@@ -1,0 +1,10 @@
+{
+  // Site estático servido pela Cloudflare (Workers Static Assets). Sem código de servidor.
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "age-of-empires-haiku",
+  "compatibility_date": "2026-01-01",
+  "assets": {
+    "directory": "./public",
+    "not_found_handling": "404-page"
+  }
+}
