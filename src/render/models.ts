@@ -480,6 +480,15 @@ export function buildAdvancedBuilding(type: BuildingType, g: THREE.Group, team: 
       part(g, box(0.2, 0.5, 0.05), 0x2a2a2a, 0, 1.3, 0.95);
       break;
     }
+    case 'archeryRange': {
+      part(g, box(2.8, 0.6, 2.8), 0x7d7f88, 0, 0.3, 0);
+      part(g, box(2.4, 0.9, 2.4), 0x9c7a50, 0, 1.05, 0);
+      part(g, box(0.1, 1.9, 0.1), 0x5a3b1f, 1.1, 1.55, 1.1);
+      part(g, cyl(0.5, 0.5, 0.08, 12), 0xf2f2f2, -0.9, 1.5, 1.22, [Math.PI / 2, 0, 0]);
+      part(g, cyl(0.28, 0.28, 0.09, 12), team, -0.9, 1.5, 1.24, [Math.PI / 2, 0, 0]);
+      part(g, box(0.5, 0.3, 0.03), team, 0.0, 2.2, 1.22);
+      break;
+    }
     default:
       break;
   }

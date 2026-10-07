@@ -99,6 +99,9 @@ export class BotBrain {
     if (civil.length >= 10 && built('barracks').length + planned('barracks') === 0) {
       this.build('barracks', civil, centerOf(tc), 6, 12);
     }
+    if (civil.length >= 12 && built('barracks').length > 0 && built('archeryRange').length + planned('archeryRange') === 0) {
+      this.build('archeryRange', civil, centerOf(tc), 6, 12);
+    }
     if (player.age >= 2 && built('barracks').length > 0 && civil.length >= 14
       && built('stable').length + planned('stable') === 0) {
       this.build('stable', civil, centerOf(tc), 6, 12);
@@ -131,6 +134,11 @@ export class BotBrain {
         if (sim.train(o, b.id, type).ok) break;
       }
     }
+    // Arqueiros saem do campo de tiro, na mesma proporção que o quartel usava (um para cada 0,6 espadachim).
+    for (const b of built('archeryRange')) {
+      if (b.queue.length >= 2) continue;
+      if (count('archer') < count('swordsman') * 0.6) sim.train(o, b.id, 'archer');
+    }
     for (const b of built('stable')) {
       if (b.queue.length >= 2 || army.length < 6) continue;
       const order: UnitType[] = player.age >= 3 && count('knight') < count('scout') * 2 + 1
@@ -152,8 +160,7 @@ export class BotBrain {
     const order: UnitType[] = [];
     if (age >= 3 && crossbows < bows * 0.5) order.push('crossbow');
     if (age >= 2 && spears < swords) order.push('spearman');
-    if (bows < swords * 0.6) order.push('archer');
-    order.push('swordsman', 'archer', 'spearman', 'crossbow');
+    order.push('swordsman', 'spearman', 'crossbow');
     return [...new Set(order)];
   }
 

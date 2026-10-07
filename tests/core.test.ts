@@ -5,7 +5,7 @@ import { findPath } from '../src/core/pathfind.ts';
 import { World } from '../src/core/world.ts';
 import { Simulation } from '../src/core/sim.ts';
 import { BotBrain } from '../src/core/ai.ts';
-import { AGE_UP } from '../src/core/config.ts';
+import { AGE_UP, BUILDINGS } from '../src/core/config.ts';
 import type { BuildingType, DifficultyKey, Entity, Outcome, PlayerConfig } from '../src/types.ts';
 
 function makeSim({ size = 64, bots = 1, seed = 42, difficulty = 'normal' as DifficultyKey } = {}) {
@@ -285,4 +285,35 @@ test('bots avançam de idade e pesquisam técnicas numa partida', () => {
 // SPEC §4 (linha 200, duas fontes): Idade Feudal custa 400 comida + 200 ouro.
 test('custo da Idade Feudal segue a SPEC (400 comida + 200 ouro)', () => {
   assert.deepEqual(AGE_UP[2].cost, { food: 400, gold: 200 });
+});
+
+// SPEC §2.1 (linha 73): arqueiros são treinados no campo de tiro, não no quartel.
+test('arqueiros saem do campo de tiro e não do quartel (SPEC §2.1)', () => {
+  const { sim } = makeSim();
+  const barracks = sim.spawnBuilding('barracks', 0, 20, 20, true);
+  const range = sim.spawnBuilding('archeryRange', 0, 26, 20, true);
+  sim.players[0].res.food = 500;
+  sim.players[0].res.wood = 500;
+  assert.equal(sim.train(0, barracks.id, 'archer').ok, false, 'o quartel não treina arqueiros');
+  assert.equal(sim.train(0, range.id, 'archer').ok, true, 'o campo de tiro treina arqueiros');
+});
+
+// Fonte única da SPEC (linhas 73 e 377): custo, vida e tempo do campo de tiro.
+test('campo de tiro custa 150 madeira, tem 1500 de vida e leva 30 s (fonte única da SPEC)', () => {
+  assert.deepEqual(BUILDINGS.archeryRange.cost, { wood: 150 });
+  assert.equal(BUILDINGS.archeryRange.hp, 1500);
+  assert.equal(BUILDINGS.archeryRange.time, 30);
+});
+
+test('bots constroem campo de tiro e treinam arqueiros numa partida', () => {
+  const { sim, brains } = makeSim({ size: 96, bots: 2, seed: 9, difficulty: 'normal' });
+  runFor(sim, 900, brains, 0.1);
+  const ranges = [...sim.world.entities.values()].filter(
+    (e) => e.kind === 'building' && e.type === 'archeryRange' && e.owner > 0,
+  );
+  assert.ok(ranges.length > 0, 'algum bot construiu campo de tiro');
+  const archers = [...sim.world.entities.values()].filter(
+    (e) => e.kind === 'unit' && e.type === 'archer' && e.owner > 0,
+  );
+  assert.ok(archers.length > 0, 'algum bot treinou arqueiros no campo de tiro');
 });

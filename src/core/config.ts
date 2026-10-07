@@ -77,7 +77,7 @@ export const UNITS: Record<UnitType, UnitDef> = {
   },
   archer: {
     name: 'Arqueiro', hp: 45, attack: 6, cooldown: 1.6, range: 5.5, ranged: true,
-    speed: 2.0, sight: 8, cost: { food: 40, wood: 50 }, time: 12, age: 1, from: 'barracks',
+    speed: 2.0, sight: 8, cost: { food: 40, wood: 50 }, time: 12, age: 1, from: 'archeryRange',
   },
   spearman: {
     name: 'Lanceiro', hp: 100, attack: 7, cooldown: 1.3, range: 1.6, bonus: { scout: 2, knight: 2 },
@@ -127,7 +127,12 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
   },
   barracks: {
     name: 'Quartel', w: 3, h: 3, hp: 900, sight: 7, cost: { wood: 175 }, time: 40, age: 1,
-    trains: ['swordsman', 'archer', 'spearman', 'crossbow'],
+    trains: ['swordsman', 'spearman', 'crossbow'],
+  },
+  // Campo de tiro: treina arqueiros (SPEC §2.1). Custo, vida e tempo vêm da fonte única da SPEC (linha 73).
+  archeryRange: {
+    name: 'Campo de tiro', w: 3, h: 3, hp: 1500, sight: 7, cost: { wood: 150 }, time: 30, age: 1,
+    trains: ['archer'],
   },
   stable: {
     name: 'Estábulo', w: 3, h: 3, hp: 800, sight: 7, cost: { wood: 175 }, time: 40, age: 2,
@@ -189,7 +194,7 @@ export const TECHS: Record<TechId, TechDef> = {
 
 export const BUILD_MENU: readonly BuildingType[] = [
   'house', 'storehouse', 'farm', 'mill', 'lumberCamp', 'miningCamp',
-  'barracks', 'stable', 'blacksmith', 'tower',
+  'barracks', 'archeryRange', 'stable', 'blacksmith', 'tower',
 ];
 
 // Teclas de atalho (exibidas nos botões e na ajuda).
@@ -199,7 +204,7 @@ export const UNIT_KEYS: Record<UnitType, string> = {
 // O Centro da Vila não é construído pelo menu, então não tem tecla aqui.
 export const BUILD_KEYS: Partial<Record<BuildingType, string>> = {
   house: 'h', storehouse: 'm', farm: 'f', mill: 'n', lumberCamp: 'l', miningCamp: 'o',
-  barracks: 'b', stable: 't', blacksmith: 'k', tower: 'y',
+  barracks: 'b', archeryRange: 'c', stable: 't', blacksmith: 'k', tower: 'y',
 };
 export const TECH_KEYS: readonly string[] = ['j', 'i'];
 export const AGE_KEY = 'u';

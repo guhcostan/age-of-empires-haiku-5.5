@@ -9,7 +9,8 @@ import type { AgeNumber, BuildingEntity, Cost, Entity, MessageLevel, NextAge, Re
 
 const TOAST_MS = 4200;
 const MAX_TOASTS = 5;
-const GRID_SLOTS = 12;
+// 5 colunas x 3 linhas: cabe a lista mais longa (11 edifícios + atacar + parar).
+const GRID_SLOTS = 15;
 
 // Um botão da grade de comandos: atalho, custo, condição de uso e ação.
 interface HudCommand {
@@ -456,7 +457,7 @@ export class Hud {
 function iconGlyph(icon: string): string {
   const glyphs: Record<string, string> = {
     house: '⌂', storehouse: '▦', farm: '✿', mill: '◍', lumberCamp: '▤', miningCamp: '◆',
-    barracks: '⚔', stable: '♞', blacksmith: '⚒', tower: '♜',
+    barracks: '⚔', archeryRange: '◎', stable: '♞', blacksmith: '⚒', tower: '♜',
     villager: '☺', swordsman: '🗡', archer: '➹', spearman: '↑', crossbow: '✜', scout: '➤', knight: '♘',
     attack: '⚔', stop: '■', cancel: '✕', age: '★', tech: '✦',
   };
