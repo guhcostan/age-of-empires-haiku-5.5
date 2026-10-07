@@ -22,7 +22,7 @@ test.describe('Bots', () => {
     // Avança a simulação de forma determinística (120 s de jogo, passos fixos), para que a
     // checagem da IA não dependa da taxa de quadros do runner (renderização por software é lenta).
     await page.evaluate(() => {
-      const g = window.aoe.game;
+      const g = window.__game.game;
       for (let t = 0; t < 120 && !g.sim.gameOver; t += 0.05) {
         for (const b of g.bots) b?.update(0.05);
         g.sim.update(0.05);

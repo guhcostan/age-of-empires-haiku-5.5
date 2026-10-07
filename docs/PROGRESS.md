@@ -16,11 +16,11 @@
 - Subagentes: fixados em `haiku` (Haiku 5.5) no lançamento.
 - Build em `public/`: o Worker publicado lê o branch do GitHub sem token, então o build de produção é commitado em `public/` (`publicDir` desligado). A alternativa é `dist/` com deploy via wrangler, que depende do token. Reavaliar quando o token existir.
 - Deploy: Worker via API (sem token). `wrangler deploy` depende de CLOUDFLARE_API_TOKEN e roda `npm run build` antes (`build.command` em wrangler.jsonc).
-- Objeto de depuração: `window.aoe` (usado pelos E2E). A mudança para `window.__game` fica para a fase em que os testes forem reescritos.
+- Objeto de teste: `window.__game` (`{ game, menus }`), exigido pela SPEC de arquitetura para os testes E2E e de simulação.
 
 ## Pendente (por fase)
 - 0 Pesquisa e SPEC: docs/SPEC.md entregue (515 linhas, 19 fontes verificadas, seção de incertezas). Muitos números têm uma única fonte; conferir antes de implementar.
-- 1 TypeScript + Vite e base da fase: concluída (migração de comportamento; ver "Bugs corrigidos"). Falta: `window.__game` e E2E contra o site publicado.
+- 1 TypeScript + Vite e base da fase: concluída (migração de comportamento; ver "Bugs corrigidos"). `window.__game` no lugar de `window.aoe`. A suíte E2E aceita `E2E_BASE_URL` para rodar contra o site publicado; a rodada contra produção ainda está pendente de confirmação do deploy.
 - 2 Economia e construção: em grande parte pronto na versão atual.
 - 3 Combate e defesas: torres prontas; muralhas, portões e fortaleza ainda faltam.
 - 4 Idades, landmarks, tecnologias: versão atual usa Centro da Vila no lugar de landmarks.

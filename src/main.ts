@@ -6,8 +6,8 @@ import { $ } from './ui/dom.ts';
 
 declare global {
   interface Window {
-    // Exposto para depuração e para os testes end-to-end.
-    aoe?: { game: Game; menus: Menus };
+    // Exposto para depuração e para os testes end-to-end (estado e comandos da partida).
+    __game?: { game: Game; menus: Menus };
   }
 }
 
@@ -25,4 +25,4 @@ const game = new Game({
 
 menus = new Menus(game);
 
-window.aoe = { game, menus };
+window.__game = { game, menus };

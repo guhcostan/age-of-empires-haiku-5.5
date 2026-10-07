@@ -6,7 +6,9 @@ import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const PORT = 8787;
-const BASE_URL = `http://127.0.0.1:${PORT}`;
+// E2E_BASE_URL aponta a suíte para um site já publicado (ex.: produção) e dispensa o servidor local.
+const EXTERNAL_URL = process.env.E2E_BASE_URL;
+const BASE_URL = EXTERNAL_URL || `http://127.0.0.1:${PORT}`;
 
 // Chromium já instalado neste ambiente (o Playwright não baixa o binário aqui).
 // PW_CHROMIUM tem prioridade sobre o caminho encontrado.
@@ -40,10 +42,12 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
-  webServer: {
-    command: `npm run build && npx vite preview --host 127.0.0.1 --port ${PORT} --strictPort`,
-    url: BASE_URL,
-    reuseExistingServer: false,
-    timeout: 120_000,
-  },
+  webServer: EXTERNAL_URL
+    ? undefined
+    : {
+        command: `npm run build && npx vite preview --host 127.0.0.1 --port ${PORT} --strictPort`,
+        url: BASE_URL,
+        reuseExistingServer: false,
+        timeout: 120_000,
+      },
 });

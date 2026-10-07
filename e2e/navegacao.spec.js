@@ -37,7 +37,7 @@ test.describe('Navegação sem erros', () => {
 
     // Fim forçado por derrota e volta ao menu.
     await page.evaluate(() => {
-      const g = window.aoe.game;
+      const g = window.__game.game;
       g.sim.gameOver = { result: 'defeat', time: g.sim.time };
     });
     await expect(page.locator('#overlay-end')).toBeVisible();

@@ -25,10 +25,10 @@ test.describe('Partida: início e pausa', () => {
     await expect(page.locator('#res-pop')).toHaveText(`${st.popUsed} / ${st.popCap}`);
 
     // Os aldeões e o Centro da Vila do jogador existem na simulação.
-    const villagers = await page.evaluate(() => [...window.aoe.game.sim.world.entities.values()]
+    const villagers = await page.evaluate(() => [...window.__game.game.sim.world.entities.values()]
       .filter((e) => e.owner === 0 && e.kind === 'unit' && e.type === 'villager').length);
     expect(villagers).toBe(cfg.START_VILLAGERS);
-    expect(await page.evaluate(() => Boolean(window.aoe.game.ownTownCenter()))).toBe(true);
+    expect(await page.evaluate(() => Boolean(window.__game.game.ownTownCenter()))).toBe(true);
   });
 
   test('Escape abre a pausa, Continuar fecha e game.paused volta a false', async ({ page }) => {
@@ -74,7 +74,7 @@ test.describe('Partida: início e pausa', () => {
     await expect(page.locator('#screen-main')).toBeVisible();
     await expect(page.locator('#overlay-pause')).toBeHidden();
     await expect(page.locator('#hud')).toBeHidden();
-    await expect.poll(() => page.evaluate(() => window.aoe.game.running)).toBe(false);
+    await expect.poll(() => page.evaluate(() => window.__game.game.running)).toBe(false);
     // Com o jogo encerrado, "Continuar partida" some do menu.
     await expect(page.locator('#btn-continue')).toBeHidden();
   });

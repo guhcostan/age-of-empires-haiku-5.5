@@ -2,7 +2,7 @@ import { test, expect, startQuickGame, startFromMenu } from './helpers.js';
 
 // Mede quantos render() ocorrem por tick de requestAnimationFrame: 1 = uma única cadeia de frames.
 const rendersPerTick = (page) => page.evaluate(() => new Promise((resolve) => {
-  const g = window.aoe.game;
+  const g = window.__game.game;
   let renders = 0;
   let ticks = 0;
   const orig = g.renderer.render.bind(g.renderer);
@@ -42,7 +42,7 @@ test.describe('Regressões de bugs já corrigidos', () => {
     // então cada morte lançava TypeError no quadro. Ver src/game.ts (handleEvents).
     await startQuickGame(page);
     const handled = await page.evaluate(() => {
-      const g = window.aoe.game;
+      const g = window.__game.game;
       g.handleEvents([{ type: 'death', kind: 'unit', x: 5, y: 5, owner: 1 }]);
       return true;
     });
