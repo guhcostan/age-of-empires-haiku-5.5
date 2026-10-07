@@ -1,7 +1,7 @@
 # PROGRESSO
 
 ## Estado atual (rodada 0)
-- Fase atual: 0 (pesquisa e SPEC). Fases anteriores: versão jogável em JavaScript puro, com ages aproximadas (ver README).
+- Fase atual: 0 concluída parcialmente (SPEC com incertezas). Próxima: fase 1 (terreno, câmera, seleção, pathfinding) em TypeScript + Vite, ainda não iniciada. Versão atual é JavaScript puro.
 - Publicado: https://age-of-empires-haiku.guhcostan.workers.dev (Worker que serve `public/` da branch `claude/admiring-feynman-bxzdp3`).
 - PR: guhcostan/age-of-empires-haiku-5.5#1 (rascunho, base `main`, criada com commit vazio).
 - Testes: 19 unitários (`npm test`), 17 E2E (`npx playwright test`), contra servidor local.
@@ -15,7 +15,7 @@
 - Deploy: Worker via API (sem token). `wrangler deploy` depende de CLOUDFLARE_API_TOKEN.
 
 ## Pendente (por fase)
-- 0 Pesquisa e SPEC: docs/SPEC.md (em andamento por subagente Haiku).
+- 0 Pesquisa e SPEC: docs/SPEC.md entregue (515 linhas, 19 fontes verificadas, seção de incertezas). Muitos números têm uma única fonte; conferir antes de implementar.
 - 1 Terreno, câmera, seleção, pathfinding: revisar contra SPEC.
 - 2 Economia e construção: em grande parte pronto na versão JS atual.
 - 3 Combate e defesas: torres, muralhas e portões ainda faltam.
