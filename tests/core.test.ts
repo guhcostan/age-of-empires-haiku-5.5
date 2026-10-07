@@ -5,6 +5,7 @@ import { findPath } from '../src/core/pathfind.ts';
 import { World } from '../src/core/world.ts';
 import { Simulation } from '../src/core/sim.ts';
 import { BotBrain } from '../src/core/ai.ts';
+import { AGE_UP } from '../src/core/config.ts';
 import type { BuildingType, DifficultyKey, Entity, Outcome, PlayerConfig } from '../src/types.ts';
 
 function makeSim({ size = 64, bots = 1, seed = 42, difficulty = 'normal' as DifficultyKey } = {}) {
@@ -279,4 +280,9 @@ test('bots avançam de idade e pesquisam técnicas numa partida', () => {
   const advanced = sim.players.slice(1).filter((p) => p.age >= 2);
   assert.ok(advanced.length > 0, 'algum bot chegou à Idade Feudal');
   assert.ok(sim.players.slice(1).some((p) => Object.keys(p.techs).length > 0), 'algum bot pesquisou técnica');
+});
+
+// SPEC §4 (linha 200, duas fontes): Idade Feudal custa 400 comida + 200 ouro.
+test('custo da Idade Feudal segue a SPEC (400 comida + 200 ouro)', () => {
+  assert.deepEqual(AGE_UP[2].cost, { food: 400, gold: 200 });
 });

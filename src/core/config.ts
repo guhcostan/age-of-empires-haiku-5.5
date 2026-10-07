@@ -59,7 +59,7 @@ export const AGE_NAMES: Record<AgeNumber, string> = {
 };
 
 export const AGE_UP: Record<NextAge, AgeUpDef> = {
-  2: { cost: { food: 500, gold: 200 }, time: 60 },
+  2: { cost: { food: 400, gold: 200 }, time: 60 },
   3: { cost: { food: 800, gold: 400 }, time: 75 },
   4: { cost: { food: 1000, gold: 700, stone: 300 }, time: 90 },
 };

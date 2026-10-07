@@ -22,7 +22,9 @@
 ## Pendente (por fase)
 - 0 Pesquisa e SPEC: docs/SPEC.md entregue (515 linhas, 19 fontes verificadas, seção de incertezas). Muitos números têm uma única fonte; conferir antes de implementar.
 - 1 TypeScript + Vite e base da fase: concluída (migração de comportamento; ver "Bugs corrigidos"). `window.__game` no lugar de `window.aoe`. A suíte E2E aceita `E2E_BASE_URL` para rodar contra o site publicado; a rodada contra produção ainda está pendente de confirmação do deploy.
-- 2 Economia e construção: em grande parte pronto na versão atual.
+- 2 Economia e construção: análise de lacunas feita por crítico independente (SPEC x código, Haiku). Corrigido: custo da Idade Feudal, 400 comida (duas fontes na SPEC). Pendente, confirmado: idade exige marco (fase 4); edifícios ausentes (Mercado, Universidade, Keep, Doca, Mosteiro, Oficina de cerco, Posto avançado, muros, marcos; fases 3 a 6); civilizações sem conceito (fase 5); Campo de tiro treina arqueiros, o Quartel não (fase 3).
+- 2 Incertos, não alterar sem fonte que resolva: custos de Idades III e IV (SPEC 1200+600 e 2400+1200, código 800+400 e 1000+700+300 pedra); custos e tempos de unidades militares (SPEC Besteiro 80+40, Batedor 65 comida, Cavaleiro 140+100 e 35 s; código usa madeira); treino de aldeão (SPEC 19–20 s, código 8 s); construções (SPEC Casa 50 madeira, código 60; Fazenda e acampamentos divergem); técnicas de coleta em outra idade (SPEC Machado e Picareta na II, código na I); carga e caça; teto de população; armadura da Forja.
+- Tempo do marco da Feudal: SPEC 190 s (uma fonte), código 60 s. Mantido até nova fonte.
 - 3 Combate e defesas: torres prontas; muralhas, portões e fortaleza ainda faltam.
 - 4 Idades, landmarks, tecnologias: versão atual usa Centro da Vila no lugar de landmarks.
 - 5 Segunda civilização: não iniciada.
