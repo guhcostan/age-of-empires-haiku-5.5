@@ -142,8 +142,8 @@ test('população máxima bloqueia treino', () => {
   const { sim } = makeSim({ bots: 0, seed: 11 });
   const tc = tcOf(sim, 0);
   sim.players[0].res.food = 10000;
-  // 4 aldeões iniciais + 11 = 15, que é o limite do centro da vila.
-  for (let i = 0; i < 11; i++) sim.spawnUnit('villager', 0, tc.x - 1.5, tc.y + 0.5);
+  // 4 aldeões iniciais + 16 = 20, que é o limite do centro da vila.
+  for (let i = 0; i < 16; i++) sim.spawnUnit('villager', 0, tc.x - 1.5, tc.y + 0.5);
   const r = sim.train(0, tc.id, 'villager');
   assert.equal(r.ok, false);
   assert.match(r.reason, /população/i);
@@ -170,7 +170,7 @@ test('aldeão constrói uma casa e a população máxima sobe', () => {
   sim.command(0, [villager.id], { type: 'build', target: r.building.id });
   runFor(sim, 60);
   assert.equal(r.building.built, true);
-  assert.equal(sim.popCap(0), capBefore + 5);
+  assert.equal(sim.popCap(0), capBefore + 10);
 });
 
 test('recursos insuficientes impedem construção', () => {

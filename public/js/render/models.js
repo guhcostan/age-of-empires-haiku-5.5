@@ -155,19 +155,20 @@ export function createUnit(type, teamColor) {
   if (type === 'villager') rig = buildVillager(root, team);
   else if (type === 'swordsman') rig = buildSwordsman(root, team);
   else if (type === 'archer') rig = buildArcher(root, team);
-  else rig = buildScout(root, team);
+  else if (type === 'scout') rig = buildScout(root, team);
+  else rig = buildAdvancedUnit(type, root, team);
   return { root, rig, type };
 }
 
 // Animação: andar (pernas), trabalhar/atacar (braço direito) e balanço do corpo.
 export function animateUnit(view, t, moving, acting) {
   const rig = view.rig;
-  const ph = t * (view.type === 'scout' ? 14 : 9);
+  const ph = t * (isHorse(view.type) ? 14 : 9);
   const k = moving ? 1 : 0;
   rig.legs.forEach((leg, i) => {
-    leg.rotation.x = Math.sin(ph + (i % 2 ? Math.PI : 0)) * (view.type === 'scout' ? 0.25 : 0.7) * k;
+    leg.rotation.x = Math.sin(ph + (i % 2 ? Math.PI : 0)) * (isHorse(view.type) ? 0.25 : 0.7) * k;
   });
-  if (view.type === 'scout') {
+  if (isHorse(view.type)) {
     rig.body.position.y = k * Math.abs(Math.sin(ph)) * 0.05;
   } else {
     rig.body.position.y = k * Math.abs(Math.sin(ph)) * 0.035;
@@ -175,9 +176,9 @@ export function animateUnit(view, t, moving, acting) {
   if (acting) {
     rig.armR.rotation.x = -1.1 + Math.sin(t * 10) * 0.8;
   } else {
-    rig.armR.rotation.x = moving && view.type !== 'scout' ? Math.sin(ph + Math.PI) * 0.5 : 0;
+    rig.armR.rotation.x = moving && !isHorse(view.type) ? Math.sin(ph + Math.PI) * 0.5 : 0;
   }
-  if (view.type !== 'scout') rig.armL.rotation.x = moving ? Math.sin(ph) * 0.4 : 0;
+  if (!isHorse(view.type)) rig.armL.rotation.x = moving ? Math.sin(ph) * 0.4 : 0;
 }
 
 // ---------- Edifícios (origem no centro da área ocupada) ----------
@@ -246,6 +247,7 @@ export function createBuilding(type, teamColor) {
       break;
     }
     default:
+      buildAdvancedBuilding(type, g, team);
       break;
   }
   return root;
@@ -334,4 +336,118 @@ export function makeGhost(object, opacity = 0.5) {
     }
   });
   return object;
+}
+
+// ---------- Unidades e edifícios da Idade Feudal em diante ----------
+
+export function isHorse(type) {
+  return type === 'scout' || type === 'knight';
+}
+
+function buildSpearman(root, team) {
+  const body = pivot(root, 0, 0, 0);
+  const legL = pivot(body, -0.11, 0.44, 0);
+  const legR = pivot(body, 0.11, 0.44, 0);
+  part(legL, box(0.14, 0.44, 0.16), STEEL_DARK, 0, -0.22, 0);
+  part(legR, box(0.14, 0.44, 0.16), STEEL_DARK, 0, -0.22, 0);
+  part(body, box(0.42, 0.46, 0.26), 0x9aa3ad, 0, 0.7, 0);
+  part(body, box(0.3, 0.36, 0.04), team, 0, 0.66, 0.15);
+  part(body, sph(0.14, 8), STEEL, 0, 1.04, 0);
+  part(body, cone(0.16, 0.2, 8), STEEL, 0, 1.14, 0);
+  part(body, box(0.04, 0.14, 0.2), team, 0, 1.28, 0);
+  const armL = pivot(body, -0.3, 0.92, 0);
+  part(armL, box(0.13, 0.42, 0.13), 0x9aa3ad, 0, -0.21, 0);
+  const armR = pivot(body, 0.3, 0.92, 0);
+  part(armR, box(0.13, 0.42, 0.13), 0x9aa3ad, 0, -0.21, 0);
+  part(armR, box(0.05, 1.9, 0.05), WOOD, 0.04, -0.9, 0.1);
+  part(armR, box(0.12, 0.32, 0.03), 0xd9e1ea, 0.04, -1.9, 0.1);
+  return { body, legs: [legL, legR], armL, armR };
+}
+
+function buildCrossbow(root, team) {
+  const body = pivot(root, 0, 0, 0);
+  const legL = pivot(body, -0.1, 0.42, 0);
+  const legR = pivot(body, 0.1, 0.42, 0);
+  part(legL, box(0.13, 0.42, 0.14), PANTS, 0, -0.21, 0);
+  part(legR, box(0.13, 0.42, 0.14), PANTS, 0, -0.21, 0);
+  part(body, box(0.36, 0.44, 0.22), 0x5f6b4a, 0, 0.66, 0);
+  part(body, box(0.42, 0.5, 0.05), team, 0, 0.62, -0.14);
+  part(body, sph(0.13), SKIN, 0, 0.98, 0);
+  part(body, cone(0.17, 0.24, 8), 0x6b5a3a, 0, 1.12, -0.02);
+  const armL = pivot(body, -0.24, 0.86, 0);
+  part(armL, box(0.11, 0.38, 0.11), SKIN, 0, -0.19, 0);
+  part(armL, box(0.1, 0.12, 0.7), 0x5a3b1f, 0.02, -0.28, 0.3);
+  part(armL, box(0.56, 0.06, 0.08), 0x3a2a1a, 0.02, -0.28, 0.62);
+  const armR = pivot(body, 0.24, 0.86, 0);
+  part(armR, box(0.11, 0.38, 0.11), SKIN, 0, -0.19, 0);
+  return { body, legs: [legL, legR], armL, armR };
+}
+
+function buildKnight(root, team) {
+  const rig = buildScout(root, team);
+  // Armadura de placas sobre o cavalo e o cavaleiro.
+  part(rig.horse, box(0.6, 0.5, 1.12), STEEL, 0, 0.72, 0);
+  part(rig.horse, box(0.36, 0.4, 0.26), STEEL, 0, 1.26, -0.05);
+  part(rig.horse, sph(0.15, 8), STEEL_DARK, 0, 1.64, -0.05);
+  part(rig.horse, box(0.05, 0.16, 0.2), team, 0, 1.78, -0.05);
+  return rig;
+}
+
+// Monta unidades desta fase; chamado por createUnit.
+export function buildAdvancedUnit(type, root, team) {
+  if (type === 'spearman') return buildSpearman(root, team);
+  if (type === 'crossbow') return buildCrossbow(root, team);
+  return buildKnight(root, team);
+}
+
+// Monta edifícios desta fase; chamado por createBuilding.
+export function buildAdvancedBuilding(type, g, team) {
+  switch (type) {
+    case 'mill': {
+      part(g, box(1.8, 1.2, 1.8), 0xb89a6a, 0, 0.6, 0);
+      part(g, box(2.0, 0.14, 2.0), 0x6b4a26, 0, 1.27, 0);
+      part(g, cone(1.4, 0.8, 4), team, 0, 1.8, 0, [0, Math.PI / 4, 0]);
+      const wheel = part(g, cyl(0.7, 0.7, 0.12, 12), 0x7a5a30, 0.92, 0.85, 0, [0, 0, Math.PI / 2]);
+      wheel.castShadow = true;
+      part(g, box(1.4, 0.08, 0.1), 0x5a3b1f, 0.95, 0.85, 0, [0, 0, Math.PI / 2]);
+      break;
+    }
+    case 'lumberCamp': {
+      part(g, box(1.8, 0.9, 1.8), 0x7a5234, 0, 0.45, 0);
+      part(g, box(2.0, 0.12, 2.0), 0x4a3018, 0, 0.96, 0);
+      for (let i = 0; i < 3; i++) part(g, cyl(0.14, 0.14, 1.0, 6), 0xb07a44, -0.5, 0.18 + i * 0.25, 1.1, [0, 0, Math.PI / 2]);
+      part(g, cyl(0.04, 0.04, 1.2, 6), 0x5a3b1f, 0.8, 0.6, 0.6);
+      part(g, box(0.5, 0.06, 0.08), 0xc8c8c8, 0.8, 1.1, 0.6);
+      part(g, box(0.5, 0.3, 0.04), team, 0, 1.2, 0.92);
+      break;
+    }
+    case 'miningCamp': {
+      part(g, box(1.8, 0.8, 1.8), 0x8a8f96, 0, 0.4, 0);
+      part(g, box(2.0, 0.12, 2.0), 0x5a5f66, 0, 0.86, 0);
+      part(g, box(0.7, 0.4, 0.5), 0x6a6e76, 0.9, 0.22, 1.2);
+      part(g, dodeca(0.22), GOLD, -0.6, 0.95, 0.8);
+      part(g, ico(0.25), 0xaeb8c2, -0.2, 0.95, 1.1);
+      part(g, box(0.5, 0.3, 0.04), team, 0, 1.2, 0.92);
+      break;
+    }
+    case 'blacksmith': {
+      part(g, box(2.8, 1.2, 2.6), 0x6e6a64, 0, 0.6, 0);
+      part(g, cyl(0.2, 0.25, 1.6, 6), 0x4a4a4a, 0.8, 2.0, -0.7);
+      part(g, box(3.0, 0.12, 2.8), 0x3a3328, 0, 1.25, 0);
+      part(g, box(0.5, 0.4, 0.3), 0x3a3a40, -0.8, 0.2, 1.6);
+      part(g, box(0.5, 0.3, 0.03), team, 0, 1.8, 1.32);
+      break;
+    }
+    case 'tower': {
+      part(g, cyl(0.9, 1.0, 3.4, 8), 0x9c9a92, 0, 1.7, 0);
+      part(g, cyl(1.1, 1.1, 0.4, 8), 0x8a8880, 0, 3.5, 0);
+      part(g, cone(1.2, 1.0, 8), team, 0, 4.2, 0);
+      part(g, cyl(0.03, 0.03, 1.0, 5), 0x3a2a1a, 0, 5.1, 0);
+      part(g, box(0.4, 0.26, 0.03), team, 0.2, 5.3, 0);
+      part(g, box(0.2, 0.5, 0.05), 0x2a2a2a, 0, 1.3, 0.95);
+      break;
+    }
+    default:
+      break;
+  }
 }

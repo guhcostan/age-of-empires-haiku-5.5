@@ -1,10 +1,10 @@
-// Simulação do jogo: economia, comandos, coleta, construção, treino, combate e névoa.
+// Simulação do jogo: economia, idades, técnicas, comandos, coleta, construção, treino, combate e névoa.
 // Não depende de DOM nem de three.js, então roda em testes no Node.
 import { World, defOf, rectOf, centerOf, distToRect } from './world.js';
 import { findPath } from './pathfind.js';
 import {
-  UNITS, BUILDINGS, NODES, START_RESOURCES, START_VILLAGERS, CARRY_CAPACITY,
-  MAX_POP, MAX_QUEUE, DIFFICULTY,
+  UNITS, BUILDINGS, NODES, TECHS, AGE_UP, AGE_NAMES, START_RESOURCES, START_VILLAGERS,
+  CARRY_CAPACITY, MAX_POP, MAX_QUEUE, DIFFICULTY,
 } from './config.js';
 
 const FOG_INTERVAL = 0.25;
@@ -29,12 +29,15 @@ export class Simulation {
       difficulty: p.difficulty ?? 'normal',
       res: { ...START_RESOURCES },
       defeated: false,
+      age: 1,
+      techs: {},
       stats: {
         kills: 0,
         lost: 0,
         destroyed: 0,
         built: 0,
         trained: 0,
+        researched: 0,
         gathered: { food: 0, wood: 0, gold: 0, stone: 0 },
       },
     }));
@@ -68,8 +71,8 @@ export class Simulation {
       hp: def.hp, maxHp: def.hp, lastHitBy: -1,
       order: 'idle', path: null, pi: 0, target: null, dest: null, resume: null,
       cooldown: 0, repath: 0, scanT: 0, gt: 0, phase: null, resKind: null,
-      gx: 0, gy: 0, skipId: -1, skipUntil: 0,
       carry: null, inSite: false, moved: false, sx: 0, sy: 0,
+      gx: 0, gy: 0, skipId: -1, skipUntil: 0,
     });
   }
 
@@ -79,6 +82,7 @@ export class Simulation {
       kind: 'building', type, owner, x, y,
       hp: built ? def.hp : Math.round(def.hp * 0.1), maxHp: def.hp, lastHitBy: -1,
       built, progress: built ? 1 : 0, builders: 0, queue: [], rally: null,
+      research: null, ageUp: null, cooldown: 0,
     });
   }
 
@@ -118,10 +122,6 @@ export class Simulation {
     return this.players[owner];
   }
 
-  isEnemy(a, b) {
-    return a.owner !== b.owner && a.owner !== -1 && b.owner !== -1;
-  }
-
   canAfford(owner, cost) {
     const res = this.players[owner].res;
     return Object.entries(cost).every(([k, v]) => res[k] >= v);
@@ -130,6 +130,23 @@ export class Simulation {
   spend(owner, cost) {
     const res = this.players[owner].res;
     for (const [k, v] of Object.entries(cost)) res[k] -= v;
+  }
+
+  // Multiplicador de coleta do dono para um recurso (técnicas somam).
+  gatherBonus(owner, res) {
+    let bonus = 1;
+    for (const id of Object.keys(this.players[owner].techs)) {
+      bonus += TECHS[id].effect.gather?.[res] ?? 0;
+    }
+    return bonus;
+  }
+
+  attackBonus(owner) {
+    let bonus = 1;
+    for (const id of Object.keys(this.players[owner].techs)) {
+      bonus += TECHS[id].effect.attack ?? 0;
+    }
+    return bonus;
   }
 
   popUsed(owner) {
@@ -209,6 +226,7 @@ export class Simulation {
 
   placeBuilding(owner, type, x, y) {
     if (type === 'towncenter' || !BUILDINGS[type]) return fail('Não é possível construir isso');
+    if (BUILDINGS[type].age > this.players[owner].age) return fail(`Requer ${AGE_NAMES[BUILDINGS[type].age]}`);
     const reason = this.checkPlacement(type, x, y);
     if (reason) return fail(reason);
     const cost = BUILDINGS[type].cost;
@@ -221,6 +239,7 @@ export class Simulation {
     const b = this.world.get(id);
     if (!b || b.dead || b.owner !== owner || !b.built) return fail('Edifício indisponível');
     if (!BUILDINGS[b.type].trains?.includes(type)) return fail('Este edifício não treina isso');
+    if (UNITS[type].age > this.players[owner].age) return fail(`Requer ${AGE_NAMES[UNITS[type].age]}`);
     if (b.queue.length >= MAX_QUEUE) return fail('Fila cheia');
     const def = UNITS[type];
     if (!this.canAfford(owner, def.cost)) return fail('Recursos insuficientes');
@@ -237,6 +256,39 @@ export class Simulation {
     const refund = UNITS[item.type].cost;
     const res = this.players[owner].res;
     for (const [k, v] of Object.entries(refund)) res[k] += v;
+    return ok();
+  }
+
+  // Avança para a próxima idade no Centro da Vila.
+  startAgeUp(owner, id) {
+    const b = this.world.get(id);
+    if (!b || b.dead || b.owner !== owner || !b.built || b.type !== 'towncenter') return fail('Use o Centro da Vila');
+    const p = this.players[owner];
+    if (p.age >= 4) return fail('Já está na última idade');
+    if (b.ageUp) return fail('Já avançando de idade');
+    const next = AGE_UP[p.age + 1];
+    if (!this.canAfford(owner, next.cost)) return fail('Recursos insuficientes');
+    this.spend(owner, next.cost);
+    b.ageUp = { elapsed: 0, time: next.time, to: p.age + 1 };
+    this.notify(owner, `Avançando para ${AGE_NAMES[p.age + 1]}`, 'info');
+    return ok();
+  }
+
+  // Pesquisa uma técnica num edifício que a oferece (uma por vez em cada edifício).
+  research(owner, id, techId) {
+    const b = this.world.get(id);
+    const tech = TECHS[techId];
+    if (!b || b.dead || b.owner !== owner || !b.built) return fail('Edifício indisponível');
+    if (!tech || tech.building !== b.type) return fail('Esta técnica não é deste edifício');
+    const p = this.players[owner];
+    if (p.techs[techId]) return fail('Técnica já pesquisada');
+    if (tech.age > p.age) return fail(`Requer ${AGE_NAMES[tech.age]}`);
+    if (tech.req && !p.techs[tech.req]) return fail(`Pesquise ${TECHS[tech.req].name} antes`);
+    if (b.research) return fail('Já pesquisando neste edifício');
+    if (!this.canAfford(owner, tech.cost)) return fail('Recursos insuficientes');
+    this.spend(owner, tech.cost);
+    b.research = { id: techId, elapsed: 0, time: tech.time };
+    this.notify(owner, `${tech.name} em pesquisa`, 'info');
     return ok();
   }
 
@@ -411,6 +463,14 @@ export class Simulation {
       }
       return;
     }
+    if (b.ageUp) {
+      b.ageUp.elapsed += dt;
+      if (b.ageUp.elapsed >= b.ageUp.time) this.finishAgeUp(b);
+    }
+    if (b.research) {
+      b.research.elapsed += dt;
+      if (b.research.elapsed >= b.research.time) this.finishResearch(b);
+    }
     const q = b.queue[0];
     if (q) {
       q.elapsed += dt;
@@ -418,6 +478,31 @@ export class Simulation {
         b.queue.shift();
         this.finishTraining(b, q.type);
       }
+    }
+    if (def.attack) this.towerFire(b, dt);
+  }
+
+  // Torre: atira no inimigo mais próximo dentro do alcance.
+  towerFire(b, dt) {
+    const def = BUILDINGS[b.type];
+    b.cooldown = Math.max(0, b.cooldown - dt);
+    if (b.cooldown > 0) return;
+    const c = centerOf(b);
+    let best = null;
+    let bestD = def.range;
+    for (const u of this.lists.units) {
+      if (u.dead || u.owner === b.owner || u.owner === -1) continue;
+      const d = Math.hypot(u.x - c.x, u.y - c.y);
+      if (d < bestD) { best = u; bestD = d; }
+    }
+    if (!best) return;
+    b.cooldown = def.cooldown;
+    best.hp -= def.attack * this.attackBonus(b.owner);
+    best.lastHitBy = b.owner;
+    this.events.push({ type: 'shot', from: { x: c.x, y: c.y }, to: { x: best.x, y: best.y }, owner: b.owner });
+    if (best.owner === this.humanIndex && this.time - this.lastWarn > ATTACK_WARNING_COOLDOWN) {
+      this.lastWarn = this.time;
+      this.say('Estamos sendo atacados!', 'bad');
     }
   }
 
@@ -433,6 +518,22 @@ export class Simulation {
       if (def.gather) this.orderGather(u, b, def.gather);
       else this.setIdle(u);
     }
+  }
+
+  finishAgeUp(b) {
+    const p = this.players[b.owner];
+    p.age = b.ageUp.to;
+    b.ageUp = null;
+    this.notify(b.owner, `${AGE_NAMES[p.age]} alcançada!`, 'good');
+  }
+
+  finishResearch(b) {
+    const p = this.players[b.owner];
+    const id = b.research.id;
+    p.techs[id] = true;
+    p.stats.researched++;
+    b.research = null;
+    this.notify(b.owner, `${TECHS[id].name} concluída`, 'good');
   }
 
   finishTraining(b, type) {
@@ -555,7 +656,9 @@ export class Simulation {
 
   strike(u, t) {
     const def = UNITS[u.type];
-    const dmg = t.kind === 'building' ? def.attack * 0.5 : def.attack;
+    let dmg = def.attack * this.attackBonus(u.owner);
+    if (t.kind === 'unit') dmg *= def.bonus?.[t.type] ?? 1;
+    if (t.kind === 'building') dmg *= 0.5;
     t.hp -= dmg;
     t.lastHitBy = u.owner;
     this.events.push({
@@ -612,7 +715,7 @@ export class Simulation {
     const res = isNode ? NODES[src.type].resource : BUILDINGS[src.type].gather;
     const per = isNode ? NODES[src.type].gatherTime : BUILDINGS[src.type].gatherTime;
     if (!u.carry || u.carry.res !== res) u.carry = { res, amt: 0 };
-    u.gt += dt * this.econMult(u.owner);
+    u.gt += dt * this.econMult(u.owner) * this.gatherBonus(u.owner, res);
     while (u.gt >= per) {
       u.gt -= per;
       u.carry.amt++;
@@ -807,8 +910,8 @@ export class Simulation {
         else killer.destroyed++;
       }
       if (e.kind === 'unit') this.players[e.owner].stats.lost++;
-      if (e.kind === 'building') {
-        if (e.owner === this.humanIndex) this.notify(e.owner, `${BUILDINGS[e.type].name} destruído!`, 'bad');
+      if (e.kind === 'building' && e.owner === this.humanIndex) {
+        this.notify(e.owner, `${BUILDINGS[e.type].name} destruído!`, 'bad');
       }
       this.world.remove(e);
     }
@@ -892,7 +995,7 @@ export class Simulation {
     return out;
   }
 
-  // Ordena a lista de entidades do jogador para a UI (unidades, edifícios).
+  // Entidades do jogador para a UI e a IA.
   entitiesOf(owner) {
     const units = [];
     const buildings = [];

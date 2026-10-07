@@ -11,9 +11,10 @@ import { BUILDINGS } from '../core/config.js';
 
 const SELECT_OWN = 0x4cff6a;
 const SELECT_ENEMY = 0xff5050;
-const BAR_HEIGHT = { villager: 1.35, swordsman: 1.4, archer: 1.4, scout: 1.95 };
+const BAR_HEIGHT = { villager: 1.35, swordsman: 1.4, archer: 1.4, spearman: 1.45, crossbow: 1.4, scout: 1.95, knight: 2.2 };
 const BUILDING_BAR = 3.4;
 const TC_BAR = 5.4;
+const TOWER_BAR = 6.0;
 const MAX_PARTICLES = 300;
 
 const barBg = new THREE.PlaneGeometry(1, 0.12);
@@ -149,7 +150,7 @@ export class EntityRenderer {
       view = { group, kind: 'unit', rig: u.rig, type: e.type, yaw: 0, height: BAR_HEIGHT[e.type] };
     } else if (e.kind === 'building') {
       group = createBuilding(e.type, color);
-      view = { group, kind: 'building', type: e.type, height: e.type === 'towncenter' ? TC_BAR : BUILDING_BAR };
+      view = { group, kind: 'building', type: e.type, height: e.type === 'towncenter' ? TC_BAR : e.type === 'tower' ? TOWER_BAR : BUILDING_BAR };
     } else if (e.type === 'berry') {
       group = createBerry();
       view = { group, kind: 'node', height: 1.1 };

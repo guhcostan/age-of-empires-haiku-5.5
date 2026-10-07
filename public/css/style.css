@@ -342,6 +342,7 @@ fieldset input[type="range"] { width: 100%; accent-color: var(--gold); }
 }
 .bar.small { width: 120px; height: 10px; }
 .bar.small i { background: linear-gradient(#f5d36b, #c8901d); }
+.bar.prog { width: 130px; }
 #sel-queue { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; max-height: 60px; overflow: auto; }
 .queue-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
 .queue-item span { width: 100px; }
@@ -380,6 +381,12 @@ fieldset input[type="range"] { width: 100%; accent-color: var(--gold); }
 .cmd:hover:not(:disabled) { border-color: var(--gold); filter: brightness(1.15); }
 .cmd:disabled { cursor: default; opacity: 0.35; box-shadow: none; }
 .cmd.empty { background: #1a120a; border-style: dashed; border-color: #3a2a18; }
+.cmd.done { border-color: var(--ok); opacity: 0.7; }
+.cmd.done .label::after { content: " ✓"; color: var(--ok); }
+.cmd .icon.age { background: radial-gradient(circle at 40% 30%, #ffe08a, #9a6a16); color: #2a1a05; }
+.cmd .icon.tech { background: radial-gradient(circle at 40% 30%, #9ad1ff, #2a5a8a); }
+.bar.prog i { background: linear-gradient(#9ad1ff, #2a6aa8); }
+#topbar .age b { color: var(--gold); letter-spacing: 0.5px; }
 .cmd.unavailable { filter: grayscale(0.6) brightness(0.7); }
 .cmd .icon {
   width: 34px;

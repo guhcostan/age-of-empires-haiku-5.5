@@ -1,6 +1,8 @@
 // Bots: pensam a cada poucos segundos (depende da dificuldade) e usam
 // exatamente os mesmos comandos que o jogador humano.
-import { BUILDINGS, UNITS, NODES, DIFFICULTY, MAX_POP, RESOURCES } from './config.js';
+import {
+  BUILDINGS, UNITS, NODES, DIFFICULTY, MAX_POP, RESOURCES, AGE_UP, TECHS,
+} from './config.js';
 import { centerOf, rectOf, distToRect } from './world.js';
 
 // Divisão ideal dos aldeões entre recursos.
@@ -27,6 +29,7 @@ export class BotBrain {
   think() {
     const sim = this.sim;
     const o = this.owner;
+    const player = sim.players[o];
     const { units, buildings } = sim.entitiesOf(o);
     const tc = buildings.find((b) => b.type === 'towncenter' && b.built);
     if (!tc) return;
@@ -48,48 +51,104 @@ export class BotBrain {
       this.build('house', civil, centerOf(tc), 4, 12);
     }
 
-    // 3. Armazém perto de uma floresta.
+    // 3. Coleta: armazém, serraria e acampamento de mineração perto dos recursos.
     if (civil.length >= 6 && built('storehouse').length + planned('storehouse') === 0) {
       const wood = this.nearestNode(centerOf(tc), 'wood');
       if (wood) this.build('storehouse', civil, centerOf(wood), 2, 5);
     }
+    if (civil.length >= 8 && built('lumberCamp').length + planned('lumberCamp') === 0) {
+      const wood = this.nearestNode(centerOf(tc), 'wood');
+      if (wood) this.build('lumberCamp', civil, centerOf(wood), 3, 6);
+    }
+    if (civil.length >= 10 && built('miningCamp').length + planned('miningCamp') === 0) {
+      const mine = this.nearestNode(centerOf(tc), 'gold');
+      if (mine) this.build('miningCamp', civil, centerOf(mine), 3, 6);
+    }
 
-    // 4. Fazendas: uma para cada ~5 aldeões.
+    // 4. Fazendas e moinho: uma fazenda para cada ~5 aldeões.
     const farms = built('farm').length + planned('farm');
     const wantFarms = Math.min(6, Math.ceil(civil.length / 5));
     if (civil.length >= 6 && farms < wantFarms && planned('farm') === 0) {
       this.build('farm', civil, centerOf(tc), 4, 10);
     }
+    if (built('farm').length >= 2 && built('mill').length + planned('mill') === 0) {
+      this.build('mill', civil, centerOf(tc), 4, 10);
+    }
 
-    // 5. Quartel e estábulo.
+    // 5. Quartel, estábulo e ferreiro conforme a idade.
     if (civil.length >= 10 && built('barracks').length + planned('barracks') === 0) {
       this.build('barracks', civil, centerOf(tc), 6, 12);
     }
-    if (built('barracks').length > 0 && civil.length >= 14 && built('stable').length + planned('stable') === 0) {
+    if (player.age >= 2 && built('barracks').length > 0 && civil.length >= 14
+      && built('stable').length + planned('stable') === 0) {
       this.build('stable', civil, centerOf(tc), 6, 12);
     }
+    if (player.age >= 2 && civil.length >= 16 && built('blacksmith').length + planned('blacksmith') === 0) {
+      this.build('blacksmith', civil, centerOf(tc), 6, 12);
+    }
 
-    // 6. Treino militar: mistura de arqueiros e espadachins; batedores no estábulo.
-    const swords = army.filter((u) => u.type === 'swordsman').length;
-    const bows = army.filter((u) => u.type === 'archer').length;
-    const scouts = army.filter((u) => u.type === 'scout').length;
+    // 6. Subir de idade quando a economia está pronta.
+    this.tryAgeUp(tc, civil.length, army.length);
+
+    // 7. Pesquisas: a primeira técnica disponível em cada edifício que as oferece.
+    for (const b of buildings) {
+      if (!b.built || b.research) continue;
+      const def = BUILDINGS[b.type];
+      if (!def.techs) continue;
+      for (const id of def.techs) {
+        if (player.techs[id] || TECHS[id].age > player.age) continue;
+        if (TECHS[id].req && !player.techs[TECHS[id].req]) continue;
+        if (sim.research(o, b.id, id).ok) break;
+      }
+    }
+
+    // 8. Treino militar: escolhe o melhor tipo desbloqueado para cada prédio.
+    const count = (type) => army.filter((u) => u.type === type).length;
     for (const b of built('barracks')) {
       if (b.queue.length >= 2) continue;
-      const first = bows < swords * 0.6 ? 'archer' : 'swordsman';
-      const second = first === 'archer' ? 'swordsman' : 'archer';
-      if (!sim.train(o, b.id, first).ok) sim.train(o, b.id, second);
+      for (const type of this.barracksPriority(count, player.age)) {
+        if (sim.train(o, b.id, type).ok) break;
+      }
     }
     for (const b of built('stable')) {
-      if (b.queue.length < 2 && army.length >= 6 && scouts < army.length * 0.2) sim.train(o, b.id, 'scout');
+      if (b.queue.length >= 2 || army.length < 6) continue;
+      const order = player.age >= 3 && count('knight') < count('scout') * 2 + 1 ? ['knight', 'scout'] : ['scout', 'knight'];
+      for (const type of order) if (sim.train(o, b.id, type).ok) break;
     }
 
     this.assignVillagers(civil, buildings);
     this.commandArmy(army, tc);
   }
 
+  // Ordem de preferência de unidades do quartel conforme a idade e a composição do exército.
+  barracksPriority(count, age) {
+    const swords = count('swordsman');
+    const bows = count('archer');
+    const spears = count('spearman');
+    const crossbows = count('crossbow');
+    const order = [];
+    if (age >= 3 && crossbows < bows * 0.5) order.push('crossbow');
+    if (age >= 2 && spears < swords) order.push('spearman');
+    if (bows < swords * 0.6) order.push('archer');
+    order.push('swordsman', 'archer', 'spearman', 'crossbow');
+    return [...new Set(order)];
+  }
+
+  tryAgeUp(tc, civilCount, armyCount) {
+    const player = this.sim.players[this.owner];
+    if (player.age >= 4 || tc.ageUp) return;
+    const next = player.age + 1;
+    const needCivil = { 2: 14, 3: 20, 4: 26 }[next];
+    if (civilCount < needCivil) return;
+    if (next === 3 && armyCount < 4) return;
+    if (!this.sim.canAfford(this.owner, AGE_UP[next].cost)) return;
+    this.sim.startAgeUp(this.owner, tc.id);
+  }
+
   // Constrói um edifício num local livre perto de uma âncora, com até 2 construtores.
   build(type, civil, anchor, rMin, rMax) {
     const sim = this.sim;
+    if (BUILDINGS[type].age > sim.players[this.owner].age) return false;
     if (!sim.canAfford(this.owner, BUILDINGS[type].cost)) return false;
     const spot = this.findSpot(type, anchor.x, anchor.y, rMin, rMax);
     if (!spot) return false;
@@ -135,7 +194,7 @@ export class BotBrain {
     const sim = this.sim;
     const o = this.owner;
 
-    // Construtores: até 3 aldeões ociosos por fundação.
+    // Construtores: até 3 aldeões por fundação (pelo menos 1, mesmo que coletem).
     for (const f of buildings) {
       if (f.built) continue;
       const have = civil.filter((u) => u.order === 'build' && u.target === f.id).length;
