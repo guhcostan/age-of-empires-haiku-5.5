@@ -46,6 +46,15 @@ de arte ou áudio de terceiros.
 | Técnicas | J e I (no edifício de apoio correspondente) |
 | Pausa | Esc |
 
+## Jogo publicado
+
+- URL: https://age-of-empires-haiku.guhcostan.workers.dev
+- O Worker `age-of-empires-haiku` (conta Cloudflare do projeto) serve a pasta `public/` a partir da
+  branch `claude/admiring-feynman-bxzdp3` do GitHub, buscando os arquivos no raw do repositório e
+  guardando por 5 minutos. Ele precisa que o repositório seja público.
+- Por isso, cada push na branch aparece no site em até 5 minutos. Para um deploy direto com
+  `wrangler` (com assets empacotados), defina `CLOUDFLARE_API_TOKEN` e use `npm run deploy`.
+
 ## Desenvolvimento
 
 Não há etapa de build: os módulos ES ficam em `public/` e o three.js é servido de
