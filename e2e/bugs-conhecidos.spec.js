@@ -20,10 +20,9 @@ const rendersPerTick = (page) => page.evaluate(() => new Promise((resolve) => {
   requestAnimationFrame(tick);
 }));
 
-// Bugs confirmados no jogo, registrados como test.fail: o teste passa enquanto o bug existir.
-// Quando o bug for corrigido, o teste passa "inesperadamente" e o test.fail deve ser removido.
-test.describe('Bugs conhecidos (esperados a falhar)', () => {
-  test.fail('iniciar partida enquanto outra roda não duplica o loop de renderização', async ({ page }) => {
+// Regressões: bugs confirmados antes e corrigidos (loop de quadros duplicado ao reiniciar a partida).
+test.describe('Regressões de bugs já corrigidos', () => {
+  test('iniciar partida enquanto outra roda não duplica o loop de renderização', async ({ page }) => {
     // Bug: Game.start() chama stop() e depois define running = true enquanto ainda há um
     // requestAnimationFrame pendente de Game.frame(); esse frame antigo continua a cadeia,
     // e a nova partida inicia outra. Ver public/js/game.js (start, linha ~101-105; frame, linha ~159-161).

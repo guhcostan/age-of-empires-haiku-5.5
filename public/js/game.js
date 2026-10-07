@@ -48,7 +48,7 @@ export class Game {
     this.ended = false;
     this.selected = new Set();
     this.groups = {};
-    this.frameBound = (now) => this.frame(now);
+    this.loopId = 0;
     this.onResize = () => this.resize();
     window.addEventListener('resize', this.onResize);
     this.resize();
@@ -102,7 +102,7 @@ export class Game {
     this.hud.show();
     this.resize();
     this.last = performance.now();
-    requestAnimationFrame(this.frameBound);
+    this.startLoop();
   }
 
   buildLights(mapSize) {
@@ -121,6 +121,7 @@ export class Game {
   }
 
   stop() {
+    this.loopId++;
     if (!this.running && !this.scene) return;
     this.running = false;
     if (this.entities) this.entities.dispose();
@@ -156,9 +157,19 @@ export class Game {
 
   // ---------- Loop ----------
 
+  // Cada partida tem um id de loop: quadros pendentes de uma partida anterior morrem sozinhos.
+  startLoop() {
+    const id = ++this.loopId;
+    const step = (now) => {
+      if (id !== this.loopId || !this.running) return;
+      requestAnimationFrame(step);
+      this.frame(now);
+    };
+    requestAnimationFrame(step);
+  }
+
   frame(now) {
     if (!this.running) return;
-    requestAnimationFrame(this.frameBound);
     const dt = Math.min(0.1, Math.max(0, (now - this.last) / 1000));
     this.last = now;
 

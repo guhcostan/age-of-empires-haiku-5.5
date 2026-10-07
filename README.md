@@ -54,7 +54,7 @@ Não há etapa de build: os módulos ES ficam em `public/` e o three.js é servi
 ```bash
 npm install
 npm test            # testes unitários da simulação (Node)
-npx playwright test # testes end-to-end no Chromium (ver tests/e2e)
+npx playwright test # testes end-to-end no Chromium (ver e2e/)
 npm run dev         # servidor local com wrangler
 npm run deploy      # publica na Cloudflare (requer CLOUDFLARE_API_TOKEN)
 ```
