@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Age of Empires</title>
+  <meta name="description" content="Clone de Age of Empires para testes pessoais. Sem fins comerciais.">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+  { "imports": { "three": "./vendor/three.module.js" } }
+  </script>
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <canvas id="game-canvas"></canvas>
+
+  <!-- ===== HUD da partida ===== -->
+  <div id="hud" class="hidden">
+    <header id="topbar">
+      <div class="res" title="Comida"><span class="ri food"></span><b id="res-food">0</b></div>
+      <div class="res" title="Madeira"><span class="ri wood"></span><b id="res-wood">0</b></div>
+      <div class="res" title="Ouro"><span class="ri gold"></span><b id="res-gold">0</b></div>
+      <div class="res" title="Pedra"><span class="ri stone"></span><b id="res-stone">0</b></div>
+      <div class="res pop" title="População (usada / máxima)"><span class="ri pop"></span><b id="res-pop">0 / 0</b></div>
+      <div class="res age" title="Idade atual"><b id="res-age">Idade das Trevas</b></div>
+      <button id="btn-menu-hud" class="menu-btn" type="button">Menu</button>
+    </header>
+
+    <div id="toasts"></div>
+    <div id="hint"></div>
+
+    <footer id="bottombar">
+      <div id="minimap-wrap">
+        <canvas id="minimap"></canvas>
+      </div>
+      <section id="panel-sel">
+        <div id="sel-icon"></div>
+        <div id="sel-text">
+          <h2 id="sel-title">Nada selecionado</h2>
+          <p id="sel-sub">Clique em unidades ou edifícios</p>
+          <div id="sel-body"></div>
+          <div id="sel-queue"></div>
+        </div>
+      </section>
+      <section id="cmd-panel">
+        <div id="cmd-grid"></div>
+      </section>
+    </footer>
+
+    <div id="sel-box"></div>
+  </div>
+
+  <!-- ===== Menus ===== -->
+  <div id="menus" class="hidden">
+    <section id="screen-main" class="screen">
+      <div class="logo">
+        <h1>Age of Empires</h1>
+        <p>Idade das Trevas · Clone para testes</p>
+      </div>
+      <nav class="menu-col">
+        <button id="btn-play" class="menu-btn big" type="button">Partida rápida</button>
+        <button id="btn-continue" class="menu-btn big hidden" type="button">Continuar partida</button>
+        <button class="menu-btn big" type="button" data-go="help">Como jogar</button>
+        <button class="menu-btn big" type="button" data-go="options">Opções</button>
+      </nav>
+      <p class="fine">Projeto pessoal de teste. Não é um produto oficial e não será comercializado.</p>
+    </section>
+
+    <section id="screen-setup" class="screen hidden">
+      <h2 class="screen-title">Partida rápida</h2>
+      <div class="setup">
+        <fieldset>
+          <legend>Tamanho do mapa</legend>
+          <label><input type="radio" name="size" value="pequeno"> Pequeno <small>64×64</small></label>
+          <label><input type="radio" name="size" value="medio"> Médio <small>96×96</small></label>
+          <label><input type="radio" name="size" value="grande"> Grande <small>128×128</small></label>
+        </fieldset>
+        <fieldset>
+          <legend>Adversários (bots)</legend>
+          <label><input type="radio" name="bots" value="1"> 1 bot</label>
+          <label><input type="radio" name="bots" value="2"> 2 bots</label>
+          <label><input type="radio" name="bots" value="3"> 3 bots</label>
+        </fieldset>
+        <fieldset>
+          <legend>Dificuldade</legend>
+          <label><input type="radio" name="difficulty" value="facil"> Fácil</label>
+          <label><input type="radio" name="difficulty" value="normal"> Normal</label>
+          <label><input type="radio" name="difficulty" value="dificil"> Difícil</label>
+        </fieldset>
+        <fieldset>
+          <legend>Semente do mapa</legend>
+          <input id="seed" type="text" maxlength="24" placeholder="Aleatória se vazio" autocomplete="off">
+        </fieldset>
+      </div>
+      <div class="row">
+        <button class="menu-btn" type="button" data-go="main">Voltar</button>
+        <button id="btn-start" class="menu-btn primary" type="button">Iniciar partida</button>
+      </div>
+    </section>
+
+    <section id="screen-help" class="screen hidden">
+      <h2 class="screen-title">Como jogar</h2>
+      <div class="help">
+        <h3>Objetivo</h3>
+        <p>Colete recursos, construa a vila e destrua o Centro da Vila de todos os adversários.</p>
+        <h3>Mouse</h3>
+        <ul>
+          <li><b>Clique esquerdo</b>: selecionar (Shift adiciona). Clique duplo seleciona unidades iguais na tela.</li>
+          <li><b>Arrastar</b>: seleção em caixa (unidades; edifícios se não houver unidades).</li>
+          <li><b>Clique direito</b>: mover, atacar, coletar, construir ou definir ponto de encontro (edifícios de treino).</li>
+          <li><b>Roda do mouse</b>: zoom. <b>Botão do meio</b>: arrastar a câmera.</li>
+          <li><b>Minimapa</b>: clique esquerdo centraliza; clique direito move as unidades.</li>
+        </ul>
+        <h3>Teclado</h3>
+        <ul>
+          <li><b>Setas</b> ou borda da tela: mover a câmera. <b>Q / E</b>: girar.</li>
+          <li><b>Espaço</b>: centralizar na seleção. <b>Home</b>: centralizar no Centro da Vila.</li>
+          <li><b>A</b>: atacar-mover. <b>S</b>: parar. <b>Esc</b>: cancelar ou pausar.</li>
+          <li><b>0–9</b>: selecionar grupo. <b>Ctrl + 0–9</b>: definir grupo.</li>
+          <li><b>Construir</b> (aldeão): <b>H</b> casa, <b>M</b> armazém, <b>F</b> fazenda, <b>N</b> moinho, <b>L</b> serraria, <b>O</b> acampamento de mineração, <b>B</b> quartel, <b>T</b> estábulo, <b>K</b> ferreiro, <b>Y</b> torre.</li>
+          <li><b>Centro da Vila</b>: <b>V</b> aldeão, <b>U</b> avançar de idade. <b>Quartel</b>: <b>Z</b> espadachim, <b>X</b> arqueiro, <b>G</b> lanceiro, <b>D</b> besteiro. <b>Estábulo</b>: <b>C</b> batedor, <b>R</b> cavaleiro. <b>Del</b>: cancelar treino.</li>
+          <li><b>Técnicas</b> (edifício de apoio): <b>J</b> e <b>I</b> pesquisam a técnica correspondente.</li>
+        </ul>
+        <h3>Dicas</h3>
+        <ul>
+          <li>Casas dão +10 de população. O limite do jogo é 200.</li>
+          <li>Serraria, acampamento de mineração e moinho aumentam a coleta depois de pesquisados.</li>
+          <li>Para avançar de idade, o Centro da Vila precisa de comida e ouro. Idades liberam edifícios e unidades.</li>
+          <li>Fazendas são infinitas e precisam de aldeões coletando; o moinho aceita comida com técnicas.</li>
+        </ul>
+      </div>
+      <div class="row"><button class="menu-btn" type="button" data-go="main">Voltar</button></div>
+    </section>
+
+    <section id="screen-options" class="screen hidden">
+      <h2 class="screen-title">Opções</h2>
+      <div class="setup">
+        <fieldset>
+          <legend>Volume dos efeitos</legend>
+          <input id="volume" type="range" min="0" max="100" step="5">
+        </fieldset>
+      </div>
+      <div class="row"><button class="menu-btn" type="button" data-go="main">Voltar</button></div>
+    </section>
+  </div>
+
+  <!-- ===== Pausa ===== -->
+  <div id="overlay-pause" class="overlay hidden">
+    <div class="panel">
+      <h2>Pausado</h2>
+      <button id="btn-resume" class="menu-btn big primary" type="button">Continuar</button>
+      <button id="btn-pause-help" class="menu-btn big" type="button">Como jogar</button>
+      <button id="btn-pause-quit" class="menu-btn big" type="button">Sair para o menu</button>
+    </div>
+  </div>
+
+  <!-- ===== Fim de partida ===== -->
+  <div id="overlay-end" class="overlay hidden">
+    <div class="panel wide">
+      <h2 id="end-title">Vitória!</h2>
+      <table class="stats"><tbody id="end-stats"></tbody></table>
+      <div class="row">
+        <button id="btn-again" class="menu-btn big" type="button">Jogar de novo</button>
+        <button id="btn-end-menu" class="menu-btn big primary" type="button">Menu principal</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
