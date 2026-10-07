@@ -208,3 +208,74 @@ test('partida só com bots avança sem erros e gera economia e tropas', () => {
     assert.ok(Number.isFinite(e.x) && Number.isFinite(e.y), 'posições finitas');
   }
 });
+
+test('avançar de idade exige centro da vila, recursos e libera edifícios', () => {
+  const { sim } = makeSim({ bots: 0, seed: 21 });
+  const tc = tcOf(sim, 0);
+  const site = findFreeSite(sim, 'stable', tc);
+  assert.equal(sim.placeBuilding(0, 'stable', site.x, site.y).ok, false, 'estábulo exige Idade Feudal');
+  sim.players[0].res = { food: 900, wood: 900, gold: 900, stone: 0 };
+  assert.equal(sim.startAgeUp(0, tc.id).ok, true);
+  assert.equal(sim.startAgeUp(0, tc.id).ok, false, 'não avança duas vezes ao mesmo tempo');
+  runFor(sim, 61);
+  assert.equal(sim.players[0].age, 2);
+  assert.equal(sim.placeBuilding(0, 'stable', site.x, site.y).ok, true);
+});
+
+test('técnica só pesquisa no edifício certo e com a idade correta', () => {
+  const { sim } = makeSim({ bots: 0, seed: 21 });
+  sim.players[0].res = { food: 900, wood: 900, gold: 900, stone: 0 };
+  const tc = tcOf(sim, 0);
+  const site = findFreeSite(sim, 'mill', tc);
+  const mill = sim.placeBuilding(0, 'mill', site.x, site.y).building;
+  const villager = [...sim.world.entities.values()].find((e) => e.kind === 'unit' && e.type === 'villager');
+  sim.command(0, [villager.id], { type: 'build', target: mill.id });
+  runFor(sim, 40);
+  assert.equal(mill.built, true);
+  assert.equal(sim.research(0, mill.id, 'lumber').ok, false, 'serraria não é moinho');
+  assert.equal(sim.research(0, mill.id, 'horticulture').ok, false, 'horticultura exige Idade Feudal');
+  sim.players[0].age = 2;
+  assert.equal(sim.research(0, mill.id, 'fertilization').ok, false, 'fertilização exige horticultura');
+  assert.equal(sim.research(0, mill.id, 'horticulture').ok, true);
+  assert.equal(sim.gatherBonus(0, 'food'), 1, 'bônus só vale depois de concluir');
+  runFor(sim, 46);
+  assert.ok(sim.players[0].techs.horticulture);
+  assert.ok(Math.abs(sim.gatherBonus(0, 'food') - 1.1) < 1e-9, 'horticultura dá +10% de comida');
+});
+
+test('lanceiro causa mais dano contra cavalaria', () => {
+  const { sim } = makeSim({ bots: 1, seed: 33 });
+  const spear = sim.spawnUnit('spearman', 0, 30.5, 30.5);
+  const scout = sim.spawnUnit('scout', 1, 31.2, 30.5);
+  const infantry = sim.spawnUnit('swordsman', 1, 31.2, 31.5);
+  const hpScout = scout.hp;
+  const hpInf = infantry.hp;
+  sim.strike(spear, scout);
+  sim.strike(spear, infantry);
+  assert.ok(hpScout - scout.hp > hpInf - infantry.hp, 'dano contra cavalaria é maior');
+});
+
+test('torre atira no inimigo mais próximo dentro do alcance', () => {
+  const { sim } = makeSim({ bots: 1, seed: 45 });
+  sim.players[0].age = 2;
+  sim.players[0].res = { food: 0, wood: 900, gold: 0, stone: 900 };
+  const tc = tcOf(sim, 0);
+  const site = findFreeSite(sim, 'tower', tc);
+  const tower = sim.placeBuilding(0, 'tower', site.x, site.y).building;
+  const villager = [...sim.world.entities.values()].find((e) => e.kind === 'unit' && e.type === 'villager');
+  sim.command(0, [villager.id], { type: 'build', target: tower.id });
+  runFor(sim, 45);
+  assert.equal(tower.built, true);
+  const enemy = sim.spawnUnit('swordsman', 1, tower.x + 3.5, tower.y + 1);
+  const before = enemy.hp;
+  runFor(sim, 3);
+  assert.ok(enemy.hp < before, 'a torre deveria ter atingido o inimigo');
+});
+
+test('bots avançam de idade e pesquisam técnicas numa partida', () => {
+  const { sim, brains } = makeSim({ size: 96, bots: 2, seed: 9, difficulty: 'normal' });
+  runFor(sim, 900, brains, 0.1);
+  const advanced = sim.players.slice(1).filter((p) => p.age >= 2);
+  assert.ok(advanced.length > 0, 'algum bot chegou à Idade Feudal');
+  assert.ok(sim.players.slice(1).some((p) => Object.keys(p.techs).length > 0), 'algum bot pesquisou técnica');
+});
