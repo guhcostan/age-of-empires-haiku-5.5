@@ -5,7 +5,8 @@
 - Publicado: https://age-of-empires-haiku.guhcostan.workers.dev (Worker que serve `public/` da branch `claude/admiring-feynman-bxzdp3`).
 - PR: guhcostan/age-of-empires-haiku-5.5#1 (rascunho, base `main`, criada com commit vazio).
 - Testes: 19 unitários (`npm test`), 17 E2E (`npx playwright test`), contra servidor local.
-- CI: workflow `.github/workflows/ci.yml` roda no PR; o job de E2E falhou em runs anteriores, investigação em andamento.
+- CI: `main` verde no commit 456d443 (job CI e job de deploy). O job de deploy pula a publicação enquanto `CLOUDFLARE_API_TOKEN` não existir.
+- PRs mesclados: #1 (base da main) e #2 (correção do deploy sem token).
 
 ## Decisões
 - Nome do projeto: **Haiku Empires** (provisório, sem o nome do jogo original). A UI e o README ainda citam o nome antigo; trocar na fase 8.
@@ -25,7 +26,7 @@
 - 7 Bots: versão atual pronta, precisa das regras de landmark e civilização.
 - 8 Menu e HUD: layout atual não é o do AoE IV.
 - 9 Áudio, performance, polimento: 200 unidades a 60 fps ainda não medidos em GPU real.
-- CI verde na main: depende de merge do PR #1 e de E2E passar no runner.
+- CI verde na main: atingido em 456d443.
 - TypeScript + Vite: não iniciado.
 
 ## Bugs abertos
