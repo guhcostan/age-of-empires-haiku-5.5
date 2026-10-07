@@ -6,6 +6,7 @@
 - Publicado: https://age-of-empires-haiku.guhcostan.workers.dev (Worker que serve `public/` da branch `claude/admiring-feynman-bxzdp3`). Após o push, a versão nova aparece em até 5 minutos.
 - PRs: guhcostan/age-of-empires-haiku-5.5#1 e #2 (mesclados); #3 é a fase 1 (rascunho, TypeScript + Vite).
 - Testes: 19 unitários (`npm test`), 18 E2E (`npx playwright test`, compila antes e roda contra `vite preview`).
+- E2E contra produção (`E2E_BASE_URL=https://age-of-empires-haiku.guhcostan.workers.dev npx playwright test`): 18/18 passando no bundle `index-B8JoBrHp.js` (commit db17232). O CI do PR #3 ainda estava rodando nesse commit.
 - Verificações: `npm run build` (tsc strict + vite) limpo; CI checa que `public/` é igual ao build do código.
 - CI: `main` verde no commit 456d443 (job CI e job de deploy). O job de deploy pula a publicação enquanto `CLOUDFLARE_API_TOKEN` não existir.
 
