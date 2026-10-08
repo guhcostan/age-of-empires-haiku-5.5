@@ -552,3 +552,10 @@ Fonte: https://raw.githubusercontent.com/aoe4world/data/main/buildings/english.j
 - Não confirmados: velocidade (aoe4world 0,75; o código usa 1,2, proporção do aldeão, não valor medido) e alcance no código (0,54, valor do aoe4world sem conversão validada).
 - Não implementados: bônus de 300 contra muros (não há muros ainda) e resistência a flechas 95 (não há armadura nem resistência no código).
 - A redução de 0,5 contra prédios, que o código aplica aos demais atacantes, não tem fonte na SPEC. Continua como estava; o aríete a ignora por ser dano de cerco.
+
+### Anexo C, adendo 3: muro de pedra (implementado em 2026-10-08)
+
+- Muro de pedra: 25 pedra, 16 s, 3000 de vida (aoe4.club e aoe4world concordam); idade 2 só no aoe4world.
+- Provisórios: footprint 1x1 e visão 3 (a SPEC não tem esses números).
+- Colocação: um tile por clique; Shift repete a colocação, como os demais edifícios.
+- Não implementados: portões (passagem para o dono), paliçada e linhas arrastadas. O muro bloqueia tiles como qualquer edifício.

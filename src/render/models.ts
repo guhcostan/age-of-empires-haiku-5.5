@@ -504,6 +504,11 @@ export function buildAdvancedBuilding(type: BuildingType, g: THREE.Group, team: 
       part(g, box(0.5, 0.36, 0.03), team, 0, 3.6, 1.52);
       break;
     }
+    case 'stoneWall': {
+      part(g, box(0.9, 1.2, 0.9), 0xa9a9a0, 0, 0.6, 0);
+      part(g, box(0.95, 0.25, 0.95), 0x8a8a80, 0, 1.32, 0);
+      break;
+    }
     case 'siegeWorkshop': {
       part(g, box(2.8, 0.6, 2.8), 0x6e6a64, 0, 0.3, 0);
       part(g, box(2.6, 1.4, 2.6), 0x8a6a46, 0, 1.3, 0);

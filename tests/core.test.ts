@@ -391,3 +391,20 @@ test('aríete não procura unidades inimigas, só edifícios', () => {
   assert.equal(sim.findFoe(ram, 10, false), null);
 });
 
+// Muro de pedra (aoe4.club e aoe4world concordam em custo, tempo e vida; idade 2 só no aoe4world).
+test('muro de pedra custa 25 pedra, tem 3000 de vida e leva 16 s (confirmado)', () => {
+  assert.deepEqual(BUILDINGS.stoneWall.cost, { stone: 25 });
+  assert.equal(BUILDINGS.stoneWall.hp, 3000);
+  assert.equal(BUILDINGS.stoneWall.time, 16);
+  assert.equal(BUILDINGS.stoneWall.age, 2);
+});
+
+test('muro de pedra ocupa o tile: outro prédio não pode ser colocado nele', () => {
+  const { sim } = makeSim({ bots: 0, seed: 21 });
+  sim.players[0].age = 2;
+  sim.players[0].res = { food: 0, wood: 0, gold: 0, stone: 500 };
+  const r = sim.placeBuilding(0, 'stoneWall', 30, 30);
+  assert.equal(r.ok, true);
+  assert.notEqual(sim.checkPlacement('house', 30, 30), null, 'o tile já está ocupado pelo muro');
+});
+

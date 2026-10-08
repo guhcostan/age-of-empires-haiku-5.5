@@ -33,7 +33,8 @@
   - Pendente, existência confirmada (ligado à civilização, fase 5): Homem de Armas Vanguarda, Arqueiro Longo, Cavaleiro Real (Feudal, duas fontes), Arbalétrier, Canhão.
   - Pendente, mecânica sem fórmula na SPEC: armadura (o código não tem campo de armadura e o ataque não reduz dano), dano a edifícios (hoje ×0,5 sem fonte), counters por classe (só o lanceiro tem bônus, ×2 sem fonte), Rede de Castelos (aceleração perto de defesas).
   - Oficina de cerco e aríete: implementados (ver SPEC anexo C, adendo 2). Velocidade e alcance do aríete são provisórios.
-  - Pendente, incerto: muralhas, portões, paliçada e posto avançado (fonte única); valores de vida e custo da torre e do quartel: resolvidos na rodada de 2026-10-08 (SPEC anexo C, duas fontes; aplicados no código); estatísticas do Espadachim (SPEC não tem a unidade); forja: técnica "Armaduras" só dá ataque.
+  - Muro de pedra: implementado (1 tile por clique, Shift repete). Portões, paliçada e posto avançado continuam pendentes.
+  - Pendente, incerto: portões, paliçada e posto avançado (fonte única); valores de vida e custo da torre e do quartel: resolvidos na rodada de 2026-10-08 (SPEC anexo C, duas fontes; aplicados no código); estatísticas do Espadachim (SPEC não tem a unidade); forja: técnica "Armaduras" só dá ataque.
 - 4 Idades, landmarks, tecnologias: versão atual usa Centro da Vila no lugar de landmarks.
 - 5 Segunda civilização: não iniciada.
 - 6 Relíquias, locais sagrados, comércio, vitória: não iniciada.

@@ -136,6 +136,11 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     name: 'Quartel', w: 3, h: 3, hp: 1500, sight: 7, cost: { wood: 150 }, time: 30, age: 1,
     trains: ['swordsman', 'spearman', 'crossbow'],
   },
+  // Muro de pedra: 25 pedra, 16 s, 3000 de vida (aoe4.club e aoe4world); idade 2 só no aoe4world.
+  // Footprint 1x1 e visão 3 são provisórios: a SPEC não tem esses números.
+  stoneWall: {
+    name: 'Muro de pedra', w: 1, h: 1, hp: 3000, sight: 3, cost: { stone: 25 }, time: 16, age: 2,
+  },
   // Oficina de cerco: treina aríetes. Custo, vida e tempo batem em aoe4.club e aoe4world; idade 3 só no aoe4world.
   siegeWorkshop: {
     name: 'Oficina de cerco', w: 3, h: 3, hp: 2100, sight: 7, cost: { wood: 250 }, time: 45, age: 3,
@@ -212,7 +217,7 @@ export const TECHS: Record<TechId, TechDef> = {
 
 export const BUILD_MENU: readonly BuildingType[] = [
   'house', 'storehouse', 'farm', 'mill', 'lumberCamp', 'miningCamp',
-  'barracks', 'archeryRange', 'stable', 'blacksmith', 'tower', 'keep', 'siegeWorkshop',
+  'barracks', 'archeryRange', 'stable', 'blacksmith', 'tower', 'keep', 'siegeWorkshop', 'stoneWall',
 ];
 
 // Teclas de atalho (exibidas nos botões e na ajuda).
@@ -222,7 +227,7 @@ export const UNIT_KEYS: Record<UnitType, string> = {
 // O Centro da Vila não é construído pelo menu, então não tem tecla aqui.
 export const BUILD_KEYS: Partial<Record<BuildingType, string>> = {
   house: 'h', storehouse: 'm', farm: 'f', mill: 'n', lumberCamp: 'l', miningCamp: 'o',
-  barracks: 'b', archeryRange: 'c', stable: 't', blacksmith: 'k', tower: 'y', keep: 'p', siegeWorkshop: 'g',
+  barracks: 'b', archeryRange: 'c', stable: 't', blacksmith: 'k', tower: 'y', keep: 'p', siegeWorkshop: 'g', stoneWall: 'w',
 };
 export const TECH_KEYS: readonly string[] = ['j', 'i'];
 export const AGE_KEY = 'u';
