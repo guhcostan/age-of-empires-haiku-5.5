@@ -139,6 +139,14 @@ function buildCandidate(size: number, playerCount: number, seed: number): GameMa
     }
   }
 
+  // Relíquias (provisórias): posições fixas como frações do mapa, sem usar o gerador aleatório, para não mudar o mapa
+  // das sementes já existentes. Pulam posições perto das bases ou bloqueadas.
+  for (const [fx, fy] of [[0.25, 0.25], [0.75, 0.75], [0.25, 0.75], [0.75, 0.25]]) {
+    const x = Math.round(size * fx);
+    const y = Math.round(size * fy);
+    if (distToBase(x, y) > 14) place('relic', x, y);
+  }
+
   // Florestas: clusters de árvores vindos de ruído.
   for (let y = 1; y < size - 1; y++) {
     for (let x = 1; x < size - 1; x++) {

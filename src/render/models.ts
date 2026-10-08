@@ -299,6 +299,10 @@ export function createMine(type: NodeType): THREE.Group {
     for (const [x, z] of [[-0.5, 0.3], [0.4, 0.5], [0.1, -0.5], [-0.3, -0.3]]) {
       part(root, dodeca(0.17), GOLD, x, 0.66, z);
     }
+  } else if (type === 'relic') {
+    // Pilar de pedra com um cristal dourado no topo.
+    part(root, cyl(0.12, 0.17, 1.0, 6), 0xd9d2c3, 0, 0.5, 0);
+    part(root, dodeca(0.22), GOLD, 0, 1.12, 0);
   } else {
     part(root, ico(0.5), 0x9aa3ac, 0, 0.42, 0);
     part(root, ico(0.36), 0x7f8891, 0.55, 0.3, 0.35);

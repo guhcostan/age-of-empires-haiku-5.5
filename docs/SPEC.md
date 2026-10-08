@@ -711,3 +711,10 @@ Fontes lidas só por resumo de busca (a página do aoe4world é renderizada em J
 - Custo 90 de comida e 20 de ouro; 20,5 s; 155 de vida; ataque 12 corpo a corpo. Uma fonte [B] para os números; quartel só pelo resumo de busca.
 - Idade provisória (2): a SPEC marca "incerto". Armadura 4/4 e velocidade (1,125 na SPEC) não usadas, pelo mesmo motivo dos adendos anteriores.
 - Testes: tests/civilizacoes.test.ts (treino por civilização e idade).
+
+### Anexo C, adendo 23: relíquias (provisórias; 2026-10-08)
+
+- Relíquia é um nó de ouro de 100 unidades, 1 tile, coletado por aldeões e entregue como ouro. Não é a regra da AoE IV: a pesquisa (docs/SPEC.md, anexo de pesquisa, adendo 12) diz que monges levam a relíquia ao mosteiro, que gera ouro por relíquia guardada (até 3) e que a Catedral de Regnitz dobra o ouro. Sem mosteiro, sem monges e sem o número de ouro por minuto, nada disso existe no jogo ainda.
+- Posição: 4 posições fixas como frações do mapa (25%/75%), pulando as perto das bases. Não usa o gerador aleatório, então os mapas das sementes existentes não mudam. Em mapa de 64 com 2 jogadores, 2 relíquias.
+- Modelo: pilar de pedra com cristal dourado.
+- Testes: tests/relicas.test.ts (mapa tem relíquias; aldeão coleta e o ouro entra).

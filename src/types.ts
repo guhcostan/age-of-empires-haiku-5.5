@@ -18,7 +18,7 @@ export type BuildingType =
   | 'chamberOfCommerce' | 'schoolOfCavalry' | 'guildHall' | 'royalInstitute' | 'redPalace' | 'collegeOfArtillery'
   | 'notreDame';
 
-export type NodeType = 'tree' | 'berry' | 'gold' | 'stone';
+export type NodeType = 'tree' | 'berry' | 'gold' | 'stone' | 'relic';
 
 export type TechId =
   | 'horticulture' | 'fertilization' | 'lumber' | 'lumber2' | 'mining' | 'mining2' | 'forge1' | 'forge2';

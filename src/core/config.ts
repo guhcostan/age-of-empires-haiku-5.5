@@ -282,6 +282,9 @@ export const NODES: Record<NodeType, NodeDef> = {
   berry: { name: 'Frutas silvestres', resource: 'food', amount: 200, gatherTime: 0.9, w: 1, h: 1 },
   gold: { name: 'Mina de ouro', resource: 'gold', amount: 800, gatherTime: 1.2, w: 2, h: 2 },
   stone: { name: 'Mina de pedra', resource: 'stone', amount: 800, gatherTime: 1.3, w: 2, h: 2 },
+  // Relíquia (provisória): a SPEC e a pesquisa dizem que monges levam relíquias ao mosteiro, que gera ouro. Aqui é um
+  // nó de ouro pequeno, coletado por aldeões, até haver mosteiro e monges. Quantidade e tempo sem fonte confirmada.
+  relic: { name: 'Relíquia', resource: 'gold', amount: 100, gatherTime: 1.2, w: 1, h: 1 },
 };
 
 // Técnicas. `effect.gather` soma ao multiplicador de coleta; `effect.attack` soma ao ataque.
