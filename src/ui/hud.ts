@@ -4,11 +4,18 @@ import {
   MAX_QUEUE, UNIT_KEYS, BUILD_KEYS, TECH_KEYS, LANDMARK_KEYS, LANDMARKS_BY_CIV, WONDER_BY_CIV,
 } from '../core/config.ts';
 import { $ } from './dom.ts';
+import { nextAgeOf } from '../core/sim.ts';
 import type { Game } from '../game.ts';
 import type { AgeNumber, BuildingEntity, Cost, Entity, MessageLevel, NextAge, ResourceName } from '../types.ts';
 
 const TOAST_MS = 4200;
 const MAX_TOASTS = 5;
+
+// Relógio da partida em mm:ss.
+function formatClock(seconds: number): string {
+  const s = Math.floor(seconds);
+  return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+}
 // 5 colunas x 4 linhas: cabe a lista mais longa (14 edifícios + atacar + parar).
 const GRID_SLOTS = 20;
 
@@ -51,6 +58,10 @@ export class Hud {
   age: HTMLElement;
   idleBtn: HTMLButtonElement;
   idleCount: HTMLElement;
+  gat: Record<ResourceName, HTMLElement>;
+  clock: HTMLElement;
+  score: HTMLElement;
+  objective: HTMLElement;
   hint: HTMLElement;
   toasts: HTMLElement;
   selTitle: HTMLElement;
@@ -73,6 +84,11 @@ export class Hud {
     this.idleBtn = $<HTMLButtonElement>('btn-idle');
     this.idleCount = $('idle-count');
     this.idleBtn.addEventListener('click', () => this.game.selectIdleVillagers());
+    this.gat = {} as Record<ResourceName, HTMLElement>;
+    for (const r of RESOURCES) this.gat[r] = $(`gat-${r}`);
+    this.clock = $('res-time');
+    this.score = $('res-score');
+    this.objective = $('objective');
     this.hint = $('hint');
     this.toasts = $('toasts');
     this.selTitle = $('sel-title');
@@ -126,6 +142,25 @@ export class Hud {
     return true;
   }
 
+  // Objetivo atual: o próximo marco e o progresso da condição de vitória ligada.
+  objectiveText(): string {
+    const sim = this.game.sim;
+    if (!sim) return '';
+    if (sim.gameOver) return 'Partida encerrada';
+    const player = sim.players[0];
+    const next = nextAgeOf(player.age);
+    const parts = [next ? `Objetivo: marco da ${AGE_NAMES[next]}` : 'Objetivo: vencer a partida'];
+    if (sim.sacredVictory) {
+      const mine = sim.sacredSites.filter((x) => x.owner === 0).length;
+      parts.push(`locais sagrados ${mine}/${sim.sacredSites.length}`);
+    }
+    if (sim.wonderVictory) {
+      const left = sim.wonderLeft.get(0);
+      parts.push(left ? `maravilha: ${Math.ceil(left)} s` : 'maravilha: sem maravilha de pé');
+    }
+    return parts.join(' · ');
+  }
+
   // ---------- Atualização por frame ----------
 
   update(): void {
@@ -142,6 +177,12 @@ export class Hud {
     const idle = this.game.idleVillagers().length;
     this.idleCount.textContent = String(idle);
     this.idleBtn.disabled = idle === 0;
+    const counts = g.gathererCounts();
+    for (const r of RESOURCES) this.gat[r].textContent = String(counts[r]);
+    this.clock.textContent = formatClock(sim.time);
+    const st = player.stats;
+    this.score.textContent = `${st.kills} / ${st.lost}`;
+    this.objective.textContent = this.objectiveText();
 
     const sel = g.selectedEntities();
     const sig = sel.map((e) => {

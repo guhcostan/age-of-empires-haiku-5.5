@@ -14,18 +14,21 @@
   <!-- ===== HUD da partida ===== -->
   <div id="hud" class="hidden">
     <header id="topbar">
-      <div class="res" title="Comida"><span class="ri food"></span><b id="res-food">0</b></div>
-      <div class="res" title="Madeira"><span class="ri wood"></span><b id="res-wood">0</b></div>
-      <div class="res" title="Ouro"><span class="ri gold"></span><b id="res-gold">0</b></div>
-      <div class="res" title="Pedra"><span class="ri stone"></span><b id="res-stone">0</b></div>
+      <div class="res" title="Comida"><span class="ri food"></span><b id="res-food">0</b><small class="gat" id="gat-food" title="Aldeões coletando comida">0</small></div>
+      <div class="res" title="Madeira"><span class="ri wood"></span><b id="res-wood">0</b><small class="gat" id="gat-wood" title="Aldeões coletando madeira">0</small></div>
+      <div class="res" title="Ouro"><span class="ri gold"></span><b id="res-gold">0</b><small class="gat" id="gat-gold" title="Aldeões coletando ouro">0</small></div>
+      <div class="res" title="Pedra"><span class="ri stone"></span><b id="res-stone">0</b><small class="gat" id="gat-stone" title="Aldeões coletando pedra">0</small></div>
       <div class="res pop" title="População (usada / máxima)"><span class="ri pop"></span><b id="res-pop">0 / 0</b></div>
       <button id="btn-idle" class="idle-btn" type="button" title="Selecionar aldeões ociosos">Ociosos <b id="idle-count">0</b></button>
+      <div class="res clock" title="Tempo de partida"><b id="res-time">00:00</b></div>
+      <div class="res score" title="Inimigos abatidos e unidades perdidas"><b id="res-score">0 / 0</b></div>
       <div class="res age" title="Idade atual"><b id="res-age">Idade das Trevas</b></div>
       <button id="btn-menu-hud" class="menu-btn" type="button">Menu</button>
     </header>
 
     <div id="toasts"></div>
     <div id="hint"></div>
+    <div id="objective" class="objective"></div>
 
     <footer id="bottombar">
       <div id="minimap-wrap">

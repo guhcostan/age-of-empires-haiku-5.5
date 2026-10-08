@@ -71,6 +71,22 @@ button, input { font: inherit; }
 .idle-btn:hover:not(:disabled) { filter: brightness(1.2); }
 .idle-btn:disabled { opacity: 0.45; cursor: default; }
 .idle-btn b { margin-left: 4px; }
+/* Aldeões coletando cada recurso, ao lado do valor na barra de cima. */
+.gat { margin-left: 3px; font-size: 11px; color: var(--dim); }
+.gat::before { content: "👤"; font-size: 9px; margin-right: 1px; }
+/* Objetivo e placar: texto curto, sem competir com a barra de cima. */
+.objective {
+  position: absolute;
+  top: 46px;
+  left: 12px;
+  padding: 4px 10px;
+  border: 1px solid rgba(255, 220, 150, 0.35);
+  border-radius: 4px;
+  background: rgba(20, 24, 30, 0.7);
+  color: var(--text);
+  font-size: 13px;
+  pointer-events: none;
+}
 .menu-btn.big { display: block; width: 320px; max-width: 80vw; margin: 10px auto; padding: 14px 18px; font-size: 20px; letter-spacing: 0.5px; }
 .menu-btn.primary { background: linear-gradient(#a8741e, #6b4612); border-color: var(--gold); }
 

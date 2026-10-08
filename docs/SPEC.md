@@ -656,3 +656,9 @@ Fontes lidas só por resumo de busca (a página do aoe4world é renderizada em J
 - Comerciantes: podem devolver comida, madeira ou ouro aos mercados. Navios de comércio devolvem 20% a mais (resumo). Tecnologia "Guildas de mercadores": cada comerciante ativo gera 1 de ouro a cada 6 s (resumo, https://aoe4world.com/explorer/technologies/merchant-guilds).
 - Desconto das tecnologias econômicas: 30% em um resumo e 35% em outro. Divergente; não usar.
 - Pendente: confirmar cada número numa página lida na íntegra, depois implementar com testes.
+
+### Anexo C, adendo 15: HUD com relógio, aldeões por recurso, objetivo e placar (implementado em 2026-10-08; layout provisório)
+
+- Barra de cima: relógio da partida (mm:ss), placar (abatidos / perdidos), e o número de aldeões coletando cada recurso ao lado do valor.
+- Linha de objetivo (canto superior esquerdo): o próximo marco e o progresso da condição de vitória ligada (locais sagrados ou tempo de maravilha).
+- Layout, posição e textos são provisórios. A SPEC não tem o layout do HUD do AoE IV (§7.1 e §9.8), então a comparação visual é do crítico, não de referência.

@@ -57,7 +57,7 @@ Pendente (lista do crítico, sem alteração):
 - Edifícios da SPEC §2.1 faltando: mercado, posto avançado, mosteiro, universidade, doca, paliçada, portões. Espadachim e armazém não estão na SPEC.
 - Marcos sem efeito (Palácio Vermelho, Concílio).
 - Técnicas: custo e tempo de 7 de 8 sem fonte; nomes inventados.
-- HUD: sem aldeões por recurso, relógio, placar e painel de objetivos. Ícones são glifos Unicode; retrato é a inicial.
+- HUD: aldeões por recurso, relógio, placar e objetivo já implementados (adendo 15). Ícones são glifos Unicode; retrato é a inicial.
 - Atalhos da SPEC §7.2 ausentes: Tab, Ctrl+A, ponto para ociosos, F1–F4. H é casa (SPEC: centralizar no Centro da Vila).
 - Centro da Vila sem custo e não construível.
 - Avançar de idade só aparece com aldeão selecionado. É decisão de desenho (o aldeão constrói o marco), não bug; registrar na SPEC.

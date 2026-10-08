@@ -95,4 +95,26 @@ test.describe('Partida: início e pausa', () => {
     await btn.click();
     await expect.poll(async () => (await gameState(page)).selected.length).toBe(expected);
   });
+
+  test('HUD mostra relógio, placar, objetivo e aldeões por recurso', async ({ page }) => {
+    await startQuickGame(page);
+    await expect(page.locator('#res-time')).toHaveText(/^\d{2}:\d{2}$/);
+    await expect(page.locator('#res-score')).toHaveText('0 / 0');
+    await expect(page.locator('#objective')).toContainText('Objetivo: marco da');
+    // Manda os aldeões para a comida mais próxima e confere a contagem na barra de cima.
+    const ordered = await page.evaluate(() => {
+      const sim = window.__game.game.sim;
+      let n = 0;
+      for (const u of sim.entitiesOf(0).units) {
+        if (u.type !== 'villager') continue;
+        const src = sim.findSource(0, u.x, u.y, 'food');
+        if (!src) continue;
+        sim.command(0, [u.id], { type: 'gather', target: src.id });
+        n++;
+      }
+      return n;
+    });
+    expect(ordered).toBeGreaterThan(0);
+    await expect(page.locator('#gat-food')).toHaveText(String(ordered));
+  });
 });

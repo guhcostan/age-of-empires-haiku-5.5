@@ -14,7 +14,7 @@ import { Minimap } from './ui/minimap.ts';
 import { Sound } from './ui/audio.ts';
 import type {
   BuildingEntity, Command, DifficultyKey, Entity, GameEvent, GameMap, Point, PlayerConfig, PlayerStats,
-  Settings, SmartTarget, UnitEntity, UnitType, VictoryReason,
+  ResourceName, Settings, SmartTarget, UnitEntity, UnitType, VictoryReason,
 } from './types.ts';
 
 const SKY = 0xa9cfe9;
@@ -371,6 +371,18 @@ export class Game {
   }
 
   // ---------- Seleção e comandos ----------
+
+  // Aldeões do jogador coletando cada recurso agora.
+  gathererCounts(): Record<ResourceName, number> {
+    const counts: Record<ResourceName, number> = { food: 0, wood: 0, gold: 0, stone: 0 };
+    if (!this.sim) return counts;
+    for (const e of this.sim.world.entities.values()) {
+      if (e.kind === 'unit' && e.owner === 0 && !e.dead && UNITS[e.type].civil && e.order === 'gather' && e.resKind) {
+        counts[e.resKind]++;
+      }
+    }
+    return counts;
+  }
 
   // Botão "Ociosos": seleciona todos os aldeões parados e centraliza a câmera no primeiro.
   selectIdleVillagers(): void {
