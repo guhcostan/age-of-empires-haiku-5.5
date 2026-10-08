@@ -50,3 +50,20 @@ test('homem de armas vanguarda: inglês treina no quartel na Idade das Trevas; f
   const barracks = english.spawnBuilding('barracks', 0, 24, 24, true);
   assert.equal(english.train(0, barracks.id, 'vanguard').ok, true);
 });
+
+// Rei, cavalaria leve e lanceiro endurecido: inglês, em edifício próprio ou no estábulo e no quartel (SPEC §3, adendo 19).
+test('rei sai da Abadia dos Reis (inglês) a partir da Feudal', () => {
+  const english = simFor('english');
+  assert.ok(english.trainsOf(0, 'abbeyOfKings').includes('king'));
+  const abbey = english.spawnBuilding('abbeyOfKings', 0, 30, 30, true);
+  assert.equal(english.train(0, abbey.id, 'king').ok, false, 'na Idade das Trevas não treina');
+  english.players[0].age = 2;
+  assert.equal(english.train(0, abbey.id, 'king').ok, true, 'na Feudal treina');
+});
+
+test('cavalaria leve e lanceiro endurecido: só o inglês treina', () => {
+  assert.ok(simFor('english').trainsOf(0, 'stable').includes('horseman'));
+  assert.ok(!simFor('french').trainsOf(0, 'stable').includes('horseman'));
+  assert.ok(simFor('english').trainsOf(0, 'barracks').includes('hardenedSpearman'));
+  assert.ok(!simFor('french').trainsOf(0, 'barracks').includes('hardenedSpearman'));
+});

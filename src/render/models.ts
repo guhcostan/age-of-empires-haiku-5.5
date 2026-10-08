@@ -374,7 +374,7 @@ export function makeGhost(object: THREE.Object3D, opacity = 0.5): THREE.Object3D
 // ---------- Unidades e edifícios da Idade Feudal em diante ----------
 
 export function isHorse(type: UnitType): boolean {
-  return type === 'scout' || type === 'knight' || type === 'royalKnight';
+  return type === 'scout' || type === 'knight' || type === 'royalKnight' || type === 'horseman' || type === 'king';
 }
 
 function buildSpearman(root: THREE.Group, team: number): UnitRig {
@@ -444,7 +444,7 @@ function buildRam(root: THREE.Group, team: number): UnitRig {
 // Monta unidades desta fase; chamado por createUnit.
 export function buildAdvancedUnit(type: UnitType, root: THREE.Group, team: number): UnitRig {
   if (type === 'ram') return buildRam(root, team);
-  if (type === 'spearman') return buildSpearman(root, team);
+  if (type === 'spearman' || type === 'hardenedSpearman') return buildSpearman(root, team);
   if (type === 'crossbow') return buildCrossbow(root, team);
   return buildKnight(root, team);
 }

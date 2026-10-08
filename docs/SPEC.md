@@ -690,3 +690,11 @@ Fontes lidas só por resumo de busca (a página do aoe4world é renderizada em J
 - Custo 90 de comida e 20 de ouro; 14,65 s de treino; 180 de vida; ataque 14; intervalo de ataque 1,375 s; corpo a corpo. Uma fonte [A] para os números; disponível na Idade das Trevas (três fontes, SPEC §6.1). Treinado no quartel, só pelos ingleses.
 - Velocidade (SPEC 1,125) e armadura (5/6) não usadas: a velocidade segue a escala do espadachim (1,9) e o código não tem armadura. Habilidade (flechas comuns ineficientes) não implementada.
 - Testes: tests/civilizacoes.test.ts (treino por civilização).
+
+### Anexo C, adendo 20: rei, cavalaria leve e lanceiro endurecido ingleses (implementados em 2026-10-08; provisório)
+
+- Rei: custo 100 de comida e 100 de ouro; 50 s; 220 de vida; ataque 16; sai da Abadia dos Reis (uma fonte [I] para o edifício). Idade provisória 2 (a SPEC marca idade "incerto"). Recarga e velocidade do cavaleiro (a SPEC dá velocidade 1,6875 em outra escala).
+- Cavalaria leve: custo 100 de comida e 20 de madeira; 22,5 s; 180 de vida; ataque 13; estábulo, só inglês (a SPEC não diz civilização). Idade provisória 2; recarga e velocidade do cavaleiro.
+- Lanceiro endurecido: custo 60 de comida e 20 de madeira; 15 s; 140 de vida; ataque 11; anticavalaria (como o lanceiro); quartel, só inglês. Idade provisória 2; recarga e velocidade do lanceiro.
+- Testes: tests/civilizacoes.test.ts (treino na Feudal e por civilização).
+- Sem tela de treino com ícone próprio além do glifo Unicode. Sem E2E específico para estas unidades.

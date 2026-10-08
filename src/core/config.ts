@@ -106,6 +106,12 @@ export const UNITS: Record<UnitType, UnitDef> = {
     name: 'Lanceiro', hp: 100, attack: 7, cooldown: 1.3, range: 1.6, bonus: { scout: 2, knight: 2 },
     speed: 1.9, sight: 7, cost: { food: 50, wood: 35 }, time: 12, age: 2, from: 'barracks',
   },
+  // Lanceiro Endurecido (inglês). SPEC §3: custo 60 comida + 20 madeira, 15 s, 140 de vida, ataque 11; anticavalaria.
+  // Idade provisória (2) e velocidade do lanceiro: a SPEC não dá idade.
+  hardenedSpearman: {
+    name: 'Lanceiro Endurecido', hp: 140, attack: 11, cooldown: 1.3, range: 1.6, bonus: { scout: 2, knight: 2 },
+    speed: 1.9, sight: 7, cost: { food: 60, wood: 20 }, time: 15, age: 2, from: 'barracks',
+  },
   crossbow: {
     name: 'Besteiro', hp: 55, attack: 9, cooldown: 1.8, range: 6.5, ranged: true,
     speed: 1.9, sight: 8, cost: { food: 40, wood: 70, gold: 20 }, time: 14, age: 3, from: 'barracks',
@@ -117,6 +123,18 @@ export const UNITS: Record<UnitType, UnitDef> = {
   knight: {
     name: 'Cavaleiro', hp: 180, attack: 12, cooldown: 1.4, range: 1.3,
     speed: 2.6, sight: 9, cost: { food: 80, gold: 60 }, time: 22, age: 3, from: 'stable',
+  },
+  // Cavalaria leve (inglesa). SPEC §3: custo 100 comida + 20 madeira, 22,5 s, 180 de vida, ataque 13; estábulo.
+  // Idade provisória (2), velocidade e recarga do cavaleiro (a SPEC dá 1,875 em outra escala).
+  horseman: {
+    name: 'Cavalaria leve', hp: 180, attack: 13, cooldown: 1.4, range: 1.3,
+    speed: 2.6, sight: 9, cost: { food: 100, wood: 20 }, time: 22.5, age: 2, from: 'stable',
+  },
+  // Rei (inglês, sai da Abadia dos Reis). SPEC §3: custo 100 comida + 100 ouro, 50 s, 220 de vida, ataque 16.
+  // Idade provisória (2); recarga e velocidade do cavaleiro (a SPEC dá 1,6875 em outra escala).
+  king: {
+    name: 'Rei', hp: 220, attack: 16, cooldown: 1.4, range: 1.3,
+    speed: 2.6, sight: 9, cost: { food: 100, gold: 100 }, time: 50, age: 2, from: 'abbeyOfKings',
   },
   // Cavaleiro Real (francês, Feudal): 140 comida + 100 ouro, 35 s, 190 de vida, ataque 19 (SPEC §3 e aoe4world).
   // Recarga 0,875 s só no aoe4world. Alcance e velocidade são os do cavaleiro (provisórios).
@@ -191,6 +209,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
   },
   abbeyOfKings: {
     name: 'Abadia dos Reis', w: 3, h: 3, hp: 5000, sight: 7, cost: AGE_UP[2].cost, time: AGE_UP[2].time, age: 1, landmarkFor: 2,
+    trains: ['king'],
   },
   kingsPalace: {
     name: 'Palácio Real', w: 3, h: 3, hp: 5000, sight: 7, cost: AGE_UP[3].cost, time: AGE_UP[3].time, age: 2, landmarkFor: 3,
@@ -296,7 +315,7 @@ export const BUILD_MENU: readonly BuildingType[] = [
 
 // Teclas de atalho (exibidas nos botões e na ajuda).
 export const UNIT_KEYS: Record<UnitType, string> = {
-  villager: 'v', swordsman: 'z', vanguard: 'n', archer: 'x', longbowman: 'l', spearman: 'g', crossbow: 'd', scout: 'c', knight: 'r', ram: 'j', royalKnight: 'r',
+  villager: 'v', swordsman: 'z', vanguard: 'n', archer: 'x', longbowman: 'l', spearman: 'g', hardenedSpearman: 'm', crossbow: 'd', scout: 'c', horseman: 'u', knight: 'r', king: 'k', ram: 'j', royalKnight: 'r',
 };
 // O Centro da Vila não é construído pelo menu, então não tem tecla aqui.
 export const BUILD_KEYS: Partial<Record<BuildingType, string>> = {
@@ -354,7 +373,8 @@ export const CIV_BUILDING_COST: Partial<Record<Civ, Partial<Record<BuildingType,
 export const CIV_TRAINS: Partial<Record<Civ, Partial<Record<BuildingType, readonly UnitType[]>>>> = {
   english: {
     archeryRange: ['archer', 'longbowman'],
-    barracks: ['vanguard', 'swordsman', 'spearman', 'crossbow'],
+    barracks: ['vanguard', 'swordsman', 'spearman', 'hardenedSpearman', 'crossbow'],
+    stable: ['scout', 'knight', 'horseman'],
   },
   french: {
     stable: ['scout', 'royalKnight'],

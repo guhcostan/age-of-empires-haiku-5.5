@@ -7,7 +7,7 @@
 
 export type ResourceName = 'food' | 'wood' | 'gold' | 'stone';
 
-export type UnitType = 'villager' | 'swordsman' | 'vanguard' | 'archer' | 'longbowman' | 'spearman' | 'crossbow' | 'scout' | 'knight' | 'ram' | 'royalKnight';
+export type UnitType = 'villager' | 'swordsman' | 'vanguard' | 'archer' | 'longbowman' | 'spearman' | 'hardenedSpearman' | 'crossbow' | 'scout' | 'horseman' | 'knight' | 'king' | 'ram' | 'royalKnight';
 
 export type BuildingType =
   | 'towncenter' | 'house' | 'storehouse' | 'farm' | 'mill' | 'lumberCamp' | 'miningCamp'

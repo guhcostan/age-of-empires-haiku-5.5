@@ -16,7 +16,7 @@ import type {
 const SELECT_OWN = 0x4cff6a;
 const SELECT_ENEMY = 0xff5050;
 const BAR_HEIGHT: Record<UnitType, number> = {
-  villager: 1.35, swordsman: 1.4, vanguard: 1.45, archer: 1.4, longbowman: 1.45, spearman: 1.45, crossbow: 1.4, scout: 1.95, knight: 2.2, royalKnight: 2.2, ram: 1.6,
+  villager: 1.35, swordsman: 1.4, vanguard: 1.45, archer: 1.4, longbowman: 1.45, spearman: 1.45, hardenedSpearman: 1.45, crossbow: 1.4, scout: 1.95, horseman: 2.2, knight: 2.2, king: 2.2, royalKnight: 2.2, ram: 1.6,
 };
 const BUILDING_BAR = 3.4;
 const TC_BAR = 5.4;
