@@ -36,4 +36,27 @@ test.describe('Atalhos de seleção', () => {
     expect(onScreen).toBeGreaterThan(0);
     expect(onScreen).toBeLessThanOrEqual(own.length);
   });
+
+  test('F2 seleciona os edifícios econômicos e Tab passa pelas unidades selecionadas', async ({ page }) => {
+    await startQuickGame(page);
+    await waitForRunning(page);
+    const tc = await page.evaluate(() => window.__game.game.sim.entitiesOf(0).buildings.find((b) => b.type === 'towncenter').id);
+    await page.keyboard.press('F2');
+    await expect.poll(async () => (await gameState(page)).selected).toContain(tc);
+    // Dois aldeões selecionados: Tab fica com um, depois com o outro; Ctrl+Tab volta.
+    const [a, b] = await page.evaluate(() => {
+      const sim = window.__game.game.sim;
+      const tcb = sim.entitiesOf(0).buildings.find((x) => x.type === 'towncenter');
+      const x = sim.spawnUnit('villager', 0, tcb.x + 5.5, tcb.y + 5.5).id;
+      const y = sim.spawnUnit('villager', 0, tcb.x + 6.5, tcb.y + 5.5).id;
+      window.__game.game.selectIds([x, y]);
+      return [x, y].sort((p, q) => p - q);
+    });
+    await page.keyboard.press('Tab');
+    await expect.poll(async () => (await gameState(page)).selected).toEqual([a]);
+    await page.keyboard.press('Tab');
+    await expect.poll(async () => (await gameState(page)).selected).toEqual([b]);
+    await page.keyboard.press('Control+Tab');
+    await expect.poll(async () => (await gameState(page)).selected).toEqual([a]);
+  });
 });

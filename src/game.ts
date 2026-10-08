@@ -14,7 +14,7 @@ import { Minimap } from './ui/minimap.ts';
 import { Sound } from './ui/audio.ts';
 import type {
   BuildingEntity, Command, DifficultyKey, Entity, GameEvent, GameMap, Point, PlayerConfig, PlayerStats,
-  ResourceName, Settings, SmartTarget, UnitEntity, UnitType, VictoryReason,
+  BuildingType, ResourceName, Settings, SmartTarget, UnitEntity, UnitType, VictoryReason,
 } from './types.ts';
 
 const SKY = 0xa9cfe9;
@@ -69,6 +69,7 @@ export class Game {
   paused = false;
   ended = false;
   selected = new Set<number>();
+  cycleGroup: number[] | null = null;
   groups: Record<number, number[]> = {};
   lastGroup: { n: number; t: number } | null = null;
   loopId = 0;
@@ -390,6 +391,46 @@ export class Game {
     if (idle.length === 0) return;
     this.selectIds(idle.map((u) => u.id));
     this.rts?.focus(idle[0].x, idle[0].y);
+  }
+
+  // Grupos de edifícios do jogador (F1–F4, SPEC §7.2; agrupamento provisório): 1 militares, 2 econômicos,
+  // 3 de pesquisa, 4 maravilhas, marcos e centros da vila.
+  selectBuildingGroup(n: 1 | 2 | 3 | 4): void {
+    if (!this.sim) return;
+    const groups: Record<1 | 2 | 3 | 4, BuildingType[]> = {
+      1: ['barracks', 'archeryRange', 'stable', 'siegeWorkshop', 'keep', 'tower'],
+      2: ['house', 'farm', 'storehouse', 'mill', 'lumberCamp', 'miningCamp', 'towncenter'],
+      3: ['blacksmith'],
+      4: ['towncenter', 'cathedral', 'notreDame'],
+    };
+    const ids: number[] = [];
+    for (const e of this.sim.world.entities.values()) {
+      if (e.kind === 'building' && e.owner === 0 && !e.dead && groups[n].includes(e.type)) ids.push(e.id);
+    }
+    if (ids.length === 0) return;
+    this.selectIds(ids);
+    const first = this.sim.world.get(ids[0]);
+    if (first) this.rts?.focus(first.x, first.y);
+  }
+
+  // Tab: passa a seleção para a próxima unidade do grupo em que o ciclo começou (Ctrl+Tab, a anterior).
+  // Provisório: a SPEC pede ciclar entre as unidades selecionadas; aqui a seleção fica só com uma unidade.
+  cycleSelection(step: 1 | -1): void {
+    const current = [...this.selected];
+    // O grupo é o que estava selecionado quando o ciclo começou. Enquanto a seleção for uma das unidades do grupo, continua nele.
+    if (!this.cycleGroup || current.length !== 1 || !this.cycleGroup.includes(current[0])) {
+      this.cycleGroup = this.selectedOwnUnits().map((u) => u.id).sort((a, b) => a - b);
+    }
+    const group = this.cycleGroup.filter((id) => {
+      const e = this.sim?.world.get(id);
+      return e !== undefined && !e.dead;
+    });
+    if (group.length <= 1) return;
+    const at = current.length === 1 ? group.indexOf(current[0]) : -1;
+    const next = at < 0
+      ? group[step > 0 ? 0 : group.length - 1]
+      : group[(at + step + group.length) % group.length];
+    this.selectIds([next]);
   }
 
   // Militares do jogador parados (vírgula).

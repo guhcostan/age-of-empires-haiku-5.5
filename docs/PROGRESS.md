@@ -58,7 +58,7 @@ Pendente (lista do crítico, sem alteração):
 - Marcos sem efeito (Palácio Vermelho, Concílio).
 - Técnicas: custo e tempo de 7 de 8 sem fonte; nomes inventados.
 - HUD: aldeões por recurso, relógio, placar e objetivo já implementados (adendo 15). Ícones são glifos Unicode; retrato é a inicial.
-- Atalhos da SPEC §7.2 ausentes: Tab, F1–F5. Ctrl+A, ponto e vírgula implementados (adendo 16). H é casa (SPEC: centralizar no Centro da Vila).
+- Atalhos da SPEC §7.2 ausentes: F5 e Shift+comando. Ctrl+A, ponto, vírgula, Tab e F1–F4 implementados (adendo 16, provisórios). H é casa (SPEC: centralizar no Centro da Vila).
 - Centro da Vila sem custo e não construível.
 - Avançar de idade só aparece com aldeão selecionado. É decisão de desenho (o aldeão constrói o marco), não bug; registrar na SPEC.
 

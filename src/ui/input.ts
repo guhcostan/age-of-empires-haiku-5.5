@@ -397,6 +397,16 @@ export class Input {
       g.selectOwnUnits(!e.shiftKey);
       return;
     }
+    if (/^f[1-4]$/.test(k)) {
+      e.preventDefault();
+      g.selectBuildingGroup(Number(k[1]) as 1 | 2 | 3 | 4);
+      return;
+    }
+    if (k === 'tab') {
+      e.preventDefault();
+      g.cycleSelection(e.ctrlKey ? -1 : 1);
+      return;
+    }
     if (k === '.') {
       e.preventDefault();
       g.selectIdleVillagers();

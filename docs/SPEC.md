@@ -667,4 +667,5 @@ Fontes lidas só por resumo de busca (a página do aoe4world é renderizada em J
 
 - "." seleciona os aldeões ociosos; "," seleciona os militares ociosos (SPEC §7.2, duas e uma fonte).
 - Ctrl+A (alternativa Ctrl+K) seleciona as unidades do jogador que estão na tela; Ctrl+Shift+A (alternativa Ctrl+Shift+K), todas.
-- Ainda não implementados da §7.2: Tab (ciclar), F1–F5 (grupos de edifícios e focar), Ctrl+. (hoje igual a "."), Shift+comando para enfileirar.
+- F1–F4 selecionam grupos de edifícios (provisório: F1 militares, F2 econômicos, F3 pesquisa, F4 maravilhas, marcos e centros da vila). Tab passa para a próxima unidade do grupo e Ctrl+Tab para a anterior; a seleção fica com uma unidade (a SPEC pede ciclar sem perder a seleção).
+- Ainda não implementados da §7.2: F5 (focar nas unidades selecionadas), Ctrl+. (hoje igual a "."), Shift+comando para enfileirar.
