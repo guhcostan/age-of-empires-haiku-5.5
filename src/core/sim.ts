@@ -55,6 +55,8 @@ export interface SimulationOptions {
   wonderVictory?: boolean;
   // Vitória por locais sagrados ativa (desligada por padrão).
   sacredVictory?: boolean;
+  // Vitória por marcos ativa (desligada por padrão).
+  landmarkVictory?: boolean;
 }
 
 // Tempo que a maravilha precisa ficar de pé para dar a vitória. Valor provisório: a SPEC marca como incerto (30 min).
@@ -101,6 +103,9 @@ export class Simulation {
   // Segundos restantes da contagem de cada jogador com maravilha de pé.
   wonderLeft = new Map<number, number>();
   readonly sacredVictory: boolean;
+  readonly landmarkVictory: boolean;
+  // Jogadores que já tiveram algum marco (a vitória por marcos só vale para quem chegou a ter um).
+  landmarkOwners = new Set<number>();
   // Locais sagrados (neutros no início). Criados a partir de SACRED.fractions.
   sacredSites: SacredSite[] = [];
   // Segundos restantes da contagem de cada jogador com todos os locais sagrados.
@@ -109,8 +114,9 @@ export class Simulation {
   lists: EntityLists = { units: [], buildings: [], nodes: [] };
   lastWarn = -Infinity;
 
-  constructor({ map, players, humanIndex = 0, wonderVictory = false, sacredVictory = false }: SimulationOptions) {
+  constructor({ map, players, humanIndex = 0, wonderVictory = false, sacredVictory = false, landmarkVictory = false }: SimulationOptions) {
     this.wonderVictory = wonderVictory;
+    this.landmarkVictory = landmarkVictory;
     this.sacredVictory = sacredVictory;
     this.map = map;
     this.size = map.size;
@@ -543,6 +549,7 @@ export class Simulation {
     }
     this.updateWonders(dt);
     this.updateSacred(dt);
+    this.updateLandmarks();
     this.checkDefeats();
   }
 
@@ -1127,6 +1134,25 @@ export class Simulation {
       return;
     }
     this.sacredLeft.set(holder, left);
+  }
+
+  // Vitória por marcos (SPEC §8, fonte única; provisório): quem já teve marco e perde todos os marcos é eliminado.
+  updateLandmarks(): void {
+    if (!this.landmarkVictory || this.gameOver) return;
+    const alive = new Map<number, number>();
+    for (const b of this.lists.buildings) {
+      if (b.dead || BUILDINGS[b.type].landmarkFor === undefined) continue;
+      this.landmarkOwners.add(b.owner);
+      alive.set(b.owner, (alive.get(b.owner) ?? 0) + 1);
+    }
+    for (const p of this.players) {
+      if (p.defeated || !this.landmarkOwners.has(p.index) || (alive.get(p.index) ?? 0) > 0) continue;
+      p.defeated = true;
+      for (const e of [...this.world.entities.values()]) {
+        if (e.owner === p.index && e.kind === 'unit') this.world.remove(e);
+      }
+      if (p.index !== this.humanIndex) this.say(`${p.name} perderam os marcos!`, 'good');
+    }
   }
 
   // Vitória por maravilha: a maravilha precisa ficar de pé pela contagem inteira; se cair, a contagem zera.

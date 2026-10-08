@@ -355,6 +355,8 @@ export interface Settings {
   wonderVictory?: boolean;
   // Vitória por locais sagrados (desligada por padrão).
   sacredVictory?: boolean;
+  // Vitória por marcos (desligada por padrão).
+  landmarkVictory?: boolean;
   civ?: Civ;
 }
 

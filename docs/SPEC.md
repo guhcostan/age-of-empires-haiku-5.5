@@ -598,3 +598,10 @@ Fonte: https://raw.githubusercontent.com/aoe4world/data/main/buildings/english.j
 - Regras implementadas: 4 locais (posições provisórias: centro e meio dos lados do mapa); captura por presença exclusiva de unidades num raio de 3 tiles, em 10 s; quem tem todos vence após 10 min de contagem; contagem pausa com inimigo dentro de um local; cada local dá 100 de ouro por minuto ao dono.
 - Opção do menu: "Locais sagrados" (desligada por padrão).
 - Não confirmado: número de locais (o post não diz), raio, tempo de captura. Pilares no mapa e quadrados no minimapa mostram o dono.
+
+### Anexo C, adendo 9: vitória por marcos (implementada em 2026-10-08; provisória)
+
+- Regra da SPEC §8 (fonte única, resumo de busca): destruir todos os marcos do adversário o elimina. A regra detalhada não tem segunda fonte.
+- Implementação provisória: só vale para quem já teve pelo menos um marco. Quem perde todos os marcos vivos é eliminado (unidades removidas). Se o eliminado é o humano, é derrota; se todos os adversários caem, é vitória.
+- Opção do menu: "Marcos" (desligada por padrão). Conquista continua sempre ativa.
+- Não confirmado: se contam marcos em obra, se a eliminação é imediata e se a regra vale para todas as idades. Hoje conta qualquer marco vivo, inclusive em obra.

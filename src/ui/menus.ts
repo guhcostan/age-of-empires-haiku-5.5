@@ -5,7 +5,7 @@ import type { Game, EndInfo } from '../game.ts';
 import type { Civ, DifficultyKey, MapSizeKey, Settings } from '../types.ts';
 
 const SETUP_KEY = 'aoe.setup';
-const DEFAULTS: Settings = { size: 'medio', bots: 1, difficulty: 'normal', seed: '', wonderVictory: false, sacredVictory: false, civ: 'english' };
+const DEFAULTS: Settings = { size: 'medio', bots: 1, difficulty: 'normal', seed: '', wonderVictory: false, sacredVictory: false, landmarkVictory: false, civ: 'english' };
 
 type ScreenName = 'main' | 'setup' | 'help' | 'options';
 const SCREEN_NAMES: ScreenName[] = ['main', 'setup', 'help', 'options'];
@@ -105,6 +105,7 @@ export class Menus {
       seed: $<HTMLInputElement>('seed').value.trim(),
       wonderVictory: $<HTMLInputElement>('victory-wonder').checked,
       sacredVictory: $<HTMLInputElement>('victory-sacred').checked,
+      landmarkVictory: $<HTMLInputElement>('victory-landmarks').checked,
       civ: (checkedValue('civ') as Civ | undefined) || DEFAULTS.civ,
     };
   }
@@ -120,6 +121,7 @@ export class Menus {
     $<HTMLInputElement>('seed').value = String(this.setup.seed);
     $<HTMLInputElement>('victory-wonder').checked = Boolean(this.setup.wonderVictory);
     $<HTMLInputElement>('victory-sacred').checked = Boolean(this.setup.sacredVictory);
+    $<HTMLInputElement>('victory-landmarks').checked = Boolean(this.setup.landmarkVictory);
     set('civ', this.setup.civ ?? DEFAULTS.civ ?? 'english');
   }
 

@@ -120,6 +120,7 @@ export class Game {
       map, players, humanIndex: 0,
       wonderVictory: settings.wonderVictory ?? false,
       sacredVictory: settings.sacredVictory ?? false,
+      landmarkVictory: settings.landmarkVictory ?? false,
     });
     this.map = map;
     this.seed = numericSeed;

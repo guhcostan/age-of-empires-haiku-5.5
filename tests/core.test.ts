@@ -8,13 +8,13 @@ import { BotBrain } from '../src/core/ai.ts';
 import { AGE_UP, BUILDINGS, LANDMARKS_BY_CIV, SACRED, UNITS } from '../src/core/config.ts';
 import type { BuildingType, Civ, DifficultyKey, Entity, Outcome, PlayerConfig } from '../src/types.ts';
 
-function makeSim({ size = 64, bots = 1, seed = 42, difficulty = 'normal' as DifficultyKey, wonderVictory = false, sacredVictory = false, civ = 'english' as Civ } = {}) {
+function makeSim({ size = 64, bots = 1, seed = 42, difficulty = 'normal' as DifficultyKey, wonderVictory = false, sacredVictory = false, landmarkVictory = false, civ = 'english' as Civ } = {}) {
   const players: PlayerConfig[] = [{ name: 'Você', color: '#2f7de1', civ }];
   for (let i = 0; i < bots; i++) {
     players.push({ name: `Bot ${i + 1}`, color: '#e04848', isBot: true, difficulty });
   }
   const map = generateMap({ size, playerCount: players.length, seed });
-  const sim = new Simulation({ map, players, humanIndex: 0, wonderVictory, sacredVictory });
+  const sim = new Simulation({ map, players, humanIndex: 0, wonderVictory, sacredVictory, landmarkVictory });
   const brains = players.map((p, i) => (p.isBot ? new BotBrain(sim, i) : null));
   return { sim, map, brains };
 }
@@ -592,5 +592,35 @@ test('inimigo dentro de um local sagrado pausa a contagem de vitória', () => {
   sim.spawnUnit('swordsman', 1, sim.sacredSites[0].x, sim.sacredSites[0].y);
   for (let t = 0; t < SACRED.countdown + 10; t += 0.5) sim.update(0.5);
   assert.equal(sim.gameOver, null, 'com inimigo dentro, a contagem não anda');
+});
+
+// Vitória por marcos (SPEC §8, fonte única; provisório): quem perde todos os marcos depois de ter um é eliminado.
+test('vitória por marcos: o adversário que perde todos os marcos depois de ter um é eliminado', () => {
+  const { sim } = makeSim({ bots: 1, seed: 8, landmarkVictory: true });
+  const mark = sim.spawnBuilding('councilHall', 1, 60, 60, true);
+  sim.update(0.5);
+  assert.ok(sim.landmarkOwners.has(1));
+  sim.world.remove(mark);
+  sim.update(0.5);
+  assert.equal(sim.players[1].defeated, true);
+  assert.deepEqual(sim.gameOver?.result, 'victory');
+});
+
+test('vitória por marcos: perder o próprio último marco dá derrota', () => {
+  const { sim } = makeSim({ bots: 1, seed: 8, landmarkVictory: true });
+  const mark = sim.spawnBuilding('councilHall', 0, 60, 60, true);
+  sim.update(0.5);
+  sim.world.remove(mark);
+  sim.update(0.5);
+  assert.deepEqual(sim.gameOver?.result, 'defeat');
+});
+
+test('sem a opção de marcos, perder os marcos não elimina ninguém', () => {
+  const { sim } = makeSim({ bots: 1, seed: 8, landmarkVictory: false });
+  const mark = sim.spawnBuilding('councilHall', 1, 60, 60, true);
+  sim.update(0.5);
+  sim.world.remove(mark);
+  sim.update(0.5);
+  assert.equal(sim.players[1].defeated, false);
 });
 
