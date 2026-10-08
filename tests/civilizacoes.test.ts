@@ -30,3 +30,14 @@ test('moinho, serraria e acampamento de mineração: francês paga 25 de madeira
     assert.deepEqual(simFor('english').buildingCost(0, type), { wood: 50 }, type);
   }
 });
+
+// Arqueiro Longo: só o inglês, no campo de tiro, a partir da Feudal (SPEC anexo C, adendo 18).
+test('arqueiro longo: inglês treina no campo de tiro a partir da Feudal; francês não treina', () => {
+  const english = simFor('english');
+  assert.ok(english.trainsOf(0, 'archeryRange').includes('longbowman'));
+  assert.ok(!simFor('french').trainsOf(0, 'archeryRange').includes('longbowman'));
+  const range = english.spawnBuilding('archeryRange', 0, 20, 20, true);
+  assert.equal(english.train(0, range.id, 'longbowman').ok, false, 'na Idade das Trevas não treina');
+  english.players[0].age = 2;
+  assert.equal(english.train(0, range.id, 'longbowman').ok, true, 'na Feudal treina');
+});

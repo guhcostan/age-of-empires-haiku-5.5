@@ -90,6 +90,12 @@ export const UNITS: Record<UnitType, UnitDef> = {
     name: 'Arqueiro', hp: 45, attack: 6, cooldown: 1.6, range: 5.5, ranged: true,
     speed: 2.0, sight: 8, cost: { food: 40, wood: 50 }, time: 12, age: 1, from: 'archeryRange',
   },
+  // Arqueiro Longo (inglês, Feudal). SPEC anexo C, adendo 18: vida 95, ataque 9, alcance 7, custo e tempo de uma fonte;
+  // recarga do arqueiro (sem valor na SPEC) e velocidade do arqueiro, para manter a escala do código.
+  longbowman: {
+    name: 'Arqueiro Longo', hp: 95, attack: 9, cooldown: 1.6, range: 7, ranged: true,
+    speed: 2.0, sight: 8, cost: { food: 40, wood: 50 }, time: 15, age: 2, from: 'archeryRange',
+  },
   spearman: {
     name: 'Lanceiro', hp: 100, attack: 7, cooldown: 1.3, range: 1.6, bonus: { scout: 2, knight: 2 },
     speed: 1.9, sight: 7, cost: { food: 50, wood: 35 }, time: 12, age: 2, from: 'barracks',
@@ -284,7 +290,7 @@ export const BUILD_MENU: readonly BuildingType[] = [
 
 // Teclas de atalho (exibidas nos botões e na ajuda).
 export const UNIT_KEYS: Record<UnitType, string> = {
-  villager: 'v', swordsman: 'z', archer: 'x', spearman: 'g', crossbow: 'd', scout: 'c', knight: 'r', ram: 'j', royalKnight: 'r',
+  villager: 'v', swordsman: 'z', archer: 'x', longbowman: 'l', spearman: 'g', crossbow: 'd', scout: 'c', knight: 'r', ram: 'j', royalKnight: 'r',
 };
 // O Centro da Vila não é construído pelo menu, então não tem tecla aqui.
 export const BUILD_KEYS: Partial<Record<BuildingType, string>> = {
@@ -340,6 +346,9 @@ export const CIV_BUILDING_COST: Partial<Record<Civ, Partial<Record<BuildingType,
 };
 // Unidades que cada edifício treina por civilização: o estábulo francês treina o Cavaleiro Real em vez do Cavaleiro.
 export const CIV_TRAINS: Partial<Record<Civ, Partial<Record<BuildingType, readonly UnitType[]>>>> = {
+  english: {
+    archeryRange: ['archer', 'longbowman'],
+  },
   french: {
     stable: ['scout', 'royalKnight'],
     keep: ['swordsman', 'archer', 'spearman', 'crossbow', 'scout', 'ram'],

@@ -186,7 +186,7 @@ export function createUnit(type: UnitType, teamColor: string): CreatedUnit {
   let rig: UnitRig;
   if (type === 'villager') rig = buildVillager(root, team);
   else if (type === 'swordsman') rig = buildSwordsman(root, team);
-  else if (type === 'archer') rig = buildArcher(root, team);
+  else if (type === 'archer' || type === 'longbowman') rig = buildArcher(root, team);
   else if (type === 'scout') rig = buildScout(root, team);
   else rig = buildAdvancedUnit(type, root, team);
   return { root, rig };
