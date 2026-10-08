@@ -12,10 +12,11 @@ import type { BuildingEntity, BuildingType, PlayerConfig, UnitEntity } from '../
 const STEP = 0.05;
 const MAP_SIZE = 64;
 
-type Kind = 'conquista' | 'maravilha' | 'sagrados' | 'marcos';
+type Kind = 'conquista' | 'maravilha' | 'sagrados' | 'marcos' | 'sagrados-bots' | 'marcos-bots';
 
 function buildMatch(kind: Kind, seed: number) {
-  const humanIsBot = kind === 'conquista';
+  // Nas variantes "-bots" o jogador da vez também é um bot: a partida inteira é de bots.
+  const humanIsBot = kind === 'conquista' || kind.endsWith('-bots');
   const players: PlayerConfig[] = [
     humanIsBot
       ? { name: 'Bot A', color: '#2f7de1', isBot: true, difficulty: 'normal', civ: 'english' }
@@ -28,8 +29,8 @@ function buildMatch(kind: Kind, seed: number) {
     players,
     humanIndex: 0,
     wonderVictory: kind === 'maravilha',
-    sacredVictory: kind === 'sagrados',
-    landmarkVictory: kind === 'marcos',
+    sacredVictory: kind === 'sagrados' || kind === 'sagrados-bots',
+    landmarkVictory: kind === 'marcos' || kind === 'marcos-bots',
   });
   const brains = players.map((p, i) => (p.isBot ? new BotBrain(sim, i) : null));
 
@@ -111,6 +112,18 @@ test('partida completa, marcos: destruir o último marco do bot o elimina e venc
   assert.equal(end.reason, 'landmarks');
   assert.equal(end.result, 'victory');
   assert.equal(sim.players[1].defeated, true);
+});
+
+test('partida só de bots, locais sagrados: os bots não atacam, disputam os locais e a contagem decide', () => {
+  const { end } = playToEnd('sagrados-bots', 3, 5400);
+  assert.ok(end, 'a partida termina');
+  assert.equal(end.reason, 'sacred');
+});
+
+test('partida só de bots, marcos: quem perde o último marco é eliminado e a partida termina', () => {
+  const { end } = playToEnd('marcos-bots', 1, 3600);
+  assert.ok(end, 'a partida termina');
+  assert.equal(end.reason, 'landmarks');
 });
 
 // ---------- Terreno: unidades não podem ficar presas ----------

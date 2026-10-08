@@ -301,6 +301,15 @@ export class BotBrain {
     }
   }
 
+  // Tamanho do exército para atacar. Com vitória por maravilha ou por locais sagrados o bot não ataca: defende
+  // e cuida da contagem (medido: com ataque, a conquista acaba a partida antes da contagem). Valores medidos em
+  // partidas só de bots; ver SPEC anexo C, adendo 10.
+  attackArmy(): number {
+    const sim = this.sim;
+    if (sim.sacredVictory || sim.wonderVictory) return Infinity;
+    return this.cfg.attackArmy;
+  }
+
   commandArmy(army: UnitEntity[], tc: BuildingEntity): void {
     const sim = this.sim;
     const o = this.owner;
@@ -316,7 +325,8 @@ export class BotBrain {
     }
 
     // Ataque: junta o exército e ataca o alvo mais próximo.
-    if (!this.attacking && army.length >= this.cfg.attackArmy) {
+    const attackArmy = this.attackArmy();
+    if (!this.attacking && army.length >= attackArmy) {
       const target = this.pickTarget(home);
       if (target) {
         this.attacking = true;
@@ -324,7 +334,7 @@ export class BotBrain {
       }
     }
     if (this.attacking) {
-      if (army.length < Math.max(3, this.cfg.attackArmy * 0.35)) {
+      if (army.length < Math.max(3, attackArmy * 0.35)) {
         this.attacking = false; // exército muito pequeno: recua
       } else {
         let t: Entity | null | undefined = sim.world.get(this.attackTargetId);

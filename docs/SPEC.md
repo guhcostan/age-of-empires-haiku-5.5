@@ -641,3 +641,10 @@ Comércio:
 - Os números de comércio mais conhecidos vêm de Age of Empires II e Chronicles e não valem para o IV.
 
 Próximo passo: abrir as páginas citadas (ou a wiki do AoE IV) e anotar um número por regra; sem isso, a implementação fica provisória e marcada, como o resto do anexo C.
+
+### Anexo C, adendo 13: bots em partidas de vitória alternativa (medido em 2026-10-08; provisório)
+
+- Com vitória por locais sagrados ou por maravilha, o bot não ataca: defende a base e manda o exército ocioso para os locais que não são seus. Medido: com ataque normal, a conquista termina as partidas antes da contagem (2 jogadores, 8 sementes: conquista em quase todas). Sem ataque, locais sagrados decidem 6 de 8 partidas.
+- Com vitória por marcos, o bot ataca normalmente. Medido: marcos decidem 7 de 8 partidas só de bots.
+- Maravilha só de bots: não decide nenhuma partida medida (3 sementes, até 2 horas de jogo). Causa medida: a Imperial exige ouro, o ouro dos mapas acaba antes disso, e o bot fica com comida, madeira e pedra sobrando. Relíquias e locais sagrados são as fontes de ouro previstas; não implementadas ainda.
+- Economia do bot, medida: o exército não consome a comida de que a idade precisa (ver adendo 10).

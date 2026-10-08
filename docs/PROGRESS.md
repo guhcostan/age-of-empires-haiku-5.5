@@ -51,7 +51,7 @@
 
 ## Bugs abertos
 - Job E2E do CI falhou em runs anteriores (causa não confirmada: logs não acessíveis pela API pública).
-- Bot-vs-bot não chega à maravilha nem aos locais sagrados antes da conquista (medido em 10 sementes, 2 e 3 jogadores). Depende de equilíbrio do bot e da economia; não resolvido nesta rodada.
+- Bot-só de maravilha não decide nenhuma partida: falta ouro (adendo 13). Bot-só de locais sagrados decide 6 de 8 sementes sem ataque; de marcos, 7 de 8 com ataque.
 - No E2E de locais sagrados, o bot ataca os locais do jogador passivo e vence por conquista; por isso o teste de navegador só checa a tela final, e a regra está nos testes de partida completa.
 - Renderização headless por software roda a ~2,7 fps; medir 60 fps exige GPU.
 - Bundle de 567 kB (quase todo three.js) passa do limite de 500 kB do Vite; aviso esperado, sem divisão de código ainda.
