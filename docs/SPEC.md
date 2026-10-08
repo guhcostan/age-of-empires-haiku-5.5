@@ -669,3 +669,11 @@ Fontes lidas só por resumo de busca (a página do aoe4world é renderizada em J
 - Ctrl+A (alternativa Ctrl+K) seleciona as unidades do jogador que estão na tela; Ctrl+Shift+A (alternativa Ctrl+Shift+K), todas.
 - F1–F4 selecionam grupos de edifícios (provisório: F1 militares, F2 econômicos, F3 pesquisa, F4 maravilhas, marcos e centros da vila). Tab passa para a próxima unidade do grupo e Ctrl+Tab para a anterior; a seleção fica com uma unidade (a SPEC pede ciclar sem perder a seleção).
 - Ainda não implementados da §7.2: F5 (focar nas unidades selecionadas), Ctrl+. (hoje igual a "."), Shift+comando para enfileirar.
+
+### Anexo C, adendo 17: bônus de civilização implementados (2026-10-08)
+
+- Keep francês custa 810 de pedra (duas fontes; a tabela da SPEC §6.2 traz "Keeps custam 10% menos").
+- Moinho, serraria e acampamento de mineração franceses custam 25 de madeira (uma fonte, SPEC §2.1). A linha "edifícios de entrega custam 50% menos" (§6.2, uma fonte) não lista os edifícios; não aplicada além desses três, nem ao armazém.
+- Keep inglês treina todas as unidades militares do roster (duas fontes): já atendido pela lista base do Keep.
+- Testes: tests/civilizacoes.test.ts (três casos).
+- Não cobertos: Homem de Armas Vanguarda, arco curto, Rede de Castelos, Recinto, comerciantes e os demais da SPEC §6. Não há teste E2E específico para os custos; o menu de construção usa `buildingCost`.

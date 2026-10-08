@@ -53,7 +53,7 @@ Corrigido nesta rodada:
 
 Pendente (lista do crítico, sem alteração):
 - Roster militar: faltam 23 unidades da SPEC §3 (rei, homem de armas vanguarda, arqueiro longo, ranger, arcabuzeiro, monge, cavalaria leve, arbalétrier, homem de armas francês, mangonel, trabuco, bombarda, springald, canhão real, canhão, ribauldequin, 4 batalhões Wynguard, 3 navios). Navios estão fora de escopo.
-- Bônus de civilização: 3 de 21 implementados (SPEC §6.1–6.2).
+- Bônus de civilização: 3 de 21 implementados, mais keep francês 810, entrega francesa 25 de madeira e keep inglês (adendo 17).
 - Edifícios da SPEC §2.1 faltando: mercado, posto avançado, mosteiro, universidade, doca, paliçada, portões. Espadachim e armazém não estão na SPEC.
 - Marcos sem efeito (Palácio Vermelho, Concílio).
 - Técnicas: custo e tempo de 7 de 8 sem fonte; nomes inventados.

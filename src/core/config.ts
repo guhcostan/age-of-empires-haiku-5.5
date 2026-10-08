@@ -327,8 +327,16 @@ export const VICTORY_NAMES: Record<VictoryReason, string> = {
   sacred: 'Locais sagrados',
 };
 // Custo de construção que muda por civilização. Fazendas inglesas custam 50% menos madeira (SPEC §6.1: 37 no aoe4world).
+// Custo que muda por civilização. Inglaterra: fazendas 50% mais baratas (37 de madeira, duas fontes). França: keep 810 de pedra
+// (duas fontes, SPEC anexo C); moinho, serraria e acampamento de mineração 25 de madeira (uma fonte: SPEC §2.1).
 export const CIV_BUILDING_COST: Partial<Record<Civ, Partial<Record<BuildingType, Cost>>>> = {
   english: { farm: { wood: 37 } },
+  french: {
+    keep: { stone: 810 },
+    mill: { wood: 25 },
+    lumberCamp: { wood: 25 },
+    miningCamp: { wood: 25 },
+  },
 };
 // Unidades que cada edifício treina por civilização: o estábulo francês treina o Cavaleiro Real em vez do Cavaleiro.
 export const CIV_TRAINS: Partial<Record<Civ, Partial<Record<BuildingType, readonly UnitType[]>>>> = {
