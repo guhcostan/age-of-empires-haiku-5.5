@@ -512,6 +512,24 @@ export function buildAdvancedBuilding(type: BuildingType, g: THREE.Group, team: 
       part(g, box(0.5, 0.36, 0.03), team, 0, 3.6, 1.52);
       break;
     }
+    case 'chamberOfCommerce':
+      buildLandmark(g, team, 0xb89a6a, 2.2);
+      break;
+    case 'schoolOfCavalry':
+      buildLandmark(g, team, 0x8d5a3b, 2.4);
+      break;
+    case 'guildHall':
+      buildLandmark(g, team, 0x9c9a92, 2.6);
+      break;
+    case 'royalInstitute':
+      buildLandmark(g, team, 0xc9b99a, 2.8);
+      break;
+    case 'redPalace':
+      buildLandmark(g, team, 0xa83a3a, 3.0);
+      break;
+    case 'collegeOfArtillery':
+      buildLandmark(g, team, 0x7d7f88, 3.0);
+      break;
     case 'councilHall':
       buildLandmark(g, team, 0xa9825a, 2.2);
       break;
@@ -530,7 +548,8 @@ export function buildAdvancedBuilding(type: BuildingType, g: THREE.Group, team: 
     case 'wynguardPalace':
       buildLandmark(g, team, 0x7d7f88, 3.2);
       break;
-    case 'cathedral': {
+    case 'cathedral':
+    case 'notreDame': {
       part(g, box(3.6, 0.6, 3.6), 0xbdb197, 0, 0.3, 0);
       part(g, box(3.2, 2.6, 3.2), 0xc9b99a, 0, 1.9, 0);
       part(g, box(0.9, 2.0, 0.9), 0xb0a48a, -1.1, 3.6, -1.1);

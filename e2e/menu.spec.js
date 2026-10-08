@@ -19,7 +19,8 @@ test.describe('Menu inicial', () => {
     await expect(setup).toBeVisible();
     await expect(page.locator('#screen-main')).toBeHidden();
 
-    await expect(setup.locator('legend')).toHaveText(['Tamanho do mapa', 'Adversários (bots)', 'Dificuldade', 'Condições de vitória', 'Semente do mapa']);
+    await expect(setup.locator('legend')).toHaveText(['Tamanho do mapa', 'Adversários (bots)', 'Dificuldade', 'Civilização', 'Condições de vitória', 'Semente do mapa']);
+    await expect(setup.locator('input[name="civ"]')).toHaveCount(2);
     await expect(page.locator('#victory-wonder')).not.toBeChecked();
     await expect(setup.locator('input[name="size"]')).toHaveCount(3);
     await expect(setup.locator('input[name="bots"]')).toHaveCount(3);

@@ -112,7 +112,7 @@ export class Game {
     const playerCount = 1 + bots;
     const numericSeed = typeof seed === 'number' ? seed : seedFromString(String(seed));
     const map = generateMap({ size: mapSize, playerCount, seed: numericSeed });
-    const players: PlayerConfig[] = [{ name: PLAYER_NAMES[0], color: PLAYER_COLORS[0], isBot: false }];
+    const players: PlayerConfig[] = [{ name: PLAYER_NAMES[0], color: PLAYER_COLORS[0], isBot: false, civ: settings.civ ?? 'english' }];
     for (let i = 1; i < playerCount; i++) {
       players.push({ name: PLAYER_NAMES[i], color: PLAYER_COLORS[i], isBot: true, difficulty });
     }

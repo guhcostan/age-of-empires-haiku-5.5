@@ -1,7 +1,7 @@
 // HUD: barra de recursos, idade, painel de seleção, grade de comandos (com atalhos) e mensagens.
 import {
   BUILDINGS, UNITS, NODES, TECHS, AGE_NAMES, BUILD_MENU, RESOURCES, RESOURCE_INFO,
-  MAX_QUEUE, UNIT_KEYS, BUILD_KEYS, TECH_KEYS, LANDMARKS, LANDMARK_KEYS,
+  MAX_QUEUE, UNIT_KEYS, BUILD_KEYS, TECH_KEYS, LANDMARK_KEYS, LANDMARKS_BY_CIV, WONDER_BY_CIV,
 } from '../core/config.ts';
 import { $ } from './dom.ts';
 import type { Game } from '../game.ts';
@@ -326,15 +326,18 @@ export class Hud {
 
     if (units.length > 0 && units.length === own.length) {
       if (civil.length) {
-        for (const t of BUILD_MENU) {
+        // A maravilha do menu é a da civilização do jogador.
+        const menu = BUILD_MENU.map((t) => (t === 'cathedral' ? WONDER_BY_CIV[player.civ] : t));
+        for (const t of menu) {
           const def = BUILDINGS[t];
+          const cost = sim.buildingCost(0, t);
           cmds.push({
             key: BUILD_KEYS[t],
             label: def.name,
             icon: t,
-            cost: def.cost,
-            tip: `${def.name} — ${costText(def.cost)} · ${AGE_NAMES[def.age]}`,
-            enabled: () => !this.ageReason(def.age) && sim.canAfford(0, def.cost),
+            cost,
+            tip: `${def.name} — ${costText(cost)} · ${AGE_NAMES[def.age]}`,
+            enabled: () => !this.ageReason(def.age) && sim.canAfford(0, cost),
             reason: () => this.ageReason(def.age) || 'Recursos insuficientes',
             run: () => g.input.startPlacement(t),
           });
@@ -344,7 +347,7 @@ export class Hud {
       const nextAge = player.age + 1;
       if (civil.length && nextAge >= 2 && nextAge <= 4) {
         const to = nextAge as NextAge;
-        LANDMARKS[to].forEach((t, i) => {
+        LANDMARKS_BY_CIV[player.civ][to].forEach((t, i) => {
           const def = BUILDINGS[t];
           cmds.push({
             key: LANDMARK_KEYS[i],
@@ -458,7 +461,8 @@ function iconGlyph(icon: string): string {
     house: '⌂', storehouse: '▦', farm: '✿', mill: '◍', lumberCamp: '▤', miningCamp: '◆',
     barracks: '⚔', archeryRange: '◎', keep: '▣', siegeWorkshop: '⚙', stoneWall: '▬', stable: '♞', blacksmith: '⚒', tower: '♜',
     villager: '☺', swordsman: '🗡', archer: '➹', spearman: '↑', crossbow: '✜', scout: '➤', knight: '♘', ram: '▮',
-    cathedral: '✞', councilHall: '♛', abbeyOfKings: '✝', kingsPalace: '♚', whiteTower: '♖', berkshirePalace: '♔', wynguardPalace: '♕',
+    cathedral: '✞', councilHall: '♛', chamberOfCommerce: '⚖', schoolOfCavalry: '♞', guildHall: '⚜', royalInstitute: '♕',
+    redPalace: '♗', collegeOfArtillery: '✹', notreDame: '✞', abbeyOfKings: '✝', kingsPalace: '♚', whiteTower: '♖', berkshirePalace: '♔', wynguardPalace: '♕',
     attack: '⚔', stop: '■', cancel: '✕', age: '★', tech: '✦',
   };
   return glyphs[icon] || '•';

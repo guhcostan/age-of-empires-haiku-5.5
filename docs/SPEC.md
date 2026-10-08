@@ -575,3 +575,13 @@ Fonte: https://raw.githubusercontent.com/aoe4world/data/main/buildings/english.j
 - Vitória: a catedral precisa ficar de pé pela contagem inteira; se cai, a contagem recomeça do zero. Provisório: a contagem de 30 min vem de uma fonte de guia (SPEC §8, incerto).
 - Opção do menu: "Maravilha" (desligada por padrão). A conquista fica sempre ativa.
 - Não implementados: vitória por marcos (a regra detalhada tem uma fonte, de busca), locais sagrados (números de um post de fórum) e relíquias (sem regra confirmada).
+
+### Anexo C, adendo 6: economia, civilizações e marcos franceses (implementado em 2026-10-08)
+
+- Custos e tempos corrigidos (SPEC e aoe4world concordam): casa 50 madeira e 15 s; fazenda 75 madeira e 6 s; moinho, serraria e acampamento de mineração 50 madeira e 20 s; estábulo 150 madeira, 30 s e 1500 de vida.
+- Fazenda inglesa: 37 de madeira (50% menos; SPEC §6.1 e aoe4world). Implementada como tabela de custo por civilização (CIV_BUILDING_COST).
+- Menu: escolha de civilização (Inglaterra ou França). Os bots são sempre ingleses.
+- Marcos franceses, do aoe4world (custos e tempos iguais aos das idades): Câmara de Comércio e Escola de Cavalaria (Feudal, 400+200, 190 s, 5000); Sede da Guilda e Instituto Real (Castelo, 1200+600, 220 s, 5000); Palácio Vermelho e Colégio de Artilharia (Imperial, 2400+1200, 250 s, 5000).
+- Notre Dame (maravilha francesa, idade 4): 5000 de cada, 600 s, 5000 de vida (aoe4world). Conta para a vitória por maravilha.
+- Ficam para depois, porque dependem de mecânicas novas: Cavaleiro Real (Feudal), Homem de Armas Vanguarda (Idade I), aldeões com arco curto, Rede de Castelos, comerciantes e Centro da Vila mais rápido por idade.
+- Não alterado por falta de segunda fonte: vida da casa (300 no código; 750 no aoe4world), vida do moinho e dos acampamentos (350; 750 no aoe4world), tempo e vida do ferreiro (40 s e 700; 25 s e 1500 no aoe4world), vida e custo do centro da vila (2000; SPEC e aoe4world dão 2500 para o centro comum e 7000 para o capital).

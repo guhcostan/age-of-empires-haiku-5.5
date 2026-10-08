@@ -5,11 +5,11 @@ import { findPath } from '../src/core/pathfind.ts';
 import { World } from '../src/core/world.ts';
 import { Simulation, WONDER_COUNTDOWN } from '../src/core/sim.ts';
 import { BotBrain } from '../src/core/ai.ts';
-import { AGE_UP, BUILDINGS, UNITS } from '../src/core/config.ts';
-import type { BuildingType, DifficultyKey, Entity, Outcome, PlayerConfig } from '../src/types.ts';
+import { AGE_UP, BUILDINGS, LANDMARKS_BY_CIV, UNITS } from '../src/core/config.ts';
+import type { BuildingType, Civ, DifficultyKey, Entity, Outcome, PlayerConfig } from '../src/types.ts';
 
-function makeSim({ size = 64, bots = 1, seed = 42, difficulty = 'normal' as DifficultyKey, wonderVictory = false } = {}) {
-  const players: PlayerConfig[] = [{ name: 'Você', color: '#2f7de1' }];
+function makeSim({ size = 64, bots = 1, seed = 42, difficulty = 'normal' as DifficultyKey, wonderVictory = false, civ = 'english' as Civ } = {}) {
+  const players: PlayerConfig[] = [{ name: 'Você', color: '#2f7de1', civ }];
   for (let i = 0; i < bots; i++) {
     players.push({ name: `Bot ${i + 1}`, color: '#e04848', isBot: true, difficulty });
   }
@@ -469,5 +469,58 @@ test('sem a opção de maravilha, a catedral não dá vitória', () => {
   sim.spawnBuilding('cathedral', 0, tc.x + 8, tc.y + 8, true);
   for (let t = 0; t < WONDER_COUNTDOWN + 10; t += 0.5) sim.update(0.5);
   assert.equal(sim.gameOver, null);
+});
+
+// Fazenda: 75 de madeira e 6 s (aoe4world e SPEC); a inglesa custa a metade (37, SPEC §6.1).
+test('fazenda custa 75 madeira e 6 s; a inglesa custa 37 de madeira', () => {
+  assert.deepEqual(BUILDINGS.farm.cost, { wood: 75 });
+  assert.equal(BUILDINGS.farm.time, 6);
+  const english = makeSim({ bots: 0, seed: 3, civ: 'english' }).sim;
+  const french = makeSim({ bots: 0, seed: 3, civ: 'french' }).sim;
+  assert.deepEqual(english.buildingCost(0, 'farm'), { wood: 37 });
+  assert.deepEqual(french.buildingCost(0, 'farm'), { wood: 75 });
+});
+
+test('casa, moinho, serraria e acampamento seguem a SPEC e o aoe4world (50 madeira)', () => {
+  assert.deepEqual(BUILDINGS.house.cost, { wood: 50 });
+  assert.equal(BUILDINGS.house.time, 15);
+  for (const t of ['mill', 'lumberCamp', 'miningCamp'] as const) {
+    assert.deepEqual(BUILDINGS[t].cost, { wood: 50 }, t);
+    assert.equal(BUILDINGS[t].time, 20, t);
+  }
+});
+
+test('estábulo custa 150 madeira, leva 30 s e tem 1500 de vida (SPEC e aoe4world)', () => {
+  assert.deepEqual(BUILDINGS.stable.cost, { wood: 150 });
+  assert.equal(BUILDINGS.stable.time, 30);
+  assert.equal(BUILDINGS.stable.hp, 1500);
+});
+
+test('marcos franceses: Câmara de Comércio (Feudal), Sede da Guilda e Instituto Real (Castelo), Palácio Vermelho e Colégio de Artilharia (Imperial)', () => {
+  assert.deepEqual(LANDMARKS_BY_CIV.french[2], ['chamberOfCommerce', 'schoolOfCavalry']);
+  assert.deepEqual(LANDMARKS_BY_CIV.french[3], ['guildHall', 'royalInstitute']);
+  assert.deepEqual(LANDMARKS_BY_CIV.french[4], ['redPalace', 'collegeOfArtillery']);
+  assert.deepEqual(BUILDINGS.chamberOfCommerce.cost, { food: 400, gold: 200 });
+  assert.equal(BUILDINGS.chamberOfCommerce.time, 190);
+  assert.equal(BUILDINGS.redPalace.landmarkFor, 4);
+});
+
+test('um marco francês avança a idade quando concluído (civilização francesa)', () => {
+  const { sim } = makeSim({ bots: 0, seed: 9, civ: 'french' });
+  const tc = tcOf(sim, 0);
+  sim.players[0].res = { food: 500, wood: 500, gold: 500, stone: 500 };
+  const site = findFreeSite(sim, 'chamberOfCommerce', tc)!;
+  const r = sim.placeBuilding(0, 'chamberOfCommerce', site.x, site.y);
+  assert.equal(r.ok, true);
+  sim.completeBuilding(r.building!);
+  assert.equal(sim.players[0].age, 2);
+});
+
+test('vitória por maravilha vale para a Notre Dame francesa', () => {
+  const { sim } = makeSim({ bots: 1, seed: 5, wonderVictory: true, civ: 'french' });
+  const tc = tcOf(sim, 0);
+  sim.spawnBuilding('notreDame', 0, tc.x + 8, tc.y + 8, true);
+  for (let t = 0; t < WONDER_COUNTDOWN + 10 && !sim.gameOver; t += 0.5) sim.update(0.5);
+  assert.deepEqual(sim.gameOver?.result, 'victory');
 });
 

@@ -181,7 +181,7 @@ export class BotBrain {
   build(type: BuildingType, civil: UnitEntity[], anchor: Point, rMin: number, rMax: number): boolean {
     const sim = this.sim;
     if (BUILDINGS[type].age > sim.players[this.owner].age) return false;
-    if (!sim.canAfford(this.owner, BUILDINGS[type].cost)) return false;
+    if (!sim.canAfford(this.owner, sim.buildingCost(this.owner, type))) return false;
     const spot = this.findSpot(type, anchor.x, anchor.y, rMin, rMax);
     if (!spot) return false;
     const r = sim.placeBuilding(this.owner, type, spot.x, spot.y);

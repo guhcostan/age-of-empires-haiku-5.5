@@ -18,6 +18,8 @@ import type {
   TechId,
   UnitDef,
   UnitType,
+  Civ,
+  Cost,
 } from '../types.ts';
 
 export const RESOURCES: readonly ResourceName[] = ['food', 'wood', 'gold', 'stone'];
@@ -112,30 +114,55 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     name: 'Centro da Vila', w: 4, h: 4, hp: 2000, sight: 11, pop: 20, cost: {}, time: 0, age: 1,
     trains: ['villager'], dropoff: ['food', 'wood', 'gold', 'stone'],
   },
-  house: { name: 'Casa', w: 2, h: 2, hp: 300, sight: 6, pop: 10, cost: { wood: 60 }, time: 25, age: 1 },
+  house: { name: 'Casa', w: 2, h: 2, hp: 300, sight: 6, pop: 10, cost: { wood: 50 }, time: 15, age: 1 },
   storehouse: {
     name: 'Armazém', w: 2, h: 2, hp: 400, sight: 6, cost: { wood: 100 }, time: 20, age: 1,
     dropoff: ['wood', 'gold', 'stone'],
   },
   farm: {
-    name: 'Fazenda', w: 2, h: 2, hp: 300, sight: 5, cost: { wood: 60 }, time: 20, age: 1,
+    name: 'Fazenda', w: 2, h: 2, hp: 300, sight: 5, cost: { wood: 75 }, time: 6, age: 1,
     dropoff: ['food'], gather: 'food', gatherTime: 1.1, maxGatherers: 5,
   },
   mill: {
-    name: 'Moinho', w: 2, h: 2, hp: 350, sight: 6, cost: { wood: 100 }, time: 25, age: 1,
+    name: 'Moinho', w: 2, h: 2, hp: 350, sight: 6, cost: { wood: 50 }, time: 20, age: 1,
     dropoff: ['food'], techs: ['horticulture', 'fertilization'],
   },
   lumberCamp: {
-    name: 'Serraria', w: 2, h: 2, hp: 350, sight: 6, cost: { wood: 100 }, time: 25, age: 1,
+    name: 'Serraria', w: 2, h: 2, hp: 350, sight: 6, cost: { wood: 50 }, time: 20, age: 1,
     dropoff: ['wood'], techs: ['lumber', 'lumber2'],
   },
   miningCamp: {
-    name: 'Acampamento de Mineração', w: 2, h: 2, hp: 350, sight: 6, cost: { wood: 100 }, time: 25, age: 1,
+    name: 'Acampamento de Mineração', w: 2, h: 2, hp: 350, sight: 6, cost: { wood: 50 }, time: 20, age: 1,
     dropoff: ['gold', 'stone'], techs: ['mining', 'mining2'],
   },
   barracks: {
     name: 'Quartel', w: 3, h: 3, hp: 1500, sight: 7, cost: { wood: 150 }, time: 30, age: 1,
     trains: ['swordsman', 'spearman', 'crossbow'],
+  },
+  // Marcos da França (SPEC §4 e §6.2). Custo, tempo e vida: aoe4world (mesmos valores das idades).
+  // Footprint 3x3 e visão 7 são provisórios.
+  chamberOfCommerce: {
+    name: 'Câmara de Comércio', w: 3, h: 3, hp: 5000, sight: 7, cost: AGE_UP[2].cost, time: AGE_UP[2].time, age: 1, landmarkFor: 2,
+  },
+  schoolOfCavalry: {
+    name: 'Escola de Cavalaria', w: 3, h: 3, hp: 5000, sight: 7, cost: AGE_UP[2].cost, time: AGE_UP[2].time, age: 1, landmarkFor: 2,
+  },
+  guildHall: {
+    name: 'Sede da Guilda', w: 3, h: 3, hp: 5000, sight: 7, cost: AGE_UP[3].cost, time: AGE_UP[3].time, age: 2, landmarkFor: 3,
+  },
+  royalInstitute: {
+    name: 'Instituto Real', w: 3, h: 3, hp: 5000, sight: 7, cost: AGE_UP[3].cost, time: AGE_UP[3].time, age: 2, landmarkFor: 3,
+  },
+  redPalace: {
+    name: 'Palácio Vermelho', w: 3, h: 3, hp: 5000, sight: 7, cost: AGE_UP[4].cost, time: AGE_UP[4].time, age: 3, landmarkFor: 4,
+  },
+  collegeOfArtillery: {
+    name: 'Colégio de Artilharia', w: 3, h: 3, hp: 5000, sight: 7, cost: AGE_UP[4].cost, time: AGE_UP[4].time, age: 3, landmarkFor: 4,
+  },
+  // Notre Dame (maravilha francesa): 5000 de cada, 600 s, 5000 de vida (aoe4world). Footprint 4x4 provisório.
+  notreDame: {
+    name: 'Notre Dame', w: 4, h: 4, hp: 5000, sight: 9,
+    cost: { food: 5000, wood: 5000, stone: 5000, gold: 5000 }, time: 600, age: 4,
   },
   // Marcos da Inglaterra (SPEC §4). Custo e tempo são os da passagem de idade; vida em aoe4world.
   // Footprint 3x3 e visão 7 são provisórios: a SPEC não tem esses números.
@@ -179,7 +206,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     trains: ['archer'],
   },
   stable: {
-    name: 'Estábulo', w: 3, h: 3, hp: 800, sight: 7, cost: { wood: 175 }, time: 40, age: 2,
+    name: 'Estábulo', w: 3, h: 3, hp: 1500, sight: 7, cost: { wood: 150 }, time: 30, age: 2,
     trains: ['scout', 'knight'],
   },
   blacksmith: {
@@ -254,13 +281,28 @@ export const UNIT_KEYS: Record<UnitType, string> = {
 // O Centro da Vila não é construído pelo menu, então não tem tecla aqui.
 export const BUILD_KEYS: Partial<Record<BuildingType, string>> = {
   house: 'h', storehouse: 'm', farm: 'f', mill: 'n', lumberCamp: 'l', miningCamp: 'o',
-  barracks: 'b', archeryRange: 'c', stable: 't', blacksmith: 'k', tower: 'y', keep: 'p', siegeWorkshop: 'g', stoneWall: 'w', cathedral: 'z',
+  barracks: 'b', archeryRange: 'c', stable: 't', blacksmith: 'k', tower: 'y', keep: 'p', siegeWorkshop: 'g', stoneWall: 'w', cathedral: 'z', notreDame: 'z',
 };
 // Marcos que avançam para cada idade (a primeira opção de cada idade é a da Inglaterra).
 export const LANDMARKS: Record<NextAge, readonly BuildingType[]> = {
   2: ['councilHall', 'abbeyOfKings'],
   3: ['kingsPalace', 'whiteTower'],
   4: ['berkshirePalace', 'wynguardPalace'],
+};
+// Marcos de cada civilização, por idade que avançam (a primeira opção é a usada pelo bot).
+export const LANDMARKS_BY_CIV: Record<Civ, Record<NextAge, readonly BuildingType[]>> = {
+  english: LANDMARKS,
+  french: {
+    2: ['chamberOfCommerce', 'schoolOfCavalry'],
+    3: ['guildHall', 'royalInstitute'],
+    4: ['redPalace', 'collegeOfArtillery'],
+  },
+};
+// Maravilha de cada civilização (vitória por maravilha).
+export const WONDER_BY_CIV: Record<Civ, BuildingType> = { english: 'cathedral', french: 'notreDame' };
+// Custo de construção que muda por civilização. Fazendas inglesas custam 50% menos madeira (SPEC §6.1: 37 no aoe4world).
+export const CIV_BUILDING_COST: Partial<Record<Civ, Partial<Record<BuildingType, Cost>>>> = {
+  english: { farm: { wood: 37 } },
 };
 // Teclas dos marcos no menu de construção (até duas opções por idade).
 export const LANDMARK_KEYS: readonly string[] = ['v', 'x'];

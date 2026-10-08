@@ -13,7 +13,10 @@ export type BuildingType =
   | 'towncenter' | 'house' | 'storehouse' | 'farm' | 'mill' | 'lumberCamp' | 'miningCamp'
   | 'barracks' | 'archeryRange' | 'stable' | 'blacksmith' | 'tower' | 'keep' | 'siegeWorkshop' | 'stoneWall' | 'cathedral'
   // Marcos de idade (SPEC §4): o primeiro de cada idade é o da Inglaterra.
-  | 'councilHall' | 'abbeyOfKings' | 'kingsPalace' | 'whiteTower' | 'berkshirePalace' | 'wynguardPalace';
+  | 'councilHall' | 'abbeyOfKings' | 'kingsPalace' | 'whiteTower' | 'berkshirePalace' | 'wynguardPalace'
+  // Marcos e maravilha franceses (aoe4world e SPEC §6.2).
+  | 'chamberOfCommerce' | 'schoolOfCavalry' | 'guildHall' | 'royalInstitute' | 'redPalace' | 'collegeOfArtillery'
+  | 'notreDame';
 
 export type NodeType = 'tree' | 'berry' | 'gold' | 'stone';
 
@@ -29,6 +32,9 @@ export type NextAge = Exclude<AgeNumber, 1>;
 export type DifficultyKey = 'facil' | 'normal' | 'dificil';
 
 export type MapSizeKey = 'pequeno' | 'medio' | 'grande';
+
+// Civilizações jogáveis (SPEC §6): Inglaterra e França.
+export type Civ = 'english' | 'french';
 
 export type EntityKind = 'unit' | 'building' | 'node';
 
@@ -287,6 +293,7 @@ export interface PlayerConfig {
   color: string;
   isBot?: boolean;
   difficulty?: DifficultyKey;
+  civ?: Civ;
 }
 
 export interface PlayerStats {
@@ -305,6 +312,7 @@ export interface Player {
   color: string;
   isBot: boolean;
   difficulty: DifficultyKey;
+  civ: Civ;
   res: Resources;
   defeated: boolean;
   age: AgeNumber;
@@ -345,6 +353,7 @@ export interface Settings {
   seed: string | number;
   // Condição de vitória por maravilha (além da conquista, que está sempre ativa).
   wonderVictory?: boolean;
+  civ?: Civ;
 }
 
 // ---------- Comandos ----------

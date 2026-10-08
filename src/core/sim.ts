@@ -3,7 +3,7 @@
 import { World, defOf, rectOf, centerOf, distToRect } from './world.ts';
 import { findPath } from './pathfind.ts';
 import {
-  UNITS, BUILDINGS, NODES, TECHS, AGE_NAMES, START_RESOURCES, START_VILLAGERS,
+  UNITS, BUILDINGS, NODES, TECHS, AGE_NAMES, START_RESOURCES, START_VILLAGERS, CIV_BUILDING_COST,
   CARRY_CAPACITY, MAX_POP, MAX_QUEUE, DIFFICULTY,
 } from './config.ts';
 import type {
@@ -58,6 +58,9 @@ export interface SimulationOptions {
 // Tempo que a maravilha precisa ficar de pé para dar a vitória. Valor provisório: a SPEC marca como incerto (30 min).
 export const WONDER_COUNTDOWN = 1800;
 
+// Maravilhas de todas as civilizações (vitória por maravilha).
+const WONDERS = new Set<BuildingType>(['cathedral', 'notreDame']);
+
 // Entidades vivas, separadas por tipo. Reconstruídas a cada tick em rebuildLists.
 export interface EntityLists {
   units: UnitEntity[];
@@ -98,6 +101,7 @@ export class Simulation {
     this.humanIndex = humanIndex;
     this.players = players.map((p, index): Player => ({
       index,
+      civ: p.civ ?? 'english',
       name: p.name,
       color: p.color,
       isBot: !!p.isBot,
@@ -305,7 +309,7 @@ export class Simulation {
     }
     const reason = this.checkPlacement(type, x, y);
     if (reason) return fail(reason);
-    const cost = BUILDINGS[type].cost;
+    const cost = this.buildingCost(owner, type);
     if (!this.canAfford(owner, cost)) return fail('Recursos insuficientes');
     this.spend(owner, cost);
     return { ok: true, building: this.spawnBuilding(type, owner, x, y, false) };
@@ -337,6 +341,11 @@ export class Simulation {
   }
 
   // Avança para a próxima idade no Centro da Vila.
+  // Custo de construção para este jogador (muda por civilização; ver CIV_BUILDING_COST).
+  buildingCost(owner: number, type: BuildingType): Cost {
+    return CIV_BUILDING_COST[this.players[owner].civ]?.[type] ?? BUILDINGS[type].cost;
+  }
+
   // Marco de idade já construído (ou em obra) para esta idade?
   hasLandmark(owner: number, to: NextAge): boolean {
     for (const e of this.world.entities.values()) {
@@ -1041,7 +1050,7 @@ export class Simulation {
     if (!this.wonderVictory || this.gameOver) return;
     for (const p of this.players) {
       if (p.defeated) continue;
-      const standing = this.lists.buildings.some((b) => b.owner === p.index && b.type === 'cathedral' && b.built && !b.dead);
+      const standing = this.lists.buildings.some((b) => b.owner === p.index && WONDERS.has(b.type) && b.built && !b.dead);
       if (!standing) {
         this.wonderLeft.delete(p.index);
         continue;
