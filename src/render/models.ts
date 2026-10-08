@@ -426,8 +426,24 @@ function buildKnight(root: THREE.Group, team: number): HorseRig {
   return rig;
 }
 
+// Aríete: chassi com tronco e duas rodas (as rodas são as "pernas" da animação).
+function buildRam(root: THREE.Group, team: number): UnitRig {
+  const body = pivot(root, 0, 0, 0);
+  const wheelL = pivot(body, -0.45, 0.3, 0.1);
+  const wheelR = pivot(body, 0.45, 0.3, 0.1);
+  part(wheelL, cyl(0.3, 0.3, 0.12, 10), 0x4a3320, 0, 0, 0, [0, 0, Math.PI / 2]);
+  part(wheelR, cyl(0.3, 0.3, 0.12, 10), 0x4a3320, 0, 0, 0, [0, 0, Math.PI / 2]);
+  part(body, box(1.0, 0.25, 1.1), 0x8b5a2b, 0, 0.45, 0);
+  part(body, cyl(0.12, 0.12, 1.5, 8), 0x6b4423, 0, 0.7, 0.2, [Math.PI / 2, 0, 0]);
+  part(body, box(0.9, 0.5, 0.1), team, 0, 0.75, -0.55);
+  const armL = pivot(body, -0.4, 0.8, 0);
+  const armR = pivot(body, 0.4, 0.8, 0);
+  return { body, legs: [wheelL, wheelR], armL, armR };
+}
+
 // Monta unidades desta fase; chamado por createUnit.
 export function buildAdvancedUnit(type: UnitType, root: THREE.Group, team: number): UnitRig {
+  if (type === 'ram') return buildRam(root, team);
   if (type === 'spearman') return buildSpearman(root, team);
   if (type === 'crossbow') return buildCrossbow(root, team);
   return buildKnight(root, team);
@@ -486,6 +502,14 @@ export function buildAdvancedBuilding(type: BuildingType, g: THREE.Group, team: 
       part(g, box(0.9, 1.2, 0.06), 0x3a3a40, 0, 1.0, 1.33);
       part(g, box(3.0, 0.3, 3.0), 0x8a8f96, 0, 3.25, 0);
       part(g, box(0.5, 0.36, 0.03), team, 0, 3.6, 1.52);
+      break;
+    }
+    case 'siegeWorkshop': {
+      part(g, box(2.8, 0.6, 2.8), 0x6e6a64, 0, 0.3, 0);
+      part(g, box(2.6, 1.4, 2.6), 0x8a6a46, 0, 1.3, 0);
+      part(g, box(1.2, 0.9, 0.06), 0x3a2a1a, 0, 0.8, 1.32);
+      part(g, cyl(0.12, 0.12, 1.6, 6), 0x5a4a3a, 1.0, 2.6, 0.8);
+      part(g, box(0.5, 0.3, 0.03), team, 0.0, 2.2, 1.32);
       break;
     }
     case 'archeryRange': {

@@ -67,6 +67,13 @@ export const AGE_UP: Record<NextAge, AgeUpDef> = {
 // Unidades. `civil` = coleta e constrói. `ranged` = dispara. `bonus` = multiplicador de dano
 // contra classes específicas. `age` = idade mínima. `from` = edifício que treina.
 export const UNITS: Record<UnitType, UnitDef> = {
+  // Aríete (aoe4world, variação inglesa): 200 madeira, 35 s, 370 de vida, dano de cerco 200 a cada 4 s.
+  // Alcance e velocidade não são valores confirmados: a velocidade é proporcional à do aldeão no aoe4world
+  // (0,75 / 1,125 de 1,8). Ver docs/SPEC.md, anexo C.
+  ram: {
+    name: 'Aríete', hp: 370, attack: 200, cooldown: 4, range: 0.54, speed: 1.2, sight: 7,
+    cost: { wood: 200 }, time: 35, age: 2, from: 'siegeWorkshop', siege: true,
+  },
   villager: {
     name: 'Aldeão', civil: true, hp: 50, attack: 2, cooldown: 1.5, range: 1.0,
     speed: 1.8, sight: 7, cost: { food: 50 }, time: 20, age: 1, from: 'towncenter',
@@ -129,6 +136,11 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     name: 'Quartel', w: 3, h: 3, hp: 1500, sight: 7, cost: { wood: 150 }, time: 30, age: 1,
     trains: ['swordsman', 'spearman', 'crossbow'],
   },
+  // Oficina de cerco: treina aríetes. Custo, vida e tempo batem em aoe4.club e aoe4world; idade 3 só no aoe4world.
+  siegeWorkshop: {
+    name: 'Oficina de cerco', w: 3, h: 3, hp: 2100, sight: 7, cost: { wood: 250 }, time: 45, age: 3,
+    trains: ['ram'],
+  },
   // Campo de tiro: treina arqueiros (SPEC §2.1). Custo, vida e tempo vêm da fonte única da SPEC (linha 73).
   archeryRange: {
     name: 'Campo de tiro', w: 3, h: 3, hp: 1500, sight: 7, cost: { wood: 150 }, time: 30, age: 1,
@@ -146,7 +158,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
   // Idade 3 vem só do aoe4world; footprint e visão não estão na SPEC, então 3x3 e visão 7 são provisórios.
   keep: {
     name: 'Keep', w: 3, h: 3, hp: 5000, sight: 7, cost: { stone: 900 }, time: 180, age: 3,
-    trains: ['swordsman', 'archer', 'spearman', 'crossbow', 'scout', 'knight'],
+    trains: ['swordsman', 'archer', 'spearman', 'crossbow', 'scout', 'knight', 'ram'],
   },
   tower: {
     name: 'Torre', w: 2, h: 2, hp: 3000, sight: 9, cost: { stone: 250 }, time: 90, age: 2,
@@ -200,17 +212,17 @@ export const TECHS: Record<TechId, TechDef> = {
 
 export const BUILD_MENU: readonly BuildingType[] = [
   'house', 'storehouse', 'farm', 'mill', 'lumberCamp', 'miningCamp',
-  'barracks', 'archeryRange', 'stable', 'blacksmith', 'tower', 'keep',
+  'barracks', 'archeryRange', 'stable', 'blacksmith', 'tower', 'keep', 'siegeWorkshop',
 ];
 
 // Teclas de atalho (exibidas nos botões e na ajuda).
 export const UNIT_KEYS: Record<UnitType, string> = {
-  villager: 'v', swordsman: 'z', archer: 'x', spearman: 'g', crossbow: 'd', scout: 'c', knight: 'r',
+  villager: 'v', swordsman: 'z', archer: 'x', spearman: 'g', crossbow: 'd', scout: 'c', knight: 'r', ram: 'j',
 };
 // O Centro da Vila não é construído pelo menu, então não tem tecla aqui.
 export const BUILD_KEYS: Partial<Record<BuildingType, string>> = {
   house: 'h', storehouse: 'm', farm: 'f', mill: 'n', lumberCamp: 'l', miningCamp: 'o',
-  barracks: 'b', archeryRange: 'c', stable: 't', blacksmith: 'k', tower: 'y', keep: 'p',
+  barracks: 'b', archeryRange: 'c', stable: 't', blacksmith: 'k', tower: 'y', keep: 'p', siegeWorkshop: 'g',
 };
 export const TECH_KEYS: readonly string[] = ['j', 'i'];
 export const AGE_KEY = 'u';

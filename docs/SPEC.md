@@ -544,3 +544,11 @@ Fonte: https://raw.githubusercontent.com/aoe4world/data/main/buildings/english.j
 - Campo de tiro: idade 2 no aoe4world. O código tem idade 1. **Não alterado**: falta a segunda fonte para a idade.
 - Ferreiro e estábulo: idade 2 no aoe4world. Conferir com o código antes de mudar.
 - Abadia dos Reis e Concílio: idade 1, 400 comida + 200 ouro, 190 s, 5000 de vida. Ou seja, o marco da Feudal tem o custo da passagem de idade (ver §4).
+
+### Anexo C, adendo 2: oficina de cerco e aríete (implementados em 2026-10-08)
+
+- Oficina de cerco: idade 3 (aoe4world), 250 madeira, 45 s, 2100 de vida (aoe4.club e aoe4world). Footprint 3x3 e visão 7 são provisórios.
+- Aríete (variação inglesa, aoe4world): idade 2, 200 madeira, 35 s, 370 de vida, dano de cerco 200, recarga 4 s, alcance 0,5375, +300 de dano de cerco contra muros, resistência a flechas 95, só ataca edifícios. Produzido na oficina de cerco e no keep.
+- Não confirmados: velocidade (aoe4world 0,75; o código usa 1,2, proporção do aldeão, não valor medido) e alcance no código (0,54, valor do aoe4world sem conversão validada).
+- Não implementados: bônus de 300 contra muros (não há muros ainda) e resistência a flechas 95 (não há armadura nem resistência no código).
+- A redução de 0,5 contra prédios, que o código aplica aos demais atacantes, não tem fonte na SPEC. Continua como estava; o aríete a ignora por ser dano de cerco.

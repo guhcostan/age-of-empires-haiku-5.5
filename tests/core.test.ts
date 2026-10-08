@@ -354,3 +354,40 @@ test('keep treina todas as unidades militares (SPEC §2.1) e exige a idade caste
   assert.equal(BUILDINGS.keep.age, 3);
 });
 
+// Oficina de cerco (aoe4.club e aoe4world concordam em custo, vida e tempo). Idade 3 só no aoe4world.
+test('oficina de cerco custa 250 madeira, tem 2100 de vida e leva 45 s (confirmado)', () => {
+  assert.deepEqual(BUILDINGS.siegeWorkshop.cost, { wood: 250 });
+  assert.equal(BUILDINGS.siegeWorkshop.hp, 2100);
+  assert.equal(BUILDINGS.siegeWorkshop.time, 45);
+  assert.equal(BUILDINGS.siegeWorkshop.age, 3);
+});
+
+// Aríete: custo, vida e dano de cerco em aoe4.club e aoe4world; recarga de 4 s só no aoe4world.
+test('aríete custa 200 madeira, tem 370 de vida e dano de cerco 200 (confirmado)', () => {
+  assert.deepEqual(UNITS.ram.cost, { wood: 200 });
+  assert.equal(UNITS.ram.hp, 370);
+  assert.equal(UNITS.ram.time, 35);
+  assert.equal(UNITS.ram.attack, 200);
+  assert.equal(UNITS.ram.siege, true);
+});
+
+test('keep também treina aríete (aoe4world: produzido no keep)', () => {
+  assert.ok(BUILDINGS.keep.trains?.includes('ram'));
+});
+
+test('aríete causa 200 de dano a edifício, sem a redução de 0,5', () => {
+  const { sim } = makeSim({ bots: 1, seed: 5 });
+  const house = sim.spawnBuilding('house', 1, 40, 40, true);
+  const ram = sim.spawnUnit('ram', 0, 41, 42);
+  const before = house.hp;
+  sim.strike(ram, house);
+  assert.equal(before - house.hp, 200);
+});
+
+test('aríete não procura unidades inimigas, só edifícios', () => {
+  const { sim } = makeSim({ bots: 1, seed: 5 });
+  const ram = sim.spawnUnit('ram', 0, 30, 30);
+  sim.spawnUnit('swordsman', 1, 31, 30);
+  assert.equal(sim.findFoe(ram, 10, false), null);
+});
+

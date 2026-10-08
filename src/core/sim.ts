@@ -681,11 +681,12 @@ export class Simulation {
 
   attackBehaviour(u: UnitEntity, dt: number): void {
     const t = this.world.get(u.target);
-    if (!t || t.dead || t.kind === 'node' || t.hp <= 0) {
+    const def = UNITS[u.type];
+    // Aríete não ataca unidades: se o alvo é unidade, desiste.
+    if (!t || t.dead || t.kind === 'node' || t.hp <= 0 || (def.siege && t.kind === 'unit')) {
       this.afterTarget(u);
       return;
     }
-    const def = UNITS[u.type];
     const gap = this.gapTo(u, t);
     if (gap <= def.range + 0.05) {
       u.path = null;
@@ -741,7 +742,8 @@ export class Simulation {
     const def = UNITS[u.type];
     let dmg = def.attack * this.attackBonus(u.owner);
     if (t.kind === 'unit') dmg *= def.bonus?.[t.type] ?? 1;
-    if (t.kind === 'building') dmg *= 0.5;
+    // Redução de 0,5 contra prédios: valor sem fonte na SPEC. Aríete usa dano de cerco inteiro.
+    if (t.kind === 'building') dmg *= def.siege ? 1 : 0.5;
     t.hp -= dmg;
     t.lastHitBy = u.owner;
     this.events.push({
@@ -960,7 +962,8 @@ export class Simulation {
     let best: UnitEntity | BuildingEntity | null = null;
     let bestD = radius;
     const skipping = (o: Entity): boolean => o.id === u.skipId && this.time < u.skipUntil;
-    for (const o of this.lists.units) {
+    // Aríete só procura edifícios.
+    for (const o of UNITS[u.type].siege ? [] : this.lists.units) {
       if (o.dead || o.owner === u.owner || skipping(o)) continue;
       const d = Math.hypot(o.x - u.x, o.y - u.y);
       if (d < bestD) { best = o; bestD = d; }

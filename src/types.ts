@@ -7,11 +7,11 @@
 
 export type ResourceName = 'food' | 'wood' | 'gold' | 'stone';
 
-export type UnitType = 'villager' | 'swordsman' | 'archer' | 'spearman' | 'crossbow' | 'scout' | 'knight';
+export type UnitType = 'villager' | 'swordsman' | 'archer' | 'spearman' | 'crossbow' | 'scout' | 'knight' | 'ram';
 
 export type BuildingType =
   | 'towncenter' | 'house' | 'storehouse' | 'farm' | 'mill' | 'lumberCamp' | 'miningCamp'
-  | 'barracks' | 'archeryRange' | 'stable' | 'blacksmith' | 'tower' | 'keep';
+  | 'barracks' | 'archeryRange' | 'stable' | 'blacksmith' | 'tower' | 'keep' | 'siegeWorkshop';
 
 export type NodeType = 'tree' | 'berry' | 'gold' | 'stone';
 
@@ -95,6 +95,8 @@ export interface UnitDef {
   from: BuildingType;
   // Multiplicador de dano contra classes específicas.
   bonus?: Partial<Record<UnitType, number>>;
+  // Aríete: só ataca edifícios e causa dano de cerco, sem a redução de 0,5 contra prédios.
+  siege?: boolean;
 }
 
 export interface BuildingDef {
