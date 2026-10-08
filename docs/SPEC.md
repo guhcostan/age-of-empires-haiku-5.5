@@ -681,6 +681,6 @@ Fontes lidas só por resumo de busca (a página do aoe4world é renderizada em J
 ### Anexo C, adendo 18: Arqueiro Longo inglês (implementado em 2026-10-08; provisório)
 
 - Custo 40 de comida e 50 de madeira; 15 s de treino; 95 de vida; ataque 9 à distância; alcance 7; idade mínima Feudal (II). Uma fonte [A] para custo, vida e ataque; a idade vem de uma fonte [J]. Treinado no campo de tiro, só pelos ingleses (SPEC §3: "treinada em" incerto; a busca dá o campo de tiro).
-- Velocidade e recarga: a SPEC dá velocidade 1,125 e não dá recarga. O código usa a velocidade e a recarga do arqueiro, para manter a escala do jogo (a SPEC tem o arqueiro em 2,0? não: o código tem 2,0 e a SPEC tem valores de outra escala; ver adendo de balanceamento em docs/PROGRESS.md).
+- Velocidade e recarga: a SPEC dá velocidade 1,125 para o Arqueiro Longo e não dá recarga. O código usa 2,0 (a velocidade do arqueiro do código) e a recarga do arqueiro, para manter a escala do jogo. Ver as divergências de escala de velocidade em docs/PROGRESS.md.
 - Estacas (habilidade da SPEC) não implementadas.
 - Testes: tests/civilizacoes.test.ts (treino por civilização e idade).
