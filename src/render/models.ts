@@ -185,7 +185,7 @@ export function createUnit(type: UnitType, teamColor: string): CreatedUnit {
   const team = new THREE.Color(teamColor).getHex();
   let rig: UnitRig;
   if (type === 'villager') rig = buildVillager(root, team);
-  else if (type === 'swordsman') rig = buildSwordsman(root, team);
+  else if (type === 'swordsman' || type === 'vanguard') rig = buildSwordsman(root, team);
   else if (type === 'archer' || type === 'longbowman') rig = buildArcher(root, team);
   else if (type === 'scout') rig = buildScout(root, team);
   else rig = buildAdvancedUnit(type, root, team);

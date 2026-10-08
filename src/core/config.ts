@@ -86,6 +86,12 @@ export const UNITS: Record<UnitType, UnitDef> = {
     name: 'Espadachim', hp: 110, attack: 9, cooldown: 1.2, range: 1.1,
     speed: 1.9, sight: 7, cost: { food: 60, gold: 20 }, time: 14, age: 1, from: 'barracks',
   },
+  // Homem de Armas Vanguarda (inglês, já na Idade das Trevas). SPEC anexo C, adendo 18: custo, vida, ataque e intervalo
+  // de uma fonte [A]; velocidade e armadura (5/6) não usadas: a velocidade segue a escala do espadachim e não há armadura no código.
+  vanguard: {
+    name: 'Homem de Armas Vanguarda', hp: 180, attack: 14, cooldown: 1.375, range: 1.1,
+    speed: 1.9, sight: 7, cost: { food: 90, gold: 20 }, time: 14.65, age: 1, from: 'barracks',
+  },
   archer: {
     name: 'Arqueiro', hp: 45, attack: 6, cooldown: 1.6, range: 5.5, ranged: true,
     speed: 2.0, sight: 8, cost: { food: 40, wood: 50 }, time: 12, age: 1, from: 'archeryRange',
@@ -290,7 +296,7 @@ export const BUILD_MENU: readonly BuildingType[] = [
 
 // Teclas de atalho (exibidas nos botões e na ajuda).
 export const UNIT_KEYS: Record<UnitType, string> = {
-  villager: 'v', swordsman: 'z', archer: 'x', longbowman: 'l', spearman: 'g', crossbow: 'd', scout: 'c', knight: 'r', ram: 'j', royalKnight: 'r',
+  villager: 'v', swordsman: 'z', vanguard: 'n', archer: 'x', longbowman: 'l', spearman: 'g', crossbow: 'd', scout: 'c', knight: 'r', ram: 'j', royalKnight: 'r',
 };
 // O Centro da Vila não é construído pelo menu, então não tem tecla aqui.
 export const BUILD_KEYS: Partial<Record<BuildingType, string>> = {
@@ -348,6 +354,7 @@ export const CIV_BUILDING_COST: Partial<Record<Civ, Partial<Record<BuildingType,
 export const CIV_TRAINS: Partial<Record<Civ, Partial<Record<BuildingType, readonly UnitType[]>>>> = {
   english: {
     archeryRange: ['archer', 'longbowman'],
+    barracks: ['vanguard', 'swordsman', 'spearman', 'crossbow'],
   },
   french: {
     stable: ['scout', 'royalKnight'],

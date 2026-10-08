@@ -684,3 +684,9 @@ Fontes lidas só por resumo de busca (a página do aoe4world é renderizada em J
 - Velocidade e recarga: a SPEC dá velocidade 1,125 para o Arqueiro Longo e não dá recarga. O código usa 2,0 (a velocidade do arqueiro do código) e a recarga do arqueiro, para manter a escala do jogo. Ver as divergências de escala de velocidade em docs/PROGRESS.md.
 - Estacas (habilidade da SPEC) não implementadas.
 - Testes: tests/civilizacoes.test.ts (treino por civilização e idade).
+
+### Anexo C, adendo 19: Homem de Armas Vanguarda inglês (implementado em 2026-10-08; provisório)
+
+- Custo 90 de comida e 20 de ouro; 14,65 s de treino; 180 de vida; ataque 14; intervalo de ataque 1,375 s; corpo a corpo. Uma fonte [A] para os números; disponível na Idade das Trevas (três fontes, SPEC §6.1). Treinado no quartel, só pelos ingleses.
+- Velocidade (SPEC 1,125) e armadura (5/6) não usadas: a velocidade segue a escala do espadachim (1,9) e o código não tem armadura. Habilidade (flechas comuns ineficientes) não implementada.
+- Testes: tests/civilizacoes.test.ts (treino por civilização).

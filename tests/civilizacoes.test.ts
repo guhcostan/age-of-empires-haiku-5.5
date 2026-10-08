@@ -41,3 +41,12 @@ test('arqueiro longo: inglês treina no campo de tiro a partir da Feudal; franc�
   english.players[0].age = 2;
   assert.equal(english.train(0, range.id, 'longbowman').ok, true, 'na Feudal treina');
 });
+
+// Homem de Armas Vanguarda: bônus inglês, disponível já na Idade das Trevas, no quartel (SPEC §6.1, três fontes).
+test('homem de armas vanguarda: inglês treina no quartel na Idade das Trevas; francês não', () => {
+  const english = simFor('english');
+  assert.ok(english.trainsOf(0, 'barracks').includes('vanguard'));
+  assert.ok(!simFor('french').trainsOf(0, 'barracks').includes('vanguard'));
+  const barracks = english.spawnBuilding('barracks', 0, 24, 24, true);
+  assert.equal(english.train(0, barracks.id, 'vanguard').ok, true);
+});
