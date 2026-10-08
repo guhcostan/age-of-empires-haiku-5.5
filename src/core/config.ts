@@ -105,6 +105,12 @@ export const UNITS: Record<UnitType, UnitDef> = {
     name: 'Cavaleiro', hp: 180, attack: 12, cooldown: 1.4, range: 1.3,
     speed: 2.6, sight: 9, cost: { food: 80, gold: 60 }, time: 22, age: 3, from: 'stable',
   },
+  // Cavaleiro Real (francês, Feudal): 140 comida + 100 ouro, 35 s, 190 de vida, ataque 19 (SPEC §3 e aoe4world).
+  // Recarga 0,875 s só no aoe4world. Alcance e velocidade são os do cavaleiro (provisórios).
+  royalKnight: {
+    name: 'Cavaleiro Real', hp: 190, attack: 19, cooldown: 0.875, range: 1.3,
+    speed: 2.6, sight: 9, cost: { food: 140, gold: 100 }, time: 35, age: 2, from: 'stable',
+  },
 };
 
 // Edifícios. `dropoff` = recursos aceitos aqui. `gather` = recurso coletável no próprio prédio.
@@ -146,6 +152,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
   },
   schoolOfCavalry: {
     name: 'Escola de Cavalaria', w: 3, h: 3, hp: 5000, sight: 7, cost: AGE_UP[2].cost, time: AGE_UP[2].time, age: 1, landmarkFor: 2,
+    trains: ['royalKnight'],
   },
   guildHall: {
     name: 'Sede da Guilda', w: 3, h: 3, hp: 5000, sight: 7, cost: AGE_UP[3].cost, time: AGE_UP[3].time, age: 2, landmarkFor: 3,
@@ -276,7 +283,7 @@ export const BUILD_MENU: readonly BuildingType[] = [
 
 // Teclas de atalho (exibidas nos botões e na ajuda).
 export const UNIT_KEYS: Record<UnitType, string> = {
-  villager: 'v', swordsman: 'z', archer: 'x', spearman: 'g', crossbow: 'd', scout: 'c', knight: 'r', ram: 'j',
+  villager: 'v', swordsman: 'z', archer: 'x', spearman: 'g', crossbow: 'd', scout: 'c', knight: 'r', ram: 'j', royalKnight: 'r',
 };
 // O Centro da Vila não é construído pelo menu, então não tem tecla aqui.
 export const BUILD_KEYS: Partial<Record<BuildingType, string>> = {
@@ -303,6 +310,13 @@ export const WONDER_BY_CIV: Record<Civ, BuildingType> = { english: 'cathedral', 
 // Custo de construção que muda por civilização. Fazendas inglesas custam 50% menos madeira (SPEC §6.1: 37 no aoe4world).
 export const CIV_BUILDING_COST: Partial<Record<Civ, Partial<Record<BuildingType, Cost>>>> = {
   english: { farm: { wood: 37 } },
+};
+// Unidades que cada edifício treina por civilização: o estábulo francês treina o Cavaleiro Real em vez do Cavaleiro.
+export const CIV_TRAINS: Partial<Record<Civ, Partial<Record<BuildingType, readonly UnitType[]>>>> = {
+  french: {
+    stable: ['scout', 'royalKnight'],
+    keep: ['swordsman', 'archer', 'spearman', 'crossbow', 'scout', 'ram'],
+  },
 };
 // Teclas dos marcos no menu de construção (até duas opções por idade).
 export const LANDMARK_KEYS: readonly string[] = ['v', 'x'];

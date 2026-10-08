@@ -3,7 +3,7 @@
 import { World, defOf, rectOf, centerOf, distToRect } from './world.ts';
 import { findPath } from './pathfind.ts';
 import {
-  UNITS, BUILDINGS, NODES, TECHS, AGE_NAMES, START_RESOURCES, START_VILLAGERS, CIV_BUILDING_COST,
+  UNITS, BUILDINGS, NODES, TECHS, AGE_NAMES, START_RESOURCES, START_VILLAGERS, CIV_BUILDING_COST, CIV_TRAINS,
   CARRY_CAPACITY, MAX_POP, MAX_QUEUE, DIFFICULTY,
 } from './config.ts';
 import type {
@@ -318,7 +318,7 @@ export class Simulation {
   train(owner: number, id: number, type: UnitType): Outcome {
     const b = this.buildingById(id);
     if (!b || b.dead || b.owner !== owner || !b.built) return fail('Edifício indisponível');
-    if (!BUILDINGS[b.type].trains?.includes(type)) return fail('Este edifício não treina isso');
+    if (!this.trainsOf(owner, b.type).includes(type)) return fail('Este edifício não treina isso');
     if (UNITS[type].age > this.players[owner].age) return fail(`Requer ${AGE_NAMES[UNITS[type].age]}`);
     if (b.queue.length >= MAX_QUEUE) return fail('Fila cheia');
     const def = UNITS[type];
@@ -341,6 +341,11 @@ export class Simulation {
   }
 
   // Avança para a próxima idade no Centro da Vila.
+  // Unidades que um edifício treina para este jogador (muda por civilização; ver CIV_TRAINS).
+  trainsOf(owner: number, type: BuildingType): readonly UnitType[] {
+    return CIV_TRAINS[this.players[owner].civ]?.[type] ?? BUILDINGS[type].trains ?? [];
+  }
+
   // Custo de construção para este jogador (muda por civilização; ver CIV_BUILDING_COST).
   buildingCost(owner: number, type: BuildingType): Cost {
     return CIV_BUILDING_COST[this.players[owner].civ]?.[type] ?? BUILDINGS[type].cost;

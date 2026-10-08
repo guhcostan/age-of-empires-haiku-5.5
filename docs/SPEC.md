@@ -585,3 +585,9 @@ Fonte: https://raw.githubusercontent.com/aoe4world/data/main/buildings/english.j
 - Notre Dame (maravilha francesa, idade 4): 5000 de cada, 600 s, 5000 de vida (aoe4world). Conta para a vitória por maravilha.
 - Ficam para depois, porque dependem de mecânicas novas: Cavaleiro Real (Feudal), Homem de Armas Vanguarda (Idade I), aldeões com arco curto, Rede de Castelos, comerciantes e Centro da Vila mais rápido por idade.
 - Não alterado por falta de segunda fonte: vida da casa (300 no código; 750 no aoe4world), vida do moinho e dos acampamentos (350; 750 no aoe4world), tempo e vida do ferreiro (40 s e 700; 25 s e 1500 no aoe4world), vida e custo do centro da vila (2000; SPEC e aoe4world dão 2500 para o centro comum e 7000 para o capital).
+
+### Anexo C, adendo 7: Cavaleiro Real francês (implementado em 2026-10-08)
+
+- Cavaleiro Real: Feudal (idade 2), 140 comida + 100 ouro, 35 s, 190 de vida, ataque 19 (SPEC §3, linha 159, e aoe4world: mesmos valores). Treina no estábulo e na Escola de Cavalaria francesa. Armadura 3/3 do aoe4world: não modelada, porque o combate ainda não tem armadura.
+- Provisórios: recarga 0,875 s (aoe4world), alcance e velocidade (iguais aos do Cavaleiro; o aoe4world usa outra escala de velocidade e alcance).
+- Estábulo francês treina o Cavaleiro Real em vez do Cavaleiro. O Keep francês não treina cavaleiros.

@@ -374,7 +374,7 @@ export function makeGhost(object: THREE.Object3D, opacity = 0.5): THREE.Object3D
 // ---------- Unidades e edifícios da Idade Feudal em diante ----------
 
 export function isHorse(type: UnitType): boolean {
-  return type === 'scout' || type === 'knight';
+  return type === 'scout' || type === 'knight' || type === 'royalKnight';
 }
 
 function buildSpearman(root: THREE.Group, team: number): UnitRig {

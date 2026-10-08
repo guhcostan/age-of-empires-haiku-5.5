@@ -374,8 +374,9 @@ export class Hud {
     } else if (buildings.length === 1 && units.length === 0) {
       const b = buildings[0];
       const def = BUILDINGS[b.type];
-      if (b.built && def.trains) {
-        for (const t of def.trains) {
+      const trains = sim.trainsOf(0, b.type);
+      if (b.built && trains.length > 0) {
+        for (const t of trains) {
           const u = UNITS[t];
           cmds.push({
             key: UNIT_KEYS[t],
@@ -460,7 +461,7 @@ function iconGlyph(icon: string): string {
   const glyphs: Record<string, string> = {
     house: '⌂', storehouse: '▦', farm: '✿', mill: '◍', lumberCamp: '▤', miningCamp: '◆',
     barracks: '⚔', archeryRange: '◎', keep: '▣', siegeWorkshop: '⚙', stoneWall: '▬', stable: '♞', blacksmith: '⚒', tower: '♜',
-    villager: '☺', swordsman: '🗡', archer: '➹', spearman: '↑', crossbow: '✜', scout: '➤', knight: '♘', ram: '▮',
+    villager: '☺', swordsman: '🗡', archer: '➹', spearman: '↑', crossbow: '✜', scout: '➤', knight: '♘', royalKnight: '♘', ram: '▮',
     cathedral: '✞', councilHall: '♛', chamberOfCommerce: '⚖', schoolOfCavalry: '♞', guildHall: '⚜', royalInstitute: '♕',
     redPalace: '♗', collegeOfArtillery: '✹', notreDame: '✞', abbeyOfKings: '✝', kingsPalace: '♚', whiteTower: '♖', berkshirePalace: '♔', wynguardPalace: '♕',
     attack: '⚔', stop: '■', cancel: '✕', age: '★', tech: '✦',

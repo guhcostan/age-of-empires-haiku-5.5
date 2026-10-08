@@ -524,3 +524,35 @@ test('vitória por maravilha vale para a Notre Dame francesa', () => {
   assert.deepEqual(sim.gameOver?.result, 'victory');
 });
 
+// Cavaleiro Real (SPEC §3: 140 comida + 100 ouro, 35 s, 190 de vida, ataque 19; aoe4world confirma).
+test('cavaleiro real custa 140 comida + 100 ouro, tem 190 de vida e ataque 19 (confirmado)', () => {
+  assert.deepEqual(UNITS.royalKnight.cost, { food: 140, gold: 100 });
+  assert.equal(UNITS.royalKnight.time, 35);
+  assert.equal(UNITS.royalKnight.hp, 190);
+  assert.equal(UNITS.royalKnight.attack, 19);
+  assert.equal(UNITS.royalKnight.age, 2);
+});
+
+test('o estábulo francês treina cavaleiro real; o inglês não', () => {
+  const french = makeSim({ bots: 0, seed: 4, civ: 'french' }).sim;
+  const english = makeSim({ bots: 0, seed: 4, civ: 'english' }).sim;
+  assert.ok(french.trainsOf(0, 'stable').includes('royalKnight'));
+  assert.equal(french.trainsOf(0, 'stable').includes('knight'), false);
+  assert.ok(english.trainsOf(0, 'stable').includes('knight'));
+  assert.equal(english.trainsOf(0, 'stable').includes('royalKnight'), false);
+});
+
+test('cavaleiro real treina no estábulo francês na Feudal e não no inglês', () => {
+  const { sim } = makeSim({ bots: 0, seed: 4, civ: 'french' });
+  const stableSite = findFreeSite(sim, 'stable', tcOf(sim, 0))!;
+  const stable = sim.spawnBuilding('stable', 0, stableSite.x, stableSite.y, true);
+  sim.players[0].age = 2;
+  sim.players[0].res = { food: 500, wood: 0, gold: 500, stone: 0 };
+  assert.equal(sim.train(0, stable.id, 'royalKnight').ok, true);
+  const english = makeSim({ bots: 0, seed: 4, civ: 'english' }).sim;
+  const eStable = english.spawnBuilding('stable', 0, stableSite.x, stableSite.y, true);
+  english.players[0].age = 2;
+  english.players[0].res = { food: 500, wood: 0, gold: 500, stone: 0 };
+  assert.equal(english.train(0, eStable.id, 'royalKnight').ok, false);
+});
+
