@@ -1,7 +1,7 @@
 // HUD: barra de recursos, idade, painel de seleção, grade de comandos (com atalhos) e mensagens.
 import {
-  BUILDINGS, UNITS, NODES, TECHS, AGE_UP, AGE_NAMES, BUILD_MENU, RESOURCES, RESOURCE_INFO,
-  MAX_QUEUE, UNIT_KEYS, BUILD_KEYS, TECH_KEYS, AGE_KEY,
+  BUILDINGS, UNITS, NODES, TECHS, AGE_NAMES, BUILD_MENU, RESOURCES, RESOURCE_INFO,
+  MAX_QUEUE, UNIT_KEYS, BUILD_KEYS, TECH_KEYS, LANDMARKS, LANDMARK_KEYS,
 } from '../core/config.ts';
 import { $ } from './dom.ts';
 import type { Game } from '../game.ts';
@@ -140,7 +140,7 @@ export class Hud {
       const b = e.kind === 'building' ? e : null;
       return [
         e.id, e.type, b?.built ? 1 : 0, b?.queue.length ?? 0, e.owner,
-        b?.research?.id ?? '', b?.ageUp ? 1 : 0, player.age, Object.keys(player.techs).length,
+        b?.research?.id ?? '', player.age, Object.keys(player.techs).length,
       ].join(':');
     }).join('|');
     if (sig !== this.sigKey) {
@@ -224,7 +224,6 @@ export class Hud {
       return `
         <div class="stat-row"><span>Vida</span>${this.bar(e.hp, e.maxHp, 'hp')}</div>
         <div class="role">${status}</div>${extra}${drop}${atk}
-        ${e.ageUp ? `<div class="stat-row"><span>Idade</span>${this.bar(e.ageUp.elapsed, e.ageUp.time, 'prog')}</div>` : ''}
         ${e.research ? `<div class="stat-row"><span>${TECHS[e.research.id].name}</span>${this.bar(e.research.elapsed, e.research.time, 'prog')}</div>` : ''}`;
     }
     const d = NODES[e.type];
@@ -265,7 +264,7 @@ export class Hud {
     }
     if (e.kind === 'building') {
       this.selBody.querySelectorAll('.bar.prog').forEach((bar) => {
-        const source = e.ageUp ?? e.research;
+        const source = e.research;
         if (!source) return;
         setBar(bar, (source.elapsed / source.time) * 100, `${Math.floor(source.elapsed)}/${source.time}`);
       });
@@ -341,6 +340,24 @@ export class Hud {
           });
         }
       }
+      // Marcos da próxima idade (SPEC §4): só aparecem quando há uma idade a alcançar.
+      const nextAge = player.age + 1;
+      if (civil.length && nextAge >= 2 && nextAge <= 4) {
+        const to = nextAge as NextAge;
+        LANDMARKS[to].forEach((t, i) => {
+          const def = BUILDINGS[t];
+          cmds.push({
+            key: LANDMARK_KEYS[i],
+            label: def.name,
+            icon: t,
+            cost: def.cost,
+            tip: `${def.name} — ${costText(def.cost)} · ${def.time}s · marco da ${AGE_NAMES[to]}`,
+            enabled: () => !sim.hasLandmark(0, to) && sim.canAfford(0, def.cost),
+            reason: () => (sim.hasLandmark(0, to) ? 'Já existe um marco desta idade' : 'Recursos insuficientes'),
+            run: () => g.input.startPlacement(t),
+          });
+        });
+      }
       if (military.length) {
         cmds.push({
           key: 'a', label: 'Atacar-mover', icon: 'attack', tip: 'Atacar-mover (A)',
@@ -383,24 +400,6 @@ export class Hud {
           key: 'delete', label: 'Cancelar', icon: 'cancel', tip: 'Cancelar último treino (Delete)',
           enabled: () => b.queue.length > 0, reason: () => 'Nada na fila',
           run: () => sim.cancelTraining(0, b.id),
-        });
-      }
-      if (b.type === 'towncenter' && b.built) {
-        const next = player.age + 1;
-        const nextUp = AGE_UP[next as NextAge] as (typeof AGE_UP)[NextAge] | undefined;
-        const cost = nextUp?.cost;
-        cmds.push({
-          key: AGE_KEY,
-          label: next <= 4 ? 'Avançar idade' : 'Idade máxima',
-          icon: 'age',
-          cost,
-          tip: nextUp && cost ? `${AGE_NAMES[next as AgeNumber]} — ${costText(cost)} · ${nextUp.time}s` : 'Idade máxima atingida',
-          enabled: () => next <= 4 && !b.ageUp && sim.canAfford(0, cost ?? {}),
-          reason: () => (!cost ? 'Idade máxima atingida' : b.ageUp ? 'Já avançando' : 'Recursos insuficientes'),
-          run: () => {
-            const r = sim.startAgeUp(0, b.id);
-            if (!r.ok) this.toast(r.reason, 'bad');
-          },
         });
       }
       if (b.built && def.techs) {
@@ -459,6 +458,7 @@ function iconGlyph(icon: string): string {
     house: '⌂', storehouse: '▦', farm: '✿', mill: '◍', lumberCamp: '▤', miningCamp: '◆',
     barracks: '⚔', archeryRange: '◎', keep: '▣', siegeWorkshop: '⚙', stoneWall: '▬', stable: '♞', blacksmith: '⚒', tower: '♜',
     villager: '☺', swordsman: '🗡', archer: '➹', spearman: '↑', crossbow: '✜', scout: '➤', knight: '♘', ram: '▮',
+    councilHall: '♛', abbeyOfKings: '✝', kingsPalace: '♚', whiteTower: '♖', berkshirePalace: '♔', wynguardPalace: '♕',
     attack: '⚔', stop: '■', cancel: '✕', age: '★', tech: '✦',
   };
   return glyphs[icon] || '•';

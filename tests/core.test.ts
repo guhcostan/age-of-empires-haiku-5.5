@@ -212,17 +212,45 @@ test('partida só com bots avança sem erros e gera economia e tropas', () => {
   }
 });
 
-test('avançar de idade exige centro da vila, recursos e libera edifícios', () => {
+test('marco da Feudal (Concílio) avança para a Idade Feudal quando concluído (SPEC §4)', () => {
   const { sim } = makeSim({ bots: 0, seed: 21 });
   const tc = tcOf(sim, 0);
-  const site = findFreeSite(sim, 'stable', tc)!;
-  assert.equal(sim.placeBuilding(0, 'stable', site.x, site.y).ok, false, 'estábulo exige Idade Feudal');
+  const stableSite = findFreeSite(sim, 'stable', tc)!;
+  assert.equal(sim.placeBuilding(0, 'stable', stableSite.x, stableSite.y).ok, false, 'estábulo exige Idade Feudal');
   sim.players[0].res = { food: 900, wood: 900, gold: 900, stone: 0 };
-  assert.equal(sim.startAgeUp(0, tc.id).ok, true);
-  assert.equal(sim.startAgeUp(0, tc.id).ok, false, 'não avança duas vezes ao mesmo tempo');
-  runFor(sim, 61);
+  const site = findFreeSite(sim, 'councilHall', tc)!;
+  const r = sim.placeBuilding(0, 'councilHall', site.x, site.y);
+  assert.equal(r.ok, true);
+  assert.equal(sim.players[0].age, 1, 'o marco ainda está em obra: a idade não mudou');
+  sim.completeBuilding(r.building!);
   assert.equal(sim.players[0].age, 2);
-  assert.equal(sim.placeBuilding(0, 'stable', site.x, site.y).ok, true);
+  const freed = findFreeSite(sim, 'stable', tc)!;
+  assert.equal(sim.placeBuilding(0, 'stable', freed.x, freed.y).ok, true, 'a Feudal libera o estábulo');
+});
+
+test('não se constrói outro marco da mesma idade, nem marco de idade já alcançada', () => {
+  const { sim } = makeSim({ bots: 0, seed: 11 });
+  sim.players[0].res = { food: 5000, wood: 5000, gold: 5000, stone: 5000 };
+  const site = findFreeSite(sim, 'councilHall', tcOf(sim, 0))!;
+  assert.equal(sim.placeBuilding(0, 'councilHall', site.x, site.y).ok, true);
+  const second = findFreeSite(sim, 'abbeyOfKings', tcOf(sim, 0))!;
+  assert.equal(sim.placeBuilding(0, 'abbeyOfKings', second.x, second.y).ok, false, 'já existe marco da Feudal');
+  sim.players[0].age = 2;
+  const third = findFreeSite(sim, 'councilHall', tcOf(sim, 0))!;
+  assert.equal(sim.placeBuilding(0, 'councilHall', third.x, third.y).ok, false, 'a Feudal já foi alcançada');
+});
+
+test('custos e tempos das passagens de idade seguem a SPEC (2.ª 400+200 em 190 s; 3.ª 1200+600 em 220 s; 4.ª 2400+1200 em 250 s)', () => {
+  assert.equal(AGE_UP[2].time, 190);
+  assert.deepEqual(AGE_UP[3].cost, { food: 1200, gold: 600 });
+  assert.equal(AGE_UP[3].time, 220);
+  assert.deepEqual(AGE_UP[4].cost, { food: 2400, gold: 1200 });
+  assert.equal(AGE_UP[4].time, 250);
+});
+
+test('marcos com vida confirmada no aoe4world: Concílio 5000 e Palácio de Berkshire 6500', () => {
+  assert.equal(BUILDINGS.councilHall.hp, 5000);
+  assert.equal(BUILDINGS.berkshirePalace.hp, 6500);
 });
 
 test('técnica só pesquisa no edifício certo e com a idade correta', () => {

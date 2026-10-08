@@ -11,7 +11,9 @@ export type UnitType = 'villager' | 'swordsman' | 'archer' | 'spearman' | 'cross
 
 export type BuildingType =
   | 'towncenter' | 'house' | 'storehouse' | 'farm' | 'mill' | 'lumberCamp' | 'miningCamp'
-  | 'barracks' | 'archeryRange' | 'stable' | 'blacksmith' | 'tower' | 'keep' | 'siegeWorkshop' | 'stoneWall';
+  | 'barracks' | 'archeryRange' | 'stable' | 'blacksmith' | 'tower' | 'keep' | 'siegeWorkshop' | 'stoneWall'
+  // Marcos de idade (SPEC §4): o primeiro de cada idade é o da Inglaterra.
+  | 'councilHall' | 'abbeyOfKings' | 'kingsPalace' | 'whiteTower' | 'berkshirePalace' | 'wynguardPalace';
 
 export type NodeType = 'tree' | 'berry' | 'gold' | 'stone';
 
@@ -119,6 +121,8 @@ export interface BuildingDef {
   maxGatherers?: number;
   // Técnicas que este edifício pesquisa.
   techs?: TechId[];
+  // Marco: ao ser concluído, avança o jogador para esta idade.
+  landmarkFor?: NextAge;
   // Torres: atacam sozinhas.
   attack?: number;
   range?: number;
@@ -248,12 +252,6 @@ export interface ResearchJob {
   time: number;
 }
 
-export interface AgeUpJob {
-  elapsed: number;
-  time: number;
-  to: NextAge;
-}
-
 export interface BuildingEntity extends EntityBase {
   kind: 'building';
   type: BuildingType;
@@ -267,7 +265,6 @@ export interface BuildingEntity extends EntityBase {
   queue: TrainingItem[];
   rally: Rally | null;
   research: ResearchJob | null;
-  ageUp: AgeUpJob | null;
   // Recarga de torre.
   cooldown: number;
 }

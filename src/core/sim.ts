@@ -3,12 +3,11 @@
 import { World, defOf, rectOf, centerOf, distToRect } from './world.ts';
 import { findPath } from './pathfind.ts';
 import {
-  UNITS, BUILDINGS, NODES, TECHS, AGE_UP, AGE_NAMES, START_RESOURCES, START_VILLAGERS,
+  UNITS, BUILDINGS, NODES, TECHS, AGE_NAMES, START_RESOURCES, START_VILLAGERS,
   CARRY_CAPACITY, MAX_POP, MAX_QUEUE, DIFFICULTY,
 } from './config.ts';
 import type {
   AgeNumber,
-  AgeUpJob,
   BuildingEntity,
   BuildingType,
   Command,
@@ -143,7 +142,7 @@ export class Simulation {
       kind: 'building', type, owner, x, y,
       hp: built ? def.hp : Math.round(def.hp * 0.1), maxHp: def.hp, lastHitBy: -1,
       built, progress: built ? 1 : 0, builders: 0, queue: [], rally: null,
-      research: null, ageUp: null, cooldown: 0,
+      research: null, cooldown: 0,
     });
   }
 
@@ -290,6 +289,11 @@ export class Simulation {
   placeBuilding(owner: number, type: BuildingType, x: number, y: number): PlaceOutcome {
     if (type === 'towncenter' || !BUILDINGS[type]) return fail('Não é possível construir isso');
     if (BUILDINGS[type].age > this.players[owner].age) return fail(`Requer ${AGE_NAMES[BUILDINGS[type].age]}`);
+    const to = BUILDINGS[type].landmarkFor;
+    if (to !== undefined) {
+      if (this.players[owner].age >= to) return fail('Esta idade já foi alcançada');
+      if (this.hasLandmark(owner, to)) return fail('Já existe um marco desta idade');
+    }
     const reason = this.checkPlacement(type, x, y);
     if (reason) return fail(reason);
     const cost = BUILDINGS[type].cost;
@@ -324,19 +328,13 @@ export class Simulation {
   }
 
   // Avança para a próxima idade no Centro da Vila.
-  startAgeUp(owner: number, id: number): Outcome {
-    const b = this.buildingById(id);
-    if (!b || b.dead || b.owner !== owner || !b.built || b.type !== 'towncenter') return fail('Use o Centro da Vila');
-    const p = this.players[owner];
-    const to = nextAgeOf(p.age);
-    if (to === null) return fail('Já está na última idade');
-    if (b.ageUp) return fail('Já avançando de idade');
-    const next = AGE_UP[to];
-    if (!this.canAfford(owner, next.cost)) return fail('Recursos insuficientes');
-    this.spend(owner, next.cost);
-    b.ageUp = { elapsed: 0, time: next.time, to };
-    this.notify(owner, `Avançando para ${AGE_NAMES[to]}`, 'info');
-    return succeed();
+  // Marco de idade já construído (ou em obra) para esta idade?
+  hasLandmark(owner: number, to: NextAge): boolean {
+    for (const e of this.world.entities.values()) {
+      if (e.kind !== 'building' || e.owner !== owner || e.dead) continue;
+      if (BUILDINGS[e.type].landmarkFor === to) return true;
+    }
+    return false;
   }
 
   // Pesquisa uma técnica num edifício que a oferece (uma por vez em cada edifício).
@@ -532,11 +530,6 @@ export class Simulation {
       }
       return;
     }
-    const ageUp = b.ageUp;
-    if (ageUp) {
-      ageUp.elapsed += dt;
-      if (ageUp.elapsed >= ageUp.time) this.finishAgeUp(b, ageUp);
-    }
     const research = b.research;
     if (research) {
       research.elapsed += dt;
@@ -586,18 +579,17 @@ export class Simulation {
     const def = BUILDINGS[b.type];
     this.players[b.owner].stats.built++;
     this.notify(b.owner, `${def.name} concluído`, 'good');
+    // Marco concluído: a civilização avança para a idade que ele libera.
+    const to = def.landmarkFor;
+    if (to !== undefined && this.players[b.owner].age < to) {
+      this.players[b.owner].age = to;
+      this.notify(b.owner, `${AGE_NAMES[to]} alcançada!`, 'good');
+    }
     for (const u of this.lists.units) {
       if (u.order !== 'build' || u.target !== b.id) continue;
       if (def.gather) this.orderGather(u, b, def.gather);
       else this.setIdle(u);
     }
-  }
-
-  finishAgeUp(b: BuildingEntity, job: AgeUpJob): void {
-    const p = this.players[b.owner];
-    p.age = job.to;
-    b.ageUp = null;
-    this.notify(b.owner, `${AGE_NAMES[p.age]} alcançada!`, 'good');
   }
 
   finishResearch(b: BuildingEntity, job: ResearchJob): void {

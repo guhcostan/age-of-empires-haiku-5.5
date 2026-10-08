@@ -35,7 +35,7 @@
   - Oficina de cerco e aríete: implementados (ver SPEC anexo C, adendo 2). Velocidade e alcance do aríete são provisórios.
   - Muro de pedra: implementado (1 tile por clique, Shift repete). Portões, paliçada e posto avançado continuam pendentes.
   - Pendente, incerto: portões, paliçada e posto avançado (fonte única); valores de vida e custo da torre e do quartel: resolvidos na rodada de 2026-10-08 (SPEC anexo C, duas fontes; aplicados no código); estatísticas do Espadachim (SPEC não tem a unidade); forja: técnica "Armaduras" só dá ataque.
-- 4 Idades, landmarks, tecnologias: versão atual usa Centro da Vila no lugar de landmarks.
+- 4 Idades, landmarks, tecnologias: idades por marco implementadas (Inglaterra; SPEC anexo C, adendo 4). Custos corrigidos: 2.ª 400+200 em 190 s, 3.ª 1200+600 em 220 s, 4.ª 2400+1200 em 250 s. Bots constroem o marco. Falta: marcos franceses (fase 5) e o efeito de cada marco.
 - 5 Segunda civilização: não iniciada.
 - 6 Relíquias, locais sagrados, comércio, vitória: não iniciada.
 - 7 Bots: versão atual pronta, precisa das regras de landmark e civilização.

@@ -1,6 +1,6 @@
 // Bots: pensam a cada poucos segundos (depende da dificuldade) e usam
 // exatamente os mesmos comandos que o jogador humano.
-import { BUILDINGS, UNITS, NODES, DIFFICULTY, MAX_POP, RESOURCES, AGE_UP, TECHS } from './config.ts';
+import { BUILDINGS, UNITS, NODES, DIFFICULTY, MAX_POP, RESOURCES, LANDMARKS, TECHS } from './config.ts';
 import { centerOf, rectOf, distToRect } from './world.ts';
 import { nextAgeOf, type Simulation } from './sim.ts';
 import type {
@@ -111,7 +111,7 @@ export class BotBrain {
     }
 
     // 6. Subir de idade quando a economia está pronta.
-    this.tryAgeUp(tc, civil.length, army.length);
+    this.tryAgeUp(tc, civil, army.length);
 
     // 7. Pesquisas: a primeira técnica disponível em cada edifício que as oferece.
     for (const b of buildings) {
@@ -164,14 +164,17 @@ export class BotBrain {
     return [...new Set(order)];
   }
 
-  tryAgeUp(tc: BuildingEntity, civilCount: number, armyCount: number): void {
-    const player = this.sim.players[this.owner];
+  // Avança de idade construindo o marco da próxima idade (o primeiro da lista da civilização).
+  tryAgeUp(tc: BuildingEntity, civil: UnitEntity[], armyCount: number): void {
+    const sim = this.sim;
+    const player = sim.players[this.owner];
     const next = nextAgeOf(player.age);
-    if (next === null || tc.ageUp) return;
-    if (civilCount < NEED_CIVIL[next]) return;
+    if (next === null || sim.hasLandmark(this.owner, next)) return;
+    if (civil.length < NEED_CIVIL[next]) return;
     if (next === 3 && armyCount < 4) return;
-    if (!this.sim.canAfford(this.owner, AGE_UP[next].cost)) return;
-    this.sim.startAgeUp(this.owner, tc.id);
+    const [landmark] = LANDMARKS[next];
+    if (!sim.canAfford(this.owner, BUILDINGS[landmark].cost)) return;
+    this.build(landmark, civil, centerOf(tc), 6, 12);
   }
 
   // Constrói um edifício num local livre perto de uma âncora, com até 2 construtores.

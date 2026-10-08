@@ -449,6 +449,14 @@ export function buildAdvancedUnit(type: UnitType, root: THREE.Group, team: numbe
   return buildKnight(root, team);
 }
 
+// Marco de idade: base de pedra, corpo alto e telhado na cor do time.
+function buildLandmark(g: THREE.Group, team: number, stone: number, height: number): void {
+  part(g, box(3.0, 0.5, 3.0), 0xbdb197, 0, 0.25, 0);
+  part(g, box(2.6, height, 2.6), stone, 0, 0.5 + height / 2, 0);
+  part(g, cone(1.9, 1.2, 4), team, 0, 0.5 + height + 0.6, 0, [0, Math.PI / 4, 0]);
+  part(g, box(0.5, 0.36, 0.03), team, 0, 0.5 + height + 1.5, 1.32);
+}
+
 // Monta edifícios desta fase; chamado por createBuilding.
 export function buildAdvancedBuilding(type: BuildingType, g: THREE.Group, team: number): void {
   switch (type) {
@@ -504,6 +512,24 @@ export function buildAdvancedBuilding(type: BuildingType, g: THREE.Group, team: 
       part(g, box(0.5, 0.36, 0.03), team, 0, 3.6, 1.52);
       break;
     }
+    case 'councilHall':
+      buildLandmark(g, team, 0xa9825a, 2.2);
+      break;
+    case 'abbeyOfKings':
+      buildLandmark(g, team, 0x9c9a92, 2.4);
+      break;
+    case 'kingsPalace':
+      buildLandmark(g, team, 0xc9b99a, 2.8);
+      break;
+    case 'whiteTower':
+      buildLandmark(g, team, 0xe6e6e0, 3.0);
+      break;
+    case 'berkshirePalace':
+      buildLandmark(g, team, 0x8a8f96, 3.2);
+      break;
+    case 'wynguardPalace':
+      buildLandmark(g, team, 0x7d7f88, 3.2);
+      break;
     case 'stoneWall': {
       part(g, box(0.9, 1.2, 0.9), 0xa9a9a0, 0, 0.6, 0);
       part(g, box(0.95, 0.25, 0.95), 0x8a8a80, 0, 1.32, 0);

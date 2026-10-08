@@ -559,3 +559,12 @@ Fonte: https://raw.githubusercontent.com/aoe4world/data/main/buildings/english.j
 - Provisórios: footprint 1x1 e visão 3 (a SPEC não tem esses números).
 - Colocação: um tile por clique; Shift repete a colocação, como os demais edifícios.
 - Não implementados: portões (passagem para o dono), paliçada e linhas arrastadas. O muro bloqueia tiles como qualquer edifício.
+
+### Anexo C, adendo 4: idades por marco (implementado em 2026-10-08)
+
+- Avançar de idade é construir o marco da próxima idade (SPEC §4). Ao ser concluído, o jogador entra na idade. Só há um marco por idade e não se constrói marco de idade já alcançada.
+- Marcos da Inglaterra (duas opções por idade): Feudal, Concílio (idade 1, 400 comida + 200 ouro, 190 s, 5000 de vida) ou Abadia dos Reis (mesmos valores); Castelo, Palácio Real (idade 2, 1200 comida + 600 ouro, 220 s, 5000) ou Torre Branca (mesmos valores); Imperial, Palácio de Berkshire (idade 3, 2400 + 1200, 250 s, 6500 de vida) ou Palácio de Wynguard (mesmos custos e tempo, 5000 de vida).
+- Custos e tempos: aoe4world confirma os marcos da Feudal, do Castelo e da Imperial; SPEC §4 dá os mesmos valores para as passagens. O código tinha 800+400 (Castelo) e 1000+700+300 pedra (Imperial), com tempos de 60, 75 e 90 s: corrigido.
+- Provisórios: footprint 3x3 e visão 7 dos marcos (a SPEC não tem esses números).
+- Não implementado: marcos francês (fase 5), e o efeito do marco depois de construído (fica como edifício).
+- Bots: constroem o primeiro marco da lista quando têm aldeões e recursos suficientes.

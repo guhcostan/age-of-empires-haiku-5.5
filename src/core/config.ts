@@ -58,10 +58,11 @@ export const AGE_NAMES: Record<AgeNumber, string> = {
   4: 'Idade Imperial',
 };
 
+// Custo e tempo de cada passagem de idade: são os do marco que a constrói (SPEC §4; aoe4world confirma).
 export const AGE_UP: Record<NextAge, AgeUpDef> = {
-  2: { cost: { food: 400, gold: 200 }, time: 60 },
-  3: { cost: { food: 800, gold: 400 }, time: 75 },
-  4: { cost: { food: 1000, gold: 700, stone: 300 }, time: 90 },
+  2: { cost: { food: 400, gold: 200 }, time: 190 },
+  3: { cost: { food: 1200, gold: 600 }, time: 220 },
+  4: { cost: { food: 2400, gold: 1200 }, time: 250 },
 };
 
 // Unidades. `civil` = coleta e constrói. `ranged` = dispara. `bonus` = multiplicador de dano
@@ -135,6 +136,26 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
   barracks: {
     name: 'Quartel', w: 3, h: 3, hp: 1500, sight: 7, cost: { wood: 150 }, time: 30, age: 1,
     trains: ['swordsman', 'spearman', 'crossbow'],
+  },
+  // Marcos da Inglaterra (SPEC §4). Custo e tempo são os da passagem de idade; vida em aoe4world.
+  // Footprint 3x3 e visão 7 são provisórios: a SPEC não tem esses números.
+  councilHall: {
+    name: 'Concílio', w: 3, h: 3, hp: 5000, sight: 7, cost: AGE_UP[2].cost, time: AGE_UP[2].time, age: 1, landmarkFor: 2,
+  },
+  abbeyOfKings: {
+    name: 'Abadia dos Reis', w: 3, h: 3, hp: 5000, sight: 7, cost: AGE_UP[2].cost, time: AGE_UP[2].time, age: 1, landmarkFor: 2,
+  },
+  kingsPalace: {
+    name: 'Palácio Real', w: 3, h: 3, hp: 5000, sight: 7, cost: AGE_UP[3].cost, time: AGE_UP[3].time, age: 2, landmarkFor: 3,
+  },
+  whiteTower: {
+    name: 'Torre Branca', w: 3, h: 3, hp: 5000, sight: 7, cost: AGE_UP[3].cost, time: AGE_UP[3].time, age: 2, landmarkFor: 3,
+  },
+  berkshirePalace: {
+    name: 'Palácio de Berkshire', w: 3, h: 3, hp: 6500, sight: 7, cost: AGE_UP[4].cost, time: AGE_UP[4].time, age: 3, landmarkFor: 4,
+  },
+  wynguardPalace: {
+    name: 'Palácio de Wynguard', w: 3, h: 3, hp: 5000, sight: 7, cost: AGE_UP[4].cost, time: AGE_UP[4].time, age: 3, landmarkFor: 4,
   },
   // Muro de pedra: 25 pedra, 16 s, 3000 de vida (aoe4.club e aoe4world); idade 2 só no aoe4world.
   // Footprint 1x1 e visão 3 são provisórios: a SPEC não tem esses números.
@@ -229,5 +250,13 @@ export const BUILD_KEYS: Partial<Record<BuildingType, string>> = {
   house: 'h', storehouse: 'm', farm: 'f', mill: 'n', lumberCamp: 'l', miningCamp: 'o',
   barracks: 'b', archeryRange: 'c', stable: 't', blacksmith: 'k', tower: 'y', keep: 'p', siegeWorkshop: 'g', stoneWall: 'w',
 };
+// Marcos que avançam para cada idade (a primeira opção de cada idade é a da Inglaterra).
+export const LANDMARKS: Record<NextAge, readonly BuildingType[]> = {
+  2: ['councilHall', 'abbeyOfKings'],
+  3: ['kingsPalace', 'whiteTower'],
+  4: ['berkshirePalace', 'wynguardPalace'],
+};
+// Teclas dos marcos no menu de construção (até duas opções por idade).
+export const LANDMARK_KEYS: readonly string[] = ['v', 'x'];
 export const TECH_KEYS: readonly string[] = ['j', 'i'];
 export const AGE_KEY = 'u';
