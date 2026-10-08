@@ -445,7 +445,7 @@ function buildRam(root: THREE.Group, team: number): UnitRig {
 export function buildAdvancedUnit(type: UnitType, root: THREE.Group, team: number): UnitRig {
   if (type === 'ram') return buildRam(root, team);
   if (type === 'spearman' || type === 'hardenedSpearman') return buildSpearman(root, team);
-  if (type === 'crossbow') return buildCrossbow(root, team);
+  if (type === 'crossbow' || type === 'arbalestrier') return buildCrossbow(root, team);
   return buildKnight(root, team);
 }
 

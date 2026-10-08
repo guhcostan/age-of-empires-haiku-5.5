@@ -67,3 +67,14 @@ test('cavalaria leve e lanceiro endurecido: só o inglês treina', () => {
   assert.ok(simFor('english').trainsOf(0, 'barracks').includes('hardenedSpearman'));
   assert.ok(!simFor('french').trainsOf(0, 'barracks').includes('hardenedSpearman'));
 });
+
+// Arbalétrier: unidade francesa única, no campo de tiro a partir da Feudal (provisório; SPEC §3 marca incerto).
+test('arbalétrier: francês treina no campo de tiro a partir da Feudal; inglês não', () => {
+  assert.ok(simFor('french').trainsOf(0, 'archeryRange').includes('arbalestrier'));
+  assert.ok(!simFor('english').trainsOf(0, 'archeryRange').includes('arbalestrier'));
+  const french = simFor('french');
+  const range = french.spawnBuilding('archeryRange', 0, 22, 22, true);
+  assert.equal(french.train(0, range.id, 'arbalestrier').ok, false, 'na Idade das Trevas não treina');
+  french.players[0].age = 2;
+  assert.equal(french.train(0, range.id, 'arbalestrier').ok, true, 'na Feudal treina');
+});

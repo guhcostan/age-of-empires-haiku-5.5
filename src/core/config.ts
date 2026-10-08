@@ -106,6 +106,12 @@ export const UNITS: Record<UnitType, UnitDef> = {
     name: 'Lanceiro', hp: 100, attack: 7, cooldown: 1.3, range: 1.6, bonus: { scout: 2, knight: 2 },
     speed: 1.9, sight: 7, cost: { food: 50, wood: 35 }, time: 12, age: 2, from: 'barracks',
   },
+  // Arbalétrier (francês, unidade única). SPEC §3: custo 80 comida + 40 ouro, 22,5 s, 80 de vida, ataque 11 à distância,
+  // alcance 5; anti-pesado. Treino no campo de tiro e idade provisórios (a SPEC marca incerto).
+  arbalestrier: {
+    name: 'Arbalétrier', hp: 80, attack: 11, cooldown: 1.6, range: 5, ranged: true,
+    speed: 2.0, sight: 8, cost: { food: 80, gold: 40 }, time: 22.5, age: 2, from: 'archeryRange',
+  },
   // Lanceiro Endurecido (inglês). SPEC §3: custo 60 comida + 20 madeira, 15 s, 140 de vida, ataque 11; anticavalaria.
   // Idade provisória (2) e velocidade do lanceiro: a SPEC não dá idade.
   hardenedSpearman: {
@@ -315,7 +321,7 @@ export const BUILD_MENU: readonly BuildingType[] = [
 
 // Teclas de atalho (exibidas nos botões e na ajuda).
 export const UNIT_KEYS: Record<UnitType, string> = {
-  villager: 'v', swordsman: 'z', vanguard: 'n', archer: 'x', longbowman: 'l', spearman: 'g', hardenedSpearman: 'm', crossbow: 'd', scout: 'c', horseman: 'u', knight: 'r', king: 'k', ram: 'j', royalKnight: 'r',
+  villager: 'v', swordsman: 'z', vanguard: 'n', archer: 'x', longbowman: 'l', arbalestrier: 'b', spearman: 'g', hardenedSpearman: 'm', crossbow: 'd', scout: 'c', horseman: 'u', knight: 'r', king: 'k', ram: 'j', royalKnight: 'r',
 };
 // O Centro da Vila não é construído pelo menu, então não tem tecla aqui.
 export const BUILD_KEYS: Partial<Record<BuildingType, string>> = {
@@ -377,6 +383,7 @@ export const CIV_TRAINS: Partial<Record<Civ, Partial<Record<BuildingType, readon
     stable: ['scout', 'knight', 'horseman'],
   },
   french: {
+    archeryRange: ['archer', 'arbalestrier'],
     stable: ['scout', 'royalKnight'],
     keep: ['swordsman', 'archer', 'spearman', 'crossbow', 'scout', 'ram'],
   },

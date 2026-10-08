@@ -510,7 +510,7 @@ function iconGlyph(icon: string): string {
   const glyphs: Record<string, string> = {
     house: '⌂', storehouse: '▦', farm: '✿', mill: '◍', lumberCamp: '▤', miningCamp: '◆',
     barracks: '⚔', archeryRange: '◎', keep: '▣', siegeWorkshop: '⚙', stoneWall: '▬', stable: '♞', blacksmith: '⚒', tower: '♜',
-    villager: '☺', swordsman: '🗡', vanguard: '🛡', hardenedSpearman: '↑', horseman: '♞', king: '♔', archer: '➹', longbowman: '➹', spearman: '↑', crossbow: '✜', scout: '➤', knight: '♘', royalKnight: '♘', ram: '▮',
+    villager: '☺', swordsman: '🗡', vanguard: '🛡', hardenedSpearman: '↑', arbalestrier: '✜', horseman: '♞', king: '♔', archer: '➹', longbowman: '➹', spearman: '↑', crossbow: '✜', scout: '➤', knight: '♘', royalKnight: '♘', ram: '▮',
     cathedral: '✞', councilHall: '♛', chamberOfCommerce: '⚖', schoolOfCavalry: '♞', guildHall: '⚜', royalInstitute: '♕',
     redPalace: '♗', collegeOfArtillery: '✹', notreDame: '✞', abbeyOfKings: '✝', kingsPalace: '♚', whiteTower: '♖', berkshirePalace: '♔', wynguardPalace: '♕',
     attack: '⚔', stop: '■', cancel: '✕', age: '★', tech: '✦',

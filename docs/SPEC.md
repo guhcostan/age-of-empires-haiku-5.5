@@ -698,3 +698,10 @@ Fontes lidas só por resumo de busca (a página do aoe4world é renderizada em J
 - Lanceiro endurecido: custo 60 de comida e 20 de madeira; 15 s; 140 de vida; ataque 11; anticavalaria (como o lanceiro); quartel, só inglês. Idade provisória 2; recarga e velocidade do lanceiro.
 - Testes: tests/civilizacoes.test.ts (treino na Feudal e por civilização).
 - Sem tela de treino com ícone próprio além do glifo Unicode. Sem E2E específico para estas unidades.
+
+### Anexo C, adendo 21: Arbalétrier francês (implementado em 2026-10-08; provisório)
+
+- Custo 80 de comida e 40 de ouro; 22,5 s; 80 de vida; ataque 11 à distância; alcance 5. Uma fonte [B] (custo, vida, ataque; a SPEC marca o resto como incerto).
+- Treino: campo de tiro, só francês, a partir da Feudal. Local e idade são provisórios: a SPEC marca "treinada em: incerto" e "idade: incerto".
+- Recarga do arqueiro (a SPEC não dá recarga); velocidade do arqueiro (a SPEC dá 1,125 em outra escala). Armadura 1 e habilidade de pavês não implementadas.
+- Testes: tests/civilizacoes.test.ts (treino por civilização e idade).
