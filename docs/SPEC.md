@@ -620,3 +620,24 @@ Fonte: https://raw.githubusercontent.com/aoe4world/data/main/buildings/english.j
 
 - Botão "Ociosos" na barra de cima, com a contagem de aldeões parados. Clicar seleciona todos e centraliza a câmera no primeiro. Apagado quando não há nenhum.
 - Posição e rótulo são provisórios: a SPEC não descreve o layout do HUD do AoE IV. Atalho de teclado ainda não existe.
+
+### Anexo C, adendo 12: relíquias e comércio (pesquisa, não implementado; 2026-10-08)
+
+Pesquisa só por resumos de busca: nenhuma página foi lida na íntegra. Tudo aqui é de comunidade ou de wiki e precisa de confirmação antes de virar código.
+
+Relíquias:
+- Ficam longe do centro da vila, no meio e nas bordas do mapa; uma relíquia achada aparece no minimapa. Fonte: https://www.pcgamesn.com/age-of-empires-4/relics (resumo).
+- Quem move a relíquia é um monge ou unidade religiosa (a aparência de regra por civilização é contraditória nos resumos; o Cavaleiro-monge do Rus e o monge básico dos ingleses e franceses aparecem como coletores). Ordem de uso relatada: ponto de reunião do mosteiro na relíquia e, com Shift, outro ponto de volta ao mosteiro. Fonte: https://forums.ageofempires.com/t/how-do-you-drop-relics-in-the-monastery/177979 (resumo).
+- O mosteiro guarda relíquias e gera ouro. Limite de 3 relíquias por mosteiro (após a Temporada 2, relatado em https://forums.ageofempires.com/t/relics-do-not-properly-cycle-through-monasteries-with-three-garrisoned-relics/287416, resumo).
+- Não achei o ouro por relíquia por minuto. Catedral de Regnitz (Sacro Império, aoe4world https://aoe4world.com/explorer/buildings/regnitz-cathedral) dá +100% de ouro às relíquias guardadas. Tecnologia "Celeiro do Dízimo" dá comida, madeira e pedra por minuto às relíquias (resumo, sem número confirmado).
+- Relato de bug (versão 16.2): com o mosteiro cheio, sai a relíquia mais antiga; a terceira pode ficar presa. Não confirmado na versão atual.
+
+Comércio:
+- Rota precisa de um edifício de origem e um de destino com a etiqueta de posto comercial (Mercado, Doca, alguns marcos). Dono do destino pode ser aliado, inimigo ou neutro. Mercado neutro dá 20% a mais (resumo; link de origem ainda não aberto: https://forums.ageofempires.com/t/time-for-a-trade-mechanics-update/259409).
+- O ganho cresce com a distância (resumo fala em aproximadamente quadrático, com exemplos por tamanho de mapa: 173 e 112 por viagem para uma rota de 90; 373 para 170). Não usar sem fonte confirmada.
+- Mudar o destino de um comerciante carregado no retorno faz perder a carga (resumo).
+- Sultanhani (Otomanos) pode guardar comerciantes e gera ouro por eles (resumo: 6 de ouro a cada 15 s por comerciante).
+- Navios de comércio na Doca trocam ouro e madeira com posto costeiro ou doca alheia; a partir de uma temporada, o ganho é dividido entre as duas paradas (resumo, https://ageofempires.fandom.com/wiki/Trade_Ship não aberto).
+- Os números de comércio mais conhecidos vêm de Age of Empires II e Chronicles e não valem para o IV.
+
+Próximo passo: abrir as páginas citadas (ou a wiki do AoE IV) e anotar um número por regra; sem isso, a implementação fica provisória e marcada, como o resto do anexo C.
