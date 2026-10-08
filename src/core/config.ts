@@ -106,6 +106,12 @@ export const UNITS: Record<UnitType, UnitDef> = {
     name: 'Lanceiro', hp: 100, attack: 7, cooldown: 1.3, range: 1.6, bonus: { scout: 2, knight: 2 },
     speed: 1.9, sight: 7, cost: { food: 50, wood: 35 }, time: 12, age: 2, from: 'barracks',
   },
+  // Homem de Armas (francês). SPEC §3: custo 90 comida + 20 ouro, 20,5 s, 155 de vida, ataque 12 corpo a corpo; quartel
+  // (resumo de busca). Idade provisória (2): a SPEC marca incerto.
+  manAtArms: {
+    name: 'Homem de Armas', hp: 155, attack: 12, cooldown: 1.4, range: 1.1,
+    speed: 1.9, sight: 7, cost: { food: 90, gold: 20 }, time: 20.5, age: 2, from: 'barracks',
+  },
   // Arbalétrier (francês, unidade única). SPEC §3: custo 80 comida + 40 ouro, 22,5 s, 80 de vida, ataque 11 à distância,
   // alcance 5; anti-pesado. Treino no campo de tiro e idade provisórios (a SPEC marca incerto).
   arbalestrier: {
@@ -321,7 +327,7 @@ export const BUILD_MENU: readonly BuildingType[] = [
 
 // Teclas de atalho (exibidas nos botões e na ajuda).
 export const UNIT_KEYS: Record<UnitType, string> = {
-  villager: 'v', swordsman: 'z', vanguard: 'n', archer: 'x', longbowman: 'l', arbalestrier: 'b', spearman: 'g', hardenedSpearman: 'm', crossbow: 'd', scout: 'c', horseman: 'u', knight: 'r', king: 'k', ram: 'j', royalKnight: 'r',
+  villager: 'v', swordsman: 'z', vanguard: 'n', archer: 'x', longbowman: 'l', arbalestrier: 'b', manAtArms: 'o', spearman: 'g', hardenedSpearman: 'm', crossbow: 'd', scout: 'c', horseman: 'u', knight: 'r', king: 'k', ram: 'j', royalKnight: 'r',
 };
 // O Centro da Vila não é construído pelo menu, então não tem tecla aqui.
 export const BUILD_KEYS: Partial<Record<BuildingType, string>> = {
@@ -384,6 +390,7 @@ export const CIV_TRAINS: Partial<Record<Civ, Partial<Record<BuildingType, readon
   },
   french: {
     archeryRange: ['archer', 'arbalestrier'],
+    barracks: ['manAtArms', 'swordsman', 'spearman', 'crossbow'],
     stable: ['scout', 'royalKnight'],
     keep: ['swordsman', 'archer', 'spearman', 'crossbow', 'scout', 'ram'],
   },

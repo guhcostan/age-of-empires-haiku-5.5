@@ -78,3 +78,14 @@ test('arbalétrier: francês treina no campo de tiro a partir da Feudal; inglês
   french.players[0].age = 2;
   assert.equal(french.train(0, range.id, 'arbalestrier').ok, true, 'na Feudal treina');
 });
+
+// Homem de Armas francês: quartel, idade provisória 2 (SPEC §3 marca incerto; resumo de busca diz quartel).
+test('homem de armas francês: treina no quartel a partir da Feudal; inglês não', () => {
+  assert.ok(simFor('french').trainsOf(0, 'barracks').includes('manAtArms'));
+  assert.ok(!simFor('english').trainsOf(0, 'barracks').includes('manAtArms'));
+  const french = simFor('french');
+  const barracks = french.spawnBuilding('barracks', 0, 26, 26, true);
+  assert.equal(french.train(0, barracks.id, 'manAtArms').ok, false, 'na Idade das Trevas não treina');
+  french.players[0].age = 2;
+  assert.equal(french.train(0, barracks.id, 'manAtArms').ok, true, 'na Feudal treina');
+});

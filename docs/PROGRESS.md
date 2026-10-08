@@ -52,7 +52,7 @@ Corrigido nesta rodada:
 - Ajuda: "U avançar de idade" não existia e o Quartel não treina arqueiros (o Campo de tiro treina, tecla X).
 
 Pendente (lista do crítico, sem alteração):
-- Roster militar: Arqueiro Longo inglês (adendo 18) e Homem de Armas Vanguarda inglês (adendo 19) implementados. Rei, cavalaria leve e lanceiro endurecido ingleses também (adendo 20). Arbalétrier francês também (adendo 21). Faltam 17 unidades da SPEC §3 (rei, homem de armas vanguarda, arqueiro longo, ranger, arcabuzeiro, monge, cavalaria leve, arbalétrier, homem de armas francês, mangonel, trabuco, bombarda, springald, canhão real, canhão, ribauldequin, 4 batalhões Wynguard, 3 navios). Navios estão fora de escopo.
+- Roster militar: Arqueiro Longo inglês (adendo 18) e Homem de Armas Vanguarda inglês (adendo 19) implementados. Rei, cavalaria leve e lanceiro endurecido ingleses também (adendo 20). Arbalétrier francês (adendo 21) e Homem de Armas francês (adendo 22) também. Faltam 16 unidades da SPEC §3 (incluindo as máquinas de cerco inglesas e francesas, que pedem regras de cerco à distância) (rei, homem de armas vanguarda, arqueiro longo, ranger, arcabuzeiro, monge, cavalaria leve, arbalétrier, homem de armas francês, mangonel, trabuco, bombarda, springald, canhão real, canhão, ribauldequin, 4 batalhões Wynguard, 3 navios). Navios estão fora de escopo.
 - Bônus de civilização: 3 de 21 implementados, mais keep francês 810, entrega francesa 25 de madeira e keep inglês (adendo 17).
 - Edifícios da SPEC §2.1 faltando: mercado, posto avançado, mosteiro, universidade, doca, paliçada, portões. Espadachim e armazém não estão na SPEC.
 - Marcos sem efeito (Palácio Vermelho, Concílio).

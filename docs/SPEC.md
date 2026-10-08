@@ -705,3 +705,9 @@ Fontes lidas só por resumo de busca (a página do aoe4world é renderizada em J
 - Treino: campo de tiro, só francês, a partir da Feudal. Local e idade são provisórios: a SPEC marca "treinada em: incerto" e "idade: incerto".
 - Recarga do arqueiro (a SPEC não dá recarga); velocidade do arqueiro (a SPEC dá 1,125 em outra escala). Armadura 1 e habilidade de pavês não implementadas.
 - Testes: tests/civilizacoes.test.ts (treino por civilização e idade).
+
+### Anexo C, adendo 22: Homem de Armas francês (implementado em 2026-10-08; provisório)
+
+- Custo 90 de comida e 20 de ouro; 20,5 s; 155 de vida; ataque 12 corpo a corpo. Uma fonte [B] para os números; quartel só pelo resumo de busca.
+- Idade provisória (2): a SPEC marca "incerto". Armadura 4/4 e velocidade (1,125 na SPEC) não usadas, pelo mesmo motivo dos adendos anteriores.
+- Testes: tests/civilizacoes.test.ts (treino por civilização e idade).
