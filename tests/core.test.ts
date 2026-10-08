@@ -340,3 +340,17 @@ test('torre de pedra: 250 pedra, 3000 de vida, ataque 60, alcance 9 (confirmado)
   assert.equal(BUILDINGS.tower.range, 9);
 });
 
+// Keep (SPEC §2.1): 900 pedra, 180 s, 5000 de vida (aoe4.club e aoe4world). Idade 3 só no aoe4world.
+test('keep custa 900 pedra, tem 5000 de vida e leva 180 s (confirmado)', () => {
+  assert.deepEqual(BUILDINGS.keep.cost, { stone: 900 });
+  assert.equal(BUILDINGS.keep.hp, 5000);
+  assert.equal(BUILDINGS.keep.time, 180);
+});
+
+test('keep treina todas as unidades militares (SPEC §2.1) e exige a idade castelo', () => {
+  for (const t of ['swordsman', 'archer', 'spearman', 'crossbow', 'scout', 'knight'] as const) {
+    assert.ok(BUILDINGS.keep.trains?.includes(t), `keep deveria treinar ${t}`);
+  }
+  assert.equal(BUILDINGS.keep.age, 3);
+});
+

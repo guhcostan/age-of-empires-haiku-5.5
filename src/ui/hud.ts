@@ -457,7 +457,7 @@ export class Hud {
 function iconGlyph(icon: string): string {
   const glyphs: Record<string, string> = {
     house: '⌂', storehouse: '▦', farm: '✿', mill: '◍', lumberCamp: '▤', miningCamp: '◆',
-    barracks: '⚔', archeryRange: '◎', stable: '♞', blacksmith: '⚒', tower: '♜',
+    barracks: '⚔', archeryRange: '◎', keep: '▣', stable: '♞', blacksmith: '⚒', tower: '♜',
     villager: '☺', swordsman: '🗡', archer: '➹', spearman: '↑', crossbow: '✜', scout: '➤', knight: '♘',
     attack: '⚔', stop: '■', cancel: '✕', age: '★', tech: '✦',
   };

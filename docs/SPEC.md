@@ -532,3 +532,15 @@ Fontes de números: aoe4.club (páginas de civilização e de edifício), o JSON
 - Homem de Armas francês (idade 3): 90 comida + 20 ouro, 20,5 s, 155 de vida, ataque 12, armadura 4/4. Inglaterra: 14,65 s; Vanguarda (idade 1): 100 de vida, ataque 8, armadura 2/3.
 
 **Não encontrado:** fórmula de redução de dano por armadura. Há valores de armadura por unidade e um percentual de prévia de patch (aríete reduz 95% do dano à distância), sem data e sem fórmula. Não implementar armadura até haver fonte.
+
+### Anexo C, adendo: idades e valores dos edifícios (aoe4world/data, 2026-10-08)
+
+Fonte: https://raw.githubusercontent.com/aoe4world/data/main/buildings/english.json (campos `age`, `costs`, `hitpoints`). Os dados vêm de extração dos arquivos do jogo, e cada edifício tem uma única fonte nesse arquivo. Uma idade só conta como confirmada quando outra fonte concorda.
+
+- Keep: idade 3, 900 pedra, 180 s, 5000 de vida. Custo, tempo e vida também batem com aoe4.club. **Implementado** (idade 3 só do aoe4world).
+- Oficina de cerco: idade 3, 250 madeira, 45 s, 2100 de vida.
+- Muro de pedra, portão de pedra e torre de pedra: idade 2.
+- Paliçada e portão de paliçada: idade 1. Posto avançado: idade 1, 100 madeira, 60 s, 750 de vida.
+- Campo de tiro: idade 2 no aoe4world. O código tem idade 1. **Não alterado**: falta a segunda fonte para a idade.
+- Ferreiro e estábulo: idade 2 no aoe4world. Conferir com o código antes de mudar.
+- Abadia dos Reis e Concílio: idade 1, 400 comida + 200 ouro, 190 s, 5000 de vida. Ou seja, o marco da Feudal tem o custo da passagem de idade (ver §4).

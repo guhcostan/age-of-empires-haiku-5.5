@@ -142,6 +142,12 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     name: 'Ferreiro', w: 3, h: 3, hp: 700, sight: 7, cost: { wood: 150 }, time: 40, age: 2,
     techs: ['forge1', 'forge2'],
   },
+  // Keep: treina todas as unidades militares (SPEC §2.1). Custo, vida e tempo: fonte aoe4.club e aoe4world (ambas).
+  // Idade 3 vem só do aoe4world; footprint e visão não estão na SPEC, então 3x3 e visão 7 são provisórios.
+  keep: {
+    name: 'Keep', w: 3, h: 3, hp: 5000, sight: 7, cost: { stone: 900 }, time: 180, age: 3,
+    trains: ['swordsman', 'archer', 'spearman', 'crossbow', 'scout', 'knight'],
+  },
   tower: {
     name: 'Torre', w: 2, h: 2, hp: 3000, sight: 9, cost: { stone: 250 }, time: 90, age: 2,
     attack: 60, range: 9, cooldown: 3.875,
@@ -194,7 +200,7 @@ export const TECHS: Record<TechId, TechDef> = {
 
 export const BUILD_MENU: readonly BuildingType[] = [
   'house', 'storehouse', 'farm', 'mill', 'lumberCamp', 'miningCamp',
-  'barracks', 'archeryRange', 'stable', 'blacksmith', 'tower',
+  'barracks', 'archeryRange', 'stable', 'blacksmith', 'tower', 'keep',
 ];
 
 // Teclas de atalho (exibidas nos botões e na ajuda).
@@ -204,7 +210,7 @@ export const UNIT_KEYS: Record<UnitType, string> = {
 // O Centro da Vila não é construído pelo menu, então não tem tecla aqui.
 export const BUILD_KEYS: Partial<Record<BuildingType, string>> = {
   house: 'h', storehouse: 'm', farm: 'f', mill: 'n', lumberCamp: 'l', miningCamp: 'o',
-  barracks: 'b', archeryRange: 'c', stable: 't', blacksmith: 'k', tower: 'y',
+  barracks: 'b', archeryRange: 'c', stable: 't', blacksmith: 'k', tower: 'y', keep: 'p',
 };
 export const TECH_KEYS: readonly string[] = ['j', 'i'];
 export const AGE_KEY = 'u';

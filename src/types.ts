@@ -11,7 +11,7 @@ export type UnitType = 'villager' | 'swordsman' | 'archer' | 'spearman' | 'cross
 
 export type BuildingType =
   | 'towncenter' | 'house' | 'storehouse' | 'farm' | 'mill' | 'lumberCamp' | 'miningCamp'
-  | 'barracks' | 'archeryRange' | 'stable' | 'blacksmith' | 'tower';
+  | 'barracks' | 'archeryRange' | 'stable' | 'blacksmith' | 'tower' | 'keep';
 
 export type NodeType = 'tree' | 'berry' | 'gold' | 'stone';
 
