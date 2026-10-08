@@ -41,9 +41,15 @@ test.describe('Comandos', () => {
     await expect(page.locator('#sel-queue .queue-item')).toHaveCount(1);
     await expect(page.locator('#sel-queue .queue-item')).toContainText('Aldeão');
 
-    // O treino termina e o aldeão novo aparece (população usada sobe em 1).
-    await expect.poll(async () => (await gameState(page)).popUsed, { timeout: 60_000 }).toBe(popBefore + 1);
-    await expect.poll(async () => (await ownEntities(page, { kind: 'unit', type: 'villager' })).length, { timeout: 60_000 })
+    // O treino termina e o aldeão novo aparece (população usada sobe em 1). A simulação avança de forma
+    // determinística pelo tempo de treino (passos fixos, como em bots.spec.js): o quadro do runner é lento
+    // e o relógio do jogo acompanha os quadros, então esperar em tempo real pode não bastar.
+    await page.evaluate((seconds) => {
+      const g = window.__game.game;
+      for (let t = 0; t < seconds && !g.sim.gameOver; t += 0.05) g.sim.update(0.05);
+    }, cfg.villager.time + 1);
+    await expect.poll(async () => (await gameState(page)).popUsed).toBe(popBefore + 1);
+    await expect.poll(async () => (await ownEntities(page, { kind: 'unit', type: 'villager' })).length)
       .toBe(cfg.START_VILLAGERS + 1);
   });
 
