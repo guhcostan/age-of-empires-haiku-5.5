@@ -662,3 +662,9 @@ Fontes lidas só por resumo de busca (a página do aoe4world é renderizada em J
 - Barra de cima: relógio da partida (mm:ss), placar (abatidos / perdidos), e o número de aldeões coletando cada recurso ao lado do valor.
 - Linha de objetivo (canto superior esquerdo): o próximo marco e o progresso da condição de vitória ligada (locais sagrados ou tempo de maravilha).
 - Layout, posição e textos são provisórios. A SPEC não tem o layout do HUD do AoE IV (§7.1 e §9.8), então a comparação visual é do crítico, não de referência.
+
+### Anexo C, adendo 16: atalhos de seleção (implementados em 2026-10-08)
+
+- "." seleciona os aldeões ociosos; "," seleciona os militares ociosos (SPEC §7.2, duas e uma fonte).
+- Ctrl+A (alternativa Ctrl+K) seleciona as unidades do jogador que estão na tela; Ctrl+Shift+A (alternativa Ctrl+Shift+K), todas.
+- Ainda não implementados da §7.2: Tab (ciclar), F1–F5 (grupos de edifícios e focar), Ctrl+. (hoje igual a "."), Shift+comando para enfileirar.

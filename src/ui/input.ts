@@ -391,6 +391,21 @@ export class Input {
       g.rts?.rotate(k === 'q' ? -1 : 1);
       return;
     }
+    // Atalhos de seleção da SPEC §7.2 com Ctrl (antes do bloqueio de Ctrl abaixo).
+    if ((e.ctrlKey || e.metaKey) && (k === 'a' || k === 'k')) {
+      e.preventDefault();
+      g.selectOwnUnits(!e.shiftKey);
+      return;
+    }
+    if (k === '.') {
+      e.preventDefault();
+      g.selectIdleVillagers();
+      return;
+    }
+    if (k === ',') {
+      g.selectIdleMilitary();
+      return;
+    }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (k === 'a') {
       this.startAttackMode();

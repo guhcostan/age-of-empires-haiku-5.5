@@ -392,6 +392,38 @@ export class Game {
     this.rts?.focus(idle[0].x, idle[0].y);
   }
 
+  // Militares do jogador parados (vírgula).
+  idleMilitary(): UnitEntity[] {
+    if (!this.sim) return [];
+    const out: UnitEntity[] = [];
+    for (const e of this.sim.world.entities.values()) {
+      if (e.kind === 'unit' && e.owner === 0 && !e.dead && !UNITS[e.type].civil && e.order === 'idle') out.push(e);
+    }
+    return out;
+  }
+
+  selectIdleMilitary(): void {
+    const idle = this.idleMilitary();
+    if (idle.length === 0) return;
+    this.selectIds(idle.map((u) => u.id));
+    this.rts?.focus(idle[0].x, idle[0].y);
+  }
+
+  // Ctrl + A (ou Ctrl + K): unidades do jogador que estão na tela. Com Shift (Ctrl + Shift + A), todas.
+  selectOwnUnits(onScreenOnly: boolean): void {
+    if (!this.sim || !this.map) return;
+    const ids: number[] = [];
+    for (const e of this.sim.world.entities.values()) {
+      if (e.kind !== 'unit' || e.owner !== 0 || e.dead) continue;
+      if (onScreenOnly) {
+        const p = this.worldToScreen(e.x, heightAt(this.map, e.x, e.y) + 0.8, e.y);
+        if (p.x < 0 || p.y < 0 || p.x > innerWidth || p.y > innerHeight) continue;
+      }
+      ids.push(e.id);
+    }
+    if (ids.length) this.selectIds(ids);
+  }
+
   selectIds(ids: number[]): void {
     this.selected = new Set(ids);
     this.entities?.setSelection(this.selected);
