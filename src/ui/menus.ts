@@ -1,5 +1,5 @@
 // Menus: principal, partida rápida (configurações), ajuda, opções, pausa e tela final.
-import { DIFFICULTY } from '../core/config.ts';
+import { DIFFICULTY, VICTORY_NAMES } from '../core/config.ts';
 import { $ } from './dom.ts';
 import type { Game, EndInfo } from '../game.ts';
 import type { Civ, DifficultyKey, MapSizeKey, Settings } from '../types.ts';
@@ -172,6 +172,7 @@ export class Menus {
     const rows: [string, string | number][] = [
       ['Tempo de partida', formatTime(info.time)],
       ['Dificuldade', DIFFICULTY[info.difficulty].name],
+      ['Fim por', VICTORY_NAMES[info.reason]],
       ['Inimigos abatidos', s.kills],
       ['Unidades perdidas', s.lost],
       ['Edifícios destruídos', s.destroyed],

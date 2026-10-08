@@ -14,7 +14,7 @@ import { Minimap } from './ui/minimap.ts';
 import { Sound } from './ui/audio.ts';
 import type {
   BuildingEntity, Command, DifficultyKey, Entity, GameEvent, GameMap, Point, PlayerConfig, PlayerStats,
-  Settings, SmartTarget, UnitEntity, UnitType,
+  Settings, SmartTarget, UnitEntity, UnitType, VictoryReason,
 } from './types.ts';
 
 const SKY = 0xa9cfe9;
@@ -26,6 +26,7 @@ const MAX_FRAME_SIM = 0.5;
 // Dados do fim de partida, entregues à tela final.
 export interface EndInfo {
   won: boolean;
+  reason: VictoryReason;
   time: number;
   stats: PlayerStats;
   seed: number;
@@ -298,6 +299,7 @@ export class Game {
     this.sound.play(won ? 'victory' : 'defeat');
     this.hooks.onEnd?.({
       won,
+      reason: sim.gameOver.reason,
       time: sim.gameOver.time,
       stats: human.stats,
       seed: this.seed,

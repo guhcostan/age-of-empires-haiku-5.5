@@ -605,3 +605,13 @@ Fonte: https://raw.githubusercontent.com/aoe4world/data/main/buildings/english.j
 - Implementação provisória: só vale para quem já teve pelo menos um marco. Quem perde todos os marcos vivos é eliminado (unidades removidas). Se o eliminado é o humano, é derrota; se todos os adversários caem, é vitória.
 - Opção do menu: "Marcos" (desligada por padrão). Conquista continua sempre ativa.
 - Não confirmado: se contam marcos em obra, se a eliminação é imediata e se a regra vale para todas as idades. Hoje conta qualquer marco vivo, inclusive em obra.
+
+### Anexo C, adendo 10: partidas completas, bots e regras de terreno (implementado em 2026-10-08; provisório)
+
+- Toda vitória ou derrota registra o motivo (conquista, marcos, maravilha ou locais sagrados). A tela final mostra a linha "Fim por". Antes, uma regra de marcos podia ser sobrescrita pela conquista no mesmo passo; corrigido.
+- Bots constroem a maravilha da civilização na Imperial (idade 4), com 8 soldados de pé. Não há fonte para a estratégia do bot; só o acabamento técnico.
+- Com a vitória por locais sagrados ligada, o exército ocioso (3 ou mais soldados) vai ao local mais próximo que não é do bot. Os bots também atacam os locais de outros, então a contagem pode ser interrompida.
+- Economia do bot: quando a economia está pronta para a próxima idade (aldeões mínimos e, na Castelo, 4 soldados), o bot guarda recursos. Enquanto guarda, quartel, campo de tiro e estábulo não treinam. Sem isso a comida nunca juntava para o marco (medido: bots paravam na Feudal).
+- Terreno, regra provisória (a SPEC não trata disso): uma unidade nova nasce no tile livre mais próximo que esteja na região aberta do mapa, procurando em anéis de até 8 tiles ao redor do edifício. Edifício que fecharia a saída de uma unidade que está na região aberta é recusado ("Bloquearia a saída de uma unidade"). Medido antes da correção: aldeões nasciam presos num bolsão cercado por casas e fazendas e ficavam ociosos para sempre.
+- Partidas completas (tests/partidas.test.ts, em tempo de simulação): conquista entre dois bots termina em cerca de 11 a 25 min de jogo. Maravilha, locais sagrados e marcos têm início preparado (catedral de pé com 30 soldados de defesa; exército nos quatro locais; um marco do bot a destruir com 14 soldados). Depois disso o resto da partida segue as regras e o bot. Sem início preparado, bots não chegam à maravilha (a Imperial vem tarde demais) nem aos locais sagrados (a conquista acaba antes).
+- Não verificado: a duração de 30 min da contagem da maravilha (incerta na SPEC); o equilíbrio geral (bots atacam cedo); se a regra de terreno existe no AoE IV.

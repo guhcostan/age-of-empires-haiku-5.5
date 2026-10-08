@@ -65,6 +65,9 @@ export const WONDER_COUNTDOWN = 1800;
 // Maravilhas de todas as civilizações (vitória por maravilha).
 const WONDERS = new Set<BuildingType>(['cathedral', 'notreDame']);
 
+// Até onde procurar um tile livre para nascer uma unidade, contado em anéis ao redor do edifício.
+const FREE_RING_MAX = 8;
+
 // Local sagrado: posição no mapa, dono (-1 = neutro) e progresso da captura em segundos.
 export interface SacredSite {
   id: number;
@@ -192,7 +195,9 @@ export class Simulation {
     });
   }
 
-  // Tiles caminháveis encostados num edifício/unidade, sem unidades em cima.
+  // Tiles caminháveis em anéis crescentes ao redor de um edifício/unidade, sem unidades em cima.
+  // Só valem tiles da região aberta do mapa: se os edifícios cercam o centro da vila, o aldeão nasce
+  // do lado de fora em vez de ficar preso num bolsão (o bot já ficou sem coletar por isso).
   freeTilesAround(e: Entity, count: number): Point[] {
     const r: Rect = e.kind === 'unit'
       ? { x: Math.floor(e.x), y: Math.floor(e.y), w: 1, h: 1 }
@@ -201,12 +206,22 @@ export class Simulation {
     for (const u of this.world.entities.values()) {
       if (u.kind === 'unit' && !u.dead) occupied.add(`${Math.floor(u.x)},${Math.floor(u.y)}`);
     }
+    const comp = this.world.components();
+    const open = this.openRegion(comp);
+    const n = this.world.size;
     const out: Point[] = [];
-    for (let y = r.y - 1; y <= r.y + r.h && out.length < count; y++) {
-      for (let x = r.x - 1; x <= r.x + r.w && out.length < count; x++) {
-        if (x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h) continue;
-        if (!this.world.walkable(x, y) || occupied.has(`${x},${y}`)) continue;
-        out.push({ x: x + 0.5, y: y + 0.5 });
+    for (let d = 1; d <= FREE_RING_MAX && out.length < count; d++) {
+      const x0 = r.x - d;
+      const x1 = r.x + r.w - 1 + d;
+      const y0 = r.y - d;
+      const y1 = r.y + r.h - 1 + d;
+      for (let y = y0; y <= y1 && out.length < count; y++) {
+        for (let x = x0; x <= x1 && out.length < count; x++) {
+          if (x > x0 && x < x1 && y > y0 && y < y1) continue; // interior: o próprio edifício/unidade
+          if (!this.world.walkable(x, y) || occupied.has(`${x},${y}`)) continue;
+          if (comp[y * n + x] !== open) continue;
+          out.push({ x: x + 0.5, y: y + 0.5 });
+        }
       }
     }
     if (out.length === 0) {
@@ -214,6 +229,20 @@ export class Simulation {
       out.push({ x: c.x, y: c.y });
     }
     return out;
+  }
+
+  // Rótulo da maior região caminhável (-1 se não houver nenhuma).
+  openRegion(comp: Int32Array): number {
+    const sizes = new Map<number, number>();
+    let best = -1;
+    let bestSize = 0;
+    for (const c of comp) {
+      if (c < 0) continue;
+      const size = (sizes.get(c) ?? 0) + 1;
+      sizes.set(c, size);
+      if (size > bestSize) { best = c; bestSize = size; }
+    }
+    return best;
   }
 
   // ---------- Consultas ----------
@@ -321,7 +350,32 @@ export class Simulation {
       if (e.kind !== 'unit' || e.dead) continue;
       if (e.x >= x && e.x < x + def.w && e.y >= y && e.y < y + def.h) return 'Há unidades no local';
     }
+    if (this.trapsUnits(type, x, y)) return 'Bloquearia a saída de uma unidade';
     return null;
+  }
+
+  // Um edifício não pode fechar a saída de uma unidade que hoje está na região aberta do mapa (regra provisória).
+  // Simula o bloqueio do terreno, mede as regiões caminháveis e desfaz.
+  trapsUnits(type: BuildingType, x: number, y: number): boolean {
+    const def = BUILDINGS[type];
+    const n = this.size;
+    const units = [...this.world.entities.values()].filter((e): e is UnitEntity => e.kind === 'unit' && !e.dead);
+    if (units.length === 0) return false;
+    const before = this.world.components();
+    const open = this.openRegion(before);
+    const tiles = units.map((u) => Math.floor(u.y) * n + Math.floor(u.x)).filter((k) => before[k] === open);
+    if (tiles.length === 0) return false;
+    const idxs: number[] = [];
+    for (let j = y; j < y + def.h; j++) for (let i = x; i < x + def.w; i++) idxs.push(j * n + i);
+    const saved = idxs.map((k) => this.world.blocked[k]);
+    for (const k of idxs) this.world.blocked[k] = 1;
+    this.world.compDirty = true;
+    const after = this.world.components();
+    const openAfter = this.openRegion(after);
+    const trapped = tiles.some((k) => after[k] !== openAfter);
+    idxs.forEach((k, i) => { this.world.blocked[k] = saved[i]; });
+    this.world.compDirty = true;
+    return trapped;
   }
 
   // ---------- Comandos (usados pelo jogador e pelos bots) ----------
@@ -1130,7 +1184,7 @@ export class Simulation {
     if (contested) return;
     const left = (this.sacredLeft.get(holder) ?? SACRED.countdown) - dt;
     if (left <= 0) {
-      this.gameOver = { result: holder === this.humanIndex ? 'victory' : 'defeat', time: this.time };
+      this.gameOver = { result: holder === this.humanIndex ? 'victory' : 'defeat', reason: 'sacred', time: this.time };
       return;
     }
     this.sacredLeft.set(holder, left);
@@ -1153,6 +1207,13 @@ export class Simulation {
       }
       if (p.index !== this.humanIndex) this.say(`${p.name} perderam os marcos!`, 'good');
     }
+    const human = this.players[this.humanIndex];
+    const opponents = this.players.filter((p) => p.index !== this.humanIndex);
+    if (human.defeated) {
+      this.gameOver = { result: 'defeat', reason: 'landmarks', time: this.time };
+    } else if (opponents.length > 0 && opponents.every((p) => p.defeated)) {
+      this.gameOver = { result: 'victory', reason: 'landmarks', time: this.time };
+    }
   }
 
   // Vitória por maravilha: a maravilha precisa ficar de pé pela contagem inteira; se cair, a contagem zera.
@@ -1167,7 +1228,7 @@ export class Simulation {
       }
       const left = (this.wonderLeft.get(p.index) ?? WONDER_COUNTDOWN) - dt;
       if (left <= 0) {
-        this.gameOver = { result: p.index === this.humanIndex ? 'victory' : 'defeat', time: this.time };
+        this.gameOver = { result: p.index === this.humanIndex ? 'victory' : 'defeat', reason: 'wonder', time: this.time };
         return;
       }
       this.wonderLeft.set(p.index, left);
@@ -1189,10 +1250,12 @@ export class Simulation {
     }
     const human = this.players[this.humanIndex];
     const opponents = this.players.filter((p) => p.index !== this.humanIndex);
+    // Se outra regra (marcos, maravilha, locais) já encerrou a partida neste passo, ela é a causa.
+    if (this.gameOver) return;
     if (human.defeated) {
-      this.gameOver = { result: 'defeat', time: this.time };
+      this.gameOver = { result: 'defeat', reason: 'conquest', time: this.time };
     } else if (opponents.length > 0 && opponents.every((p) => p.defeated)) {
-      this.gameOver = { result: 'victory', time: this.time };
+      this.gameOver = { result: 'victory', reason: 'conquest', time: this.time };
     }
   }
 

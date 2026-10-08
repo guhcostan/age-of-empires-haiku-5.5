@@ -339,8 +339,12 @@ export interface GameMap {
   starts: Point[];
 }
 
+// Como a partida terminou: conquista, marcos, maravilha ou locais sagrados.
+export type VictoryReason = 'conquest' | 'landmarks' | 'wonder' | 'sacred';
+
 export interface GameOver {
   result: 'defeat' | 'victory';
+  reason: VictoryReason;
   time: number;
 }
 

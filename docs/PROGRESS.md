@@ -5,7 +5,7 @@
 - Fase 0 concluída parcialmente: SPEC com incertezas (ver docs/SPEC.md).
 - Publicado: https://age-of-empires-haiku.guhcostan.workers.dev (Worker que serve `public/` da branch `claude/admiring-feynman-bxzdp3`). Após o push, a versão nova aparece em até 5 minutos.
 - PRs: guhcostan/age-of-empires-haiku-5.5#1 e #2 (mesclados); #3 é a fase 1 (rascunho, TypeScript + Vite).
-- Testes: 19 unitários (`npm test`), 18 E2E (`npx playwright test`, compila antes e roda contra `vite preview`).
+- Testes: 66 unitários (`npm test`), 19 E2E (`npx playwright test`, compila antes e roda contra `vite preview`). Local: 19/19 E2E e 66/66 unitários no commit desta rodada.
 - E2E contra produção (`E2E_BASE_URL=https://age-of-empires-haiku.guhcostan.workers.dev npx playwright test`): 18/18 passando no bundle `index-B8JoBrHp.js` (commit db17232). O CI do PR #3 ainda estava rodando nesse commit.
 - Commit 0e8f9c0 (campo de tiro): CI verde (push e PR). E2E contra produção 18/18 no bundle `index-BhYKMYzw.js`, que é o build desse commit.
 - Commit 6018efe (valores confirmados de quartel, aldeão e torre): E2E contra produção 18/18 no bundle `index-C4HjoQAs.js`, que é o build desse commit. CI do PR: em andamento no momento da escrita.
@@ -38,15 +38,20 @@
 - 4 Idades, landmarks, tecnologias: idades por marco implementadas (Inglaterra; SPEC anexo C, adendo 4). Custos corrigidos: 2.ª 400+200 em 190 s, 3.ª 1200+600 em 220 s, 4.ª 2400+1200 em 250 s. Bots constroem o marco. Falta: marcos franceses (fase 5) e o efeito de cada marco.
 - 5 Segunda civilização: escolha de civilização no menu; marcos e maravilha franceses e fazenda inglesa implementados (SPEC anexo C, adendo 6). Cavaleiro Real implementado (adendo 7). Falta: comerciantes, Centro da Vila mais rápido e bônus ingleses dependentes de unidades (Homem de Armas Vanguarda, arco curto).
 - 6 Relíquias, locais sagrados, comércio, vitória: vitória por maravilha e por locais sagrados implementadas (opções no menu; números provisórios, SPEC adendos 5 e 8). Vitória por marcos implementada (provisória, adendo 9). Pendentes: relíquias e comércio.
-- 7 Bots: versão atual pronta, precisa das regras de landmark e civilização.
+- 7 Bots: constroem a maravilha na Imperial, mandam o exército ocioso para os locais sagrados, guardam recursos para cada idade e não deixam unidades presas (SPEC anexo C, adendo 10). Partidas completas por condição em tests/partidas.test.ts: conquista entre bots; maravilha, locais e marcos com início preparado. Falta: bot-vs-bot chegar à maravilha ou aos locais sem preparo (hoje a conquista acaba antes).
 - 8 Menu e HUD: layout atual não é o do AoE IV.
 - 9 Áudio, performance, polimento: 200 unidades a 60 fps ainda não medidos em GPU real.
 
 ## Bugs corrigidos na migração
 - Evento de morte: o código antigo lia `ev.to.x` também para `death` (que só tem x e y), lançando TypeError em toda morte. Corrigido; coberto por teste E2E em `e2e/bugs-conhecidos.spec.js`.
 - Barra de vida de árvores e minas: selecionar um recurso natural criava uma barra com vida NaN. Agora só unidades e edifícios têm barra.
+- Vitória por marcos era sobrescrita pela conquista no mesmo passo da simulação: a tela final mostrava "conquista". Agora o motivo é o da regra que encerrou a partida.
+- Aldeões presos: o centro da vila cercado por edifícios fazia novas unidades nascerem num bolsão sem saída, ociosas para sempre. Corrigido com nascimento na região aberta e regra de placement (adendo 10).
+- Bots paravam na Feudal: o exército consumia a comida que a idade seguinte pedia. Corrigido com a regra de guardar recursos (adendo 10).
 
 ## Bugs abertos
 - Job E2E do CI falhou em runs anteriores (causa não confirmada: logs não acessíveis pela API pública).
+- Bot-vs-bot não chega à maravilha nem aos locais sagrados antes da conquista (medido em 10 sementes, 2 e 3 jogadores). Depende de equilíbrio do bot e da economia; não resolvido nesta rodada.
+- No E2E de locais sagrados, o bot ataca os locais do jogador passivo e vence por conquista; por isso o teste de navegador só checa a tela final, e a regra está nos testes de partida completa.
 - Renderização headless por software roda a ~2,7 fps; medir 60 fps exige GPU.
 - Bundle de 567 kB (quase todo three.js) passa do limite de 500 kB do Vite; aviso esperado, sem divisão de código ainda.

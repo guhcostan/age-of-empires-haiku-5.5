@@ -20,6 +20,7 @@ import type {
   UnitType,
   Civ,
   Cost,
+  VictoryReason,
 } from '../types.ts';
 
 export const RESOURCES: readonly ResourceName[] = ['food', 'wood', 'gold', 'stone'];
@@ -318,6 +319,13 @@ export const LANDMARKS_BY_CIV: Record<Civ, Record<NextAge, readonly BuildingType
 };
 // Maravilha de cada civilização (vitória por maravilha).
 export const WONDER_BY_CIV: Record<Civ, BuildingType> = { english: 'cathedral', french: 'notreDame' };
+// Nome de cada condição de vitória, mostrado na tela final.
+export const VICTORY_NAMES: Record<VictoryReason, string> = {
+  conquest: 'Conquista',
+  landmarks: 'Marcos',
+  wonder: 'Maravilha',
+  sacred: 'Locais sagrados',
+};
 // Custo de construção que muda por civilização. Fazendas inglesas custam 50% menos madeira (SPEC §6.1: 37 no aoe4world).
 export const CIV_BUILDING_COST: Partial<Record<Civ, Partial<Record<BuildingType, Cost>>>> = {
   english: { farm: { wood: 37 } },

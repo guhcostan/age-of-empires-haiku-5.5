@@ -38,7 +38,7 @@ test.describe('Navegação sem erros', () => {
     // Fim forçado por derrota e volta ao menu.
     await page.evaluate(() => {
       const g = window.__game.game;
-      g.sim.gameOver = { result: 'defeat', time: g.sim.time };
+      g.sim.gameOver = { result: 'defeat', reason: 'conquest', time: g.sim.time };
     });
     await expect(page.locator('#overlay-end')).toBeVisible();
     await page.locator('#btn-end-menu').click();

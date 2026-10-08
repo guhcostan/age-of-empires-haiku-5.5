@@ -1,6 +1,6 @@
 // Bots: pensam a cada poucos segundos (depende da dificuldade) e usam
 // exatamente os mesmos comandos que o jogador humano.
-import { BUILDINGS, UNITS, NODES, DIFFICULTY, MAX_POP, RESOURCES, LANDMARKS, TECHS } from './config.ts';
+import { BUILDINGS, UNITS, NODES, DIFFICULTY, MAX_POP, RESOURCES, LANDMARKS_BY_CIV, TECHS, WONDER_BY_CIV } from './config.ts';
 import { centerOf, rectOf, distToRect } from './world.ts';
 import { nextAgeOf, type Simulation } from './sim.ts';
 import type {
@@ -59,6 +59,8 @@ export class BotBrain {
     const built = (type: BuildingType): BuildingEntity[] => buildings.filter((b) => b.type === type && b.built);
     const planned = (type: BuildingType): number => buildings.filter((b) => b.type === type && !b.built).length;
 
+    const saving = this.savingForAge(civil.length, army.length);
+
     // 1. Aldeões até a meta da dificuldade.
     const queuedVillagers = tc.queue.filter((q) => q.type === 'villager').length;
     if (civil.length + queuedVillagers < this.cfg.villagers && tc.queue.length < 2) {
@@ -113,6 +115,12 @@ export class BotBrain {
     // 6. Subir de idade quando a economia está pronta.
     this.tryAgeUp(tc, civil, army.length);
 
+    // 6b. Maravilha da civilização na Imperial, com exército de pé (vitória por maravilha).
+    const wonder = WONDER_BY_CIV[player.civ];
+    if (player.age >= 4 && army.length >= 8 && built(wonder).length + planned(wonder) === 0) {
+      this.build(wonder, civil, centerOf(tc), 8, 16);
+    }
+
     // 7. Pesquisas: a primeira técnica disponível em cada edifício que as oferece.
     for (const b of buildings) {
       if (!b.built || b.research) continue;
@@ -128,18 +136,19 @@ export class BotBrain {
 
     // 8. Treino militar: escolhe o melhor tipo desbloqueado para cada prédio.
     const count = (type: UnitType): number => army.filter((u) => u.type === type).length;
-    for (const b of built('barracks')) {
+    // Enquanto guarda recursos para a idade, nenhum prédio militar treina (ver savingForAge).
+    for (const b of saving ? [] : built('barracks')) {
       if (b.queue.length >= 2) continue;
       for (const type of this.barracksPriority(count, player.age)) {
         if (sim.train(o, b.id, type).ok) break;
       }
     }
     // Arqueiros saem do campo de tiro, na mesma proporção que o quartel usava (um para cada 0,6 espadachim).
-    for (const b of built('archeryRange')) {
+    for (const b of saving ? [] : built('archeryRange')) {
       if (b.queue.length >= 2) continue;
       if (count('archer') < count('swordsman') * 0.6) sim.train(o, b.id, 'archer');
     }
-    for (const b of built('stable')) {
+    for (const b of saving ? [] : built('stable')) {
       if (b.queue.length >= 2 || army.length < 6) continue;
       const order: UnitType[] = player.age >= 3 && count('knight') < count('scout') * 2 + 1
         ? ['knight', 'scout']
@@ -170,11 +179,27 @@ export class BotBrain {
     const player = sim.players[this.owner];
     const next = nextAgeOf(player.age);
     if (next === null || sim.hasLandmark(this.owner, next)) return;
-    if (civil.length < NEED_CIVIL[next]) return;
-    if (next === 3 && armyCount < 4) return;
-    const [landmark] = LANDMARKS[next];
-    if (!sim.canAfford(this.owner, BUILDINGS[landmark].cost)) return;
+    if (!this.readyForAge(next, civil.length, armyCount)) return;
+    const [landmark] = LANDMARKS_BY_CIV[player.civ][next];
+    if (!sim.canAfford(this.owner, sim.buildingCost(this.owner, landmark))) return;
     this.build(landmark, civil, centerOf(tc), 6, 12);
+  }
+
+  // Economia pronta para a próxima idade: aldeões e, na Castelo, um exército mínimo.
+  readyForAge(next: NextAge, civil: number, army: number): boolean {
+    if (civil < NEED_CIVIL[next]) return false;
+    return !(next === 3 && army < 4);
+  }
+
+  // Guardando para o marco: economia pronta, mas o custo ainda não está pago. Enquanto isso, o quartel,
+  // o campo de tiro e o estábulo não treinam, senão a comida nunca junta para a idade.
+  savingForAge(civil: number, army: number): boolean {
+    const sim = this.sim;
+    const player = sim.players[this.owner];
+    const next = nextAgeOf(player.age);
+    if (next === null || sim.hasLandmark(this.owner, next) || !this.readyForAge(next, civil, army)) return false;
+    const [landmark] = LANDMARKS_BY_CIV[player.civ][next];
+    return !sim.canAfford(this.owner, sim.buildingCost(this.owner, landmark));
   }
 
   // Constrói um edifício num local livre perto de uma âncora, com até 2 construtores.
@@ -320,11 +345,29 @@ export class BotBrain {
       }
     }
 
-    // Reúne as tropas ociosas perto da base.
+    // Locais sagrados: com a vitória por contagem ligada, o exército ocioso vai ao local mais próximo que não é seu.
     const idle = army.filter((u) => u.order === 'idle');
+    const site = sim.sacredVictory ? this.nearestSacredElsewhere(home) : null;
+    if (site && idle.length >= 3) {
+      sim.command(o, idle.map((u) => u.id), { type: 'attackmove', x: site.x, y: site.y });
+      return;
+    }
+
+    // Reúne as tropas ociosas perto da base.
     if (idle.length && Math.hypot(idle[0].x - home.x, idle[0].y - home.y) > 7) {
       sim.command(o, idle.map((u) => u.id), { type: 'attackmove', x: home.x + 3, y: home.y + 3 });
     }
+  }
+
+  nearestSacredElsewhere(from: Point): Point | null {
+    let best: Point | null = null;
+    let bestD = Infinity;
+    for (const s of this.sim.sacredSites) {
+      if (s.owner === this.owner) continue;
+      const d = Math.hypot(s.x - from.x, s.y - from.y);
+      if (d < bestD) { best = s; bestD = d; }
+    }
+    return best;
   }
 
   nearestEnemyUnit(from: Point, radius: number): UnitEntity | null {
