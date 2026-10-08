@@ -40,7 +40,7 @@
 - 6 Relíquias, locais sagrados, comércio, vitória: vitória por maravilha e por locais sagrados implementadas (opções no menu; números provisórios, SPEC adendos 5 e 8). Vitória por marcos implementada (provisória, adendo 9). Pendentes: relíquias e comércio.
 - 7 Bots: constroem a maravilha na Imperial, mandam o exército ocioso para os locais sagrados, guardam recursos para cada idade e não deixam unidades presas (SPEC anexo C, adendo 10). Partidas completas por condição em tests/partidas.test.ts: conquista entre bots; maravilha, locais e marcos com início preparado. Falta: bot-vs-bot chegar à maravilha ou aos locais sem preparo (hoje a conquista acaba antes).
 - 8 Menu e HUD: layout atual não é o do AoE IV. Botão "Ociosos" na barra de cima (adendo 11, provisório). Falta: layout de referência, painel de objetivos e pontuação.
-- 9 Áudio, performance, polimento: 200 unidades a 60 fps ainda não medidos em GPU real.
+- 9 Áudio, performance, polimento: 200 unidades a 60 fps ainda não medidos em GPU real. Medido só a simulação (Node, 208 unidades, mapa 128, dois exércitos em ataque-movimento): 0,60 ms por passo em média, 10 ms no pior passo (um pico isolado). Renderização não medida.
 
 ## Bugs corrigidos na migração
 - Evento de morte: o código antigo lia `ev.to.x` também para `death` (que só tem x e y), lançando TypeError em toda morte. Corrigido; coberto por teste E2E em `e2e/bugs-conhecidos.spec.js`.
