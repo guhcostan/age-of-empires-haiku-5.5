@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { generateMap } from './core/mapgen.ts';
 import { Simulation } from './core/sim.ts';
 import { BotBrain } from './core/ai.ts';
-import { MAP_SIZES, PLAYER_COLORS, PLAYER_NAMES } from './core/config.ts';
+import { MAP_SIZES, PLAYER_COLORS, PLAYER_NAMES, UNITS } from './core/config.ts';
 import { seedFromString } from './core/rng.ts';
 import { buildTerrain, buildFog, updateFog, heightAt, type FogLayer } from './render/terrain.ts';
 import { EntityRenderer } from './render/entities.ts';
@@ -360,7 +360,25 @@ export class Game {
     return this.selectedEntities().filter((e): e is BuildingEntity => e.kind === 'building' && e.owner === 0);
   }
 
+  // Aldeões do jogador que estão parados (sem tarefa).
+  idleVillagers(): UnitEntity[] {
+    if (!this.sim) return [];
+    const out: UnitEntity[] = [];
+    for (const e of this.sim.world.entities.values()) {
+      if (e.kind === 'unit' && e.owner === 0 && !e.dead && UNITS[e.type].civil && e.order === 'idle') out.push(e);
+    }
+    return out;
+  }
+
   // ---------- Seleção e comandos ----------
+
+  // Botão "Ociosos": seleciona todos os aldeões parados e centraliza a câmera no primeiro.
+  selectIdleVillagers(): void {
+    const idle = this.idleVillagers();
+    if (idle.length === 0) return;
+    this.selectIds(idle.map((u) => u.id));
+    this.rts?.focus(idle[0].x, idle[0].y);
+  }
 
   selectIds(ids: number[]): void {
     this.selected = new Set(ids);

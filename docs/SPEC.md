@@ -615,3 +615,8 @@ Fonte: https://raw.githubusercontent.com/aoe4world/data/main/buildings/english.j
 - Terreno, regra provisória (a SPEC não trata disso): uma unidade nova nasce no tile livre mais próximo que esteja na região aberta do mapa, procurando em anéis de até 8 tiles ao redor do edifício. Edifício que fecharia a saída de uma unidade que está na região aberta é recusado ("Bloquearia a saída de uma unidade"). Medido antes da correção: aldeões nasciam presos num bolsão cercado por casas e fazendas e ficavam ociosos para sempre.
 - Partidas completas (tests/partidas.test.ts, em tempo de simulação): conquista entre dois bots termina em cerca de 11 a 25 min de jogo. Maravilha, locais sagrados e marcos têm início preparado (catedral de pé com 30 soldados de defesa; exército nos quatro locais; um marco do bot a destruir com 14 soldados). Depois disso o resto da partida segue as regras e o bot. Sem início preparado, bots não chegam à maravilha (a Imperial vem tarde demais) nem aos locais sagrados (a conquista acaba antes).
 - Não verificado: a duração de 30 min da contagem da maravilha (incerta na SPEC); o equilíbrio geral (bots atacam cedo); se a regra de terreno existe no AoE IV.
+
+### Anexo C, adendo 11: botão de aldeões ociosos (implementado em 2026-10-08; provisório)
+
+- Botão "Ociosos" na barra de cima, com a contagem de aldeões parados. Clicar seleciona todos e centraliza a câmera no primeiro. Apagado quando não há nenhum.
+- Posição e rótulo são provisórios: a SPEC não descreve o layout do HUD do AoE IV. Atalho de teclado ainda não existe.

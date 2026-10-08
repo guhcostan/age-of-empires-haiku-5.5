@@ -5,7 +5,7 @@
 - Fase 0 concluída parcialmente: SPEC com incertezas (ver docs/SPEC.md).
 - Publicado: https://age-of-empires-haiku.guhcostan.workers.dev (Worker que serve `public/` da branch `claude/admiring-feynman-bxzdp3`). Após o push, a versão nova aparece em até 5 minutos.
 - PRs: guhcostan/age-of-empires-haiku-5.5#1 e #2 (mesclados); #3 é a fase 1 (rascunho, TypeScript + Vite).
-- Testes: 66 unitários (`npm test`), 19 E2E (`npx playwright test`, compila antes e roda contra `vite preview`). Local: 19/19 E2E e 66/66 unitários no commit desta rodada.
+- Testes: 66 unitários (`npm test`), 20 E2E (`npx playwright test`, compila antes e roda contra `vite preview`). Local: 20/20 E2E e 66/66 unitários nesta rodada.
 - E2E contra produção (`E2E_BASE_URL=https://age-of-empires-haiku.guhcostan.workers.dev npx playwright test`): 18/18 passando no bundle `index-B8JoBrHp.js` (commit db17232). O CI do PR #3 ainda estava rodando nesse commit.
 - Commit 0e8f9c0 (campo de tiro): CI verde (push e PR). E2E contra produção 18/18 no bundle `index-BhYKMYzw.js`, que é o build desse commit.
 - Commit 6018efe (valores confirmados de quartel, aldeão e torre): E2E contra produção 18/18 no bundle `index-C4HjoQAs.js`, que é o build desse commit. CI do PR: em andamento no momento da escrita.
@@ -39,7 +39,7 @@
 - 5 Segunda civilização: escolha de civilização no menu; marcos e maravilha franceses e fazenda inglesa implementados (SPEC anexo C, adendo 6). Cavaleiro Real implementado (adendo 7). Falta: comerciantes, Centro da Vila mais rápido e bônus ingleses dependentes de unidades (Homem de Armas Vanguarda, arco curto).
 - 6 Relíquias, locais sagrados, comércio, vitória: vitória por maravilha e por locais sagrados implementadas (opções no menu; números provisórios, SPEC adendos 5 e 8). Vitória por marcos implementada (provisória, adendo 9). Pendentes: relíquias e comércio.
 - 7 Bots: constroem a maravilha na Imperial, mandam o exército ocioso para os locais sagrados, guardam recursos para cada idade e não deixam unidades presas (SPEC anexo C, adendo 10). Partidas completas por condição em tests/partidas.test.ts: conquista entre bots; maravilha, locais e marcos com início preparado. Falta: bot-vs-bot chegar à maravilha ou aos locais sem preparo (hoje a conquista acaba antes).
-- 8 Menu e HUD: layout atual não é o do AoE IV.
+- 8 Menu e HUD: layout atual não é o do AoE IV. Botão "Ociosos" na barra de cima (adendo 11, provisório). Falta: layout de referência, painel de objetivos e pontuação.
 - 9 Áudio, performance, polimento: 200 unidades a 60 fps ainda não medidos em GPU real.
 
 ## Bugs corrigidos na migração

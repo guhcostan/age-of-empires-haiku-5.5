@@ -49,6 +49,8 @@ export class Hud {
   res: Record<ResourceName, HTMLElement>;
   pop: HTMLElement;
   age: HTMLElement;
+  idleBtn: HTMLButtonElement;
+  idleCount: HTMLElement;
   hint: HTMLElement;
   toasts: HTMLElement;
   selTitle: HTMLElement;
@@ -68,6 +70,9 @@ export class Hud {
     for (const r of RESOURCES) this.res[r] = $(`res-${r}`);
     this.pop = $('res-pop');
     this.age = $('res-age');
+    this.idleBtn = $<HTMLButtonElement>('btn-idle');
+    this.idleCount = $('idle-count');
+    this.idleBtn.addEventListener('click', () => this.game.selectIdleVillagers());
     this.hint = $('hint');
     this.toasts = $('toasts');
     this.selTitle = $('sel-title');
@@ -134,6 +139,9 @@ export class Hud {
     this.pop.textContent = `${used} / ${cap}`;
     this.pop.classList.toggle('warn', used >= cap);
     this.age.textContent = AGE_NAMES[player.age];
+    const idle = this.game.idleVillagers().length;
+    this.idleCount.textContent = String(idle);
+    this.idleBtn.disabled = idle === 0;
 
     const sel = g.selectedEntities();
     const sig = sel.map((e) => {

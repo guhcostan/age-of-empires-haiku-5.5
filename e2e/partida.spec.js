@@ -78,4 +78,21 @@ test.describe('Partida: início e pausa', () => {
     // Com o jogo encerrado, "Continuar partida" some do menu.
     await expect(page.locator('#btn-continue')).toBeHidden();
   });
+
+  test('botão Ociosos seleciona os aldeões parados', async ({ page }) => {
+    await startQuickGame(page);
+    const btn = page.locator('#btn-idle');
+    await expect(btn).toBeVisible();
+    // Um aldeão recém-criado, sem tarefa, conta como ocioso.
+    await page.evaluate(() => {
+      const g = window.__game.game;
+      const tc = g.sim.entitiesOf(0).buildings.find((b) => b.type === 'towncenter');
+      g.sim.spawnUnit('villager', 0, tc.x + 5.5, tc.y + 5.5);
+    });
+    await expect(btn).toBeEnabled();
+    const expected = await page.evaluate(() => window.__game.game.idleVillagers().length);
+    await expect(page.locator('#idle-count')).toHaveText(String(expected));
+    await btn.click();
+    await expect.poll(async () => (await gameState(page)).selected.length).toBe(expected);
+  });
 });
