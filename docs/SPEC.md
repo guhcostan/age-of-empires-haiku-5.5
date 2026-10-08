@@ -718,3 +718,11 @@ Fontes lidas só por resumo de busca (a página do aoe4world é renderizada em J
 - Posição: 4 posições fixas como frações do mapa (25%/75%), pulando as perto das bases. Não usa o gerador aleatório, então os mapas das sementes existentes não mudam. Em mapa de 64 com 2 jogadores, 2 relíquias.
 - Modelo: pilar de pedra com cristal dourado.
 - Testes: tests/relicas.test.ts (mapa tem relíquias; aldeão coleta e o ouro entra).
+
+### Anexo C, adendo 24: comércio (bloqueado por falta de fonte; 2026-10-08)
+
+- Mercado: 100 de madeira, 20 s, 1000 de vida (SPEC §2.1, fonte única). Não implementado: sem uso, um mercado isolado não é comércio.
+- Comerciante (unidade): custo não encontrado. A busca de 2026-10-08 não achou o custo do comerciante no patch atual. Resumos antigos e de outros patches não servem.
+- Renda por viagem: só há exemplos de comunidade (ex.: rota de 90 tiles: 173 em mapa micro e 112 em mapa grande; 373 para rota de 170), sem patch informado, e a regra é "aproximadamente quadrática". Não usável como fonte.
+- Modificadores por civilização (bolsas otomanas +40%, Especiarias abássidas +30%, taxa de Mali) são de outras civilizações ou de patches não confirmados; não há leitura na íntegra de fonte oficial.
+- Próximo passo: ler o aoe4club ou o explorador de patches do aoe4world por civilização (páginas com JavaScript; a leitura automática falhou) e anotar custo do comerciante e renda por viagem com a versão do patch.
