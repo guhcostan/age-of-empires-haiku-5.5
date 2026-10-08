@@ -733,3 +733,9 @@ Fontes lidas só por resumo de busca (a página do aoe4world é renderizada em J
 - Custo da catedral (maravilha inglesa): 5000 de cada recurso, incluindo 5000 de ouro. Idade Castelo: 600 de ouro. Idade Imperial: 1200 de ouro.
 - Conclusão: ouro de mina não basta para Castelo, Imperial e maravilha juntos (6800 de ouro). Por isso nenhuma partida só de bots decide a maravilha. Fontes de ouro fora das minas (locais sagrados: 100 de ouro por minuto por local; relíquias como mosteiro e monges) seriam necessárias.
 - Decisão em aberto: (a) aumentar o ouro do mapa no gerador (muda os mapas das sementes e o equilíbrio), (b) manter o mapa e aceitar que a maravilha só vence com ouro dos locais sagrados ou do mosteiro, ou (c) revisar o custo da maravilha, que a SPEC dá como 5000 em cada recurso (fonte única com nota de conflito no adendo 5).
+
+### Anexo C, adendo 26: partidas só de bots com maravilha e locais sagrados ligados (medido em 2026-10-08)
+
+- Com vitória por maravilha e por locais sagrados ligadas, bots não atacam (adendo 13). Três sementes (1, 2 e 3), mapa de 64, dois bots: a partida terminou por locais sagrados em todas (1554 s, 1823 s e 2043 s de jogo), com vencedor em cada uma.
+- A maravilha não foi construída em nenhuma: os bots tiveram ouro suficiente (4000 a 5500 por volta de 30 min, vindo dos locais sagrados), mas a comida ficou baixa e nenhum chegou à Idade Imperial.
+- Decisão tomada (recomendação, provisória): não mexer no custo da maravilha nem no ouro do mapa por enquanto. A maravilha continua sem vencer só de bots. A vitória por locais sagrados passa a ser a condição de vitória de bot-contra-bot que se verifica no jogo.
