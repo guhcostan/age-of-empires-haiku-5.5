@@ -658,6 +658,8 @@ export class Simulation {
     const def = BUILDINGS[b.type];
     // Só torres atiram (são as únicas com ataque, alcance e recarga definidos).
     if (def.attack === undefined || def.range === undefined || def.cooldown === undefined) return;
+    // Jogador eliminado (marcos ou conquista) não tem mais torres ativas.
+    if (this.players[b.owner]?.defeated) return;
     b.cooldown = Math.max(0, b.cooldown - dt);
     if (b.cooldown > 0) return;
     const c = centerOf(b);

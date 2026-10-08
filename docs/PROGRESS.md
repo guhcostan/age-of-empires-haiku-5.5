@@ -44,6 +44,24 @@
 - 8 Menu e HUD: layout atual não é o do AoE IV. Botão "Ociosos" na barra de cima (adendo 11, provisório). Falta: layout de referência, painel de objetivos e pontuação.
 - 9 Áudio, performance, polimento: 200 unidades a 60 fps ainda não medidos em GPU real. Medido só a simulação (Node, 208 unidades, mapa 128, dois exércitos em ataque-movimento): 0,60 ms por passo em média, 10 ms no pior passo (um pico isolado). Renderização não medida.
 
+## Balanceamento: crítico independente (Haiku, 2026-10-08)
+
+Crítico novo comparou config.ts com o anexo C. Corrigido: torre de jogador eliminado por marcos ainda atirava (teste em tests/partidas.test.ts).
+
+Não alterado (a SPEC marca como conflitante ou de uma fonte; mudar sem fonte nova viola a regra da SPEC):
+- Aldeão: velocidade 1,8 no código, 1,125 na SPEC (conflito); ataque corpo a corpo 2 contra 5 à distância.
+- Batedor: código 80 comida, ataque 6, velocidade 3,4; SPEC 65 comida, ataque 1, velocidade 1,625 (uma fonte). É a tropa mais numerosa dos bots.
+- Cavaleiro (inglês, idade 3): código 80+60, 180 de vida; SPEC 140+100, 270 de vida (uma fonte).
+- Lanceiro, arqueiro, besteiro e espadachim: códigos diferentes da SPEC; espadachim sem equivalente na SPEC.
+- Vida de moinho, serraria, acampamento (350 contra 750), casa (300 contra 750), centro da vila (2000 contra 2500) e ferreiro (700 contra 1500, idade 2 contra 25 s).
+- Desconto francês de 25% na madeira dos moinhos e serrarias ausente; Keep francês 900 contra 810.
+- Catedral e Notre Dame: a SPEC cita 6000 na patch 5.0 em um trecho e 5000 em outro.
+- Técnicas: só Horticultura bate; "Armaduras" dá +15% de ataque e a SPEC fala em armadura.
+- Não implementados pela SPEC: palissada, portões, posto avançado, mercado, universidade, doca, navios, batalhões Wynguard, artilharia.
+- Sem fonte no código: dano a prédios (x0,5), bônus x2 do lanceiro, carga 10, início de recursos, teto de população 200.
+
+Balanceamento medido (bots, mapa 64, duas sementes): conquista entre 1124 e 1409 s de jogo.
+
 ## Bugs corrigidos na migração
 - Evento de morte: o código antigo lia `ev.to.x` também para `death` (que só tem x e y), lançando TypeError em toda morte. Corrigido; coberto por teste E2E em `e2e/bugs-conhecidos.spec.js`.
 - Barra de vida de árvores e minas: selecionar um recurso natural criava uma barra com vida NaN. Agora só unidades e edifícios têm barra.

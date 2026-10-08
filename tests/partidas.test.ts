@@ -190,6 +190,22 @@ test('aldeão nasce do lado de fora quando o centro da vila está cercado', () =
   assert.equal(sim.world.components()[ty * n + tx], open, 'nasce na região aberta do mapa');
 });
 
+test('torre de jogador eliminado não atira; a de quem segue na partida atira', () => {
+  // Mesmo cenário nos dois casos: torre do jogador 1 e um soldado do jogador 0 a 4 tiles dela.
+  const shotAt = (eliminated: boolean): number => {
+    const { sim } = buildMatch('conquista', 1);
+    const tower = sim.spawnBuilding('tower', 1, 20, 20, true);
+    const c = { x: tower.x + 1, y: tower.y + 1 };
+    const enemy = sim.spawnUnit('swordsman', 0, c.x + 4, c.y);
+    const before = enemy.hp;
+    sim.players[1].defeated = eliminated;
+    for (let t = 0; t < 10; t += STEP) sim.update(STEP);
+    return before - enemy.hp;
+  };
+  assert.ok(shotAt(false) > 0, 'a torre ativa acerta o soldado');
+  assert.equal(shotAt(true), 0, 'a torre do eliminado não dispara');
+});
+
 // ---------- Bots: o exército ocioso vai para um local sagrado ----------
 
 test('bot com exército ocioso e vitória por locais sagrados manda as tropas para um local', () => {
