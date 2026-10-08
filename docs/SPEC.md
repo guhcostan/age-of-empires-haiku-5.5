@@ -648,3 +648,11 @@ Próximo passo: abrir as páginas citadas (ou a wiki do AoE IV) e anotar um núm
 - Com vitória por marcos, o bot ataca normalmente. Medido: marcos decidem 7 de 8 partidas só de bots.
 - Maravilha só de bots: não decide nenhuma partida medida (3 sementes, até 2 horas de jogo). Causa medida: a Imperial exige ouro, o ouro dos mapas acaba antes disso, e o bot fica com comida, madeira e pedra sobrando. Relíquias e locais sagrados são as fontes de ouro previstas; não implementadas ainda.
 - Economia do bot, medida: o exército não consome a comida de que a idade precisa (ver adendo 10).
+
+### Anexo C, adendo 14: civilização francesa, comerciantes e centro da vila (pesquisa, não implementado; 2026-10-08)
+
+Fontes lidas só por resumo de busca (a página do aoe4world é renderizada em JavaScript, e a wiki devolveu HTTP 402):
+- Centro da vila francês: "velocidade de produção por idade" de +15%, +15%, +20%, +25% (resumo do aoe4world, https://aoe4world.com/explorer/civs/french). Não está claro se cada valor vale para a idade em que se avança ou se são acumulados; por isso não foi implementado.
+- Comerciantes: podem devolver comida, madeira ou ouro aos mercados. Navios de comércio devolvem 20% a mais (resumo). Tecnologia "Guildas de mercadores": cada comerciante ativo gera 1 de ouro a cada 6 s (resumo, https://aoe4world.com/explorer/technologies/merchant-guilds).
+- Desconto das tecnologias econômicas: 30% em um resumo e 35% em outro. Divergente; não usar.
+- Pendente: confirmar cada número numa página lida na íntegra, depois implementar com testes.
