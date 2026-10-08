@@ -112,6 +112,24 @@ export const UNITS: Record<UnitType, UnitDef> = {
     name: 'Homem de Armas', hp: 155, attack: 12, cooldown: 1.4, range: 1.1,
     speed: 1.9, sight: 7, cost: { food: 90, gold: 20 }, time: 20.5, age: 2, from: 'barracks',
   },
+  // Máquinas de cerco à distância (SPEC §3.1 e §3.2, tabela francesa para o ataque; uma fonte). Oficina de cerco.
+  // Recarga e velocidade do aríete (a SPEC não dá recarga); idade provisória (3, ou 4 para o canhão): a SPEC marca incerto.
+  mangonel: {
+    name: 'Mangonel', hp: 130, attack: 10, cooldown: 4, range: 8, ranged: true,
+    speed: 1.2, sight: 8, cost: { wood: 400, gold: 200 }, time: 40, age: 3, from: 'siegeWorkshop',
+  },
+  trebuchet: {
+    name: 'Trabuco de contrapeso', hp: 140, attack: 40, cooldown: 4, range: 16, ranged: true,
+    speed: 1.2, sight: 9, cost: { wood: 400, gold: 150 }, time: 30, age: 3, from: 'siegeWorkshop',
+  },
+  springald: {
+    name: 'Springald', hp: 85, attack: 15, cooldown: 4, range: 7.5, ranged: true,
+    speed: 1.2, sight: 8, cost: { wood: 150, gold: 100 }, time: 20, age: 3, from: 'siegeWorkshop',
+  },
+  cannon: {
+    name: 'Canhão', hp: 190, attack: 60, cooldown: 4, range: 10, ranged: true,
+    speed: 1.2, sight: 8, cost: { wood: 300, gold: 600 }, time: 45, age: 4, from: 'siegeWorkshop',
+  },
   // Arbalétrier (francês, unidade única). SPEC §3: custo 80 comida + 40 ouro, 22,5 s, 80 de vida, ataque 11 à distância,
   // alcance 5; anti-pesado. Treino no campo de tiro e idade provisórios (a SPEC marca incerto).
   arbalestrier: {
@@ -249,7 +267,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
   // Oficina de cerco: treina aríetes. Custo, vida e tempo batem em aoe4.club e aoe4world; idade 3 só no aoe4world.
   siegeWorkshop: {
     name: 'Oficina de cerco', w: 3, h: 3, hp: 2100, sight: 7, cost: { wood: 250 }, time: 45, age: 3,
-    trains: ['ram'],
+    trains: ['ram', 'mangonel', 'trebuchet', 'springald'],
   },
   // Campo de tiro: treina arqueiros (SPEC §2.1). Custo, vida e tempo vêm da fonte única da SPEC (linha 73).
   archeryRange: {
@@ -330,7 +348,7 @@ export const BUILD_MENU: readonly BuildingType[] = [
 
 // Teclas de atalho (exibidas nos botões e na ajuda).
 export const UNIT_KEYS: Record<UnitType, string> = {
-  villager: 'v', swordsman: 'z', vanguard: 'n', archer: 'x', longbowman: 'l', arbalestrier: 'b', manAtArms: 'o', spearman: 'g', hardenedSpearman: 'm', crossbow: 'd', scout: 'c', horseman: 'u', knight: 'r', king: 'k', ram: 'j', royalKnight: 'r',
+  villager: 'v', swordsman: 'z', vanguard: 'n', archer: 'x', longbowman: 'l', arbalestrier: 'b', manAtArms: 'o', mangonel: 'f', trebuchet: 't', springald: 'w', cannon: 'y', spearman: 'g', hardenedSpearman: 'm', crossbow: 'd', scout: 'c', horseman: 'u', knight: 'r', king: 'k', ram: 'j', royalKnight: 'r',
 };
 // O Centro da Vila não é construído pelo menu, então não tem tecla aqui.
 export const BUILD_KEYS: Partial<Record<BuildingType, string>> = {
@@ -392,6 +410,7 @@ export const CIV_TRAINS: Partial<Record<Civ, Partial<Record<BuildingType, readon
     stable: ['scout', 'knight', 'horseman'],
   },
   french: {
+    siegeWorkshop: ['ram', 'mangonel', 'trebuchet', 'springald', 'cannon'],
     archeryRange: ['archer', 'arbalestrier'],
     barracks: ['manAtArms', 'swordsman', 'spearman', 'crossbow'],
     stable: ['scout', 'royalKnight'],

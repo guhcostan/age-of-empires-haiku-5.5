@@ -447,7 +447,8 @@ function buildRam(root: THREE.Group, team: number): UnitRig {
 
 // Monta unidades desta fase; chamado por createUnit.
 export function buildAdvancedUnit(type: UnitType, root: THREE.Group, team: number): UnitRig {
-  if (type === 'ram') return buildRam(root, team);
+  // Modelo provisório: as máquinas à distância usam o modelo do aríete até haver modelos próprios.
+  if (type === 'ram' || type === 'mangonel' || type === 'trebuchet' || type === 'springald' || type === 'cannon') return buildRam(root, team);
   if (type === 'spearman' || type === 'hardenedSpearman') return buildSpearman(root, team);
   if (type === 'crossbow' || type === 'arbalestrier') return buildCrossbow(root, team);
   return buildKnight(root, team);

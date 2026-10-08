@@ -739,3 +739,11 @@ Fontes lidas só por resumo de busca (a página do aoe4world é renderizada em J
 - Com vitória por maravilha e por locais sagrados ligadas, bots não atacam (adendo 13). Três sementes (1, 2 e 3), mapa de 64, dois bots: a partida terminou por locais sagrados em todas (1554 s, 1823 s e 2043 s de jogo), com vencedor em cada uma.
 - A maravilha não foi construída em nenhuma: os bots tiveram ouro suficiente (4000 a 5500 por volta de 30 min, vindo dos locais sagrados), mas a comida ficou baixa e nenhum chegou à Idade Imperial.
 - Decisão tomada (recomendação, provisória): não mexer no custo da maravilha nem no ouro do mapa por enquanto. A maravilha continua sem vencer só de bots. A vitória por locais sagrados passa a ser a condição de vitória de bot-contra-bot que se verifica no jogo.
+
+### Anexo C, adendo 27: máquinas de cerco à distância (implementadas em 2026-10-08; provisórias)
+
+- Mangonel (400 madeira + 200 ouro; 40 s; 130 de vida; alcance 8; ataque 10), trabuco de contrapeso (400 madeira + 150 ouro; 30 s; 140 de vida; alcance 16; ataque 40), springald (150 madeira + 100 ouro; 20 s; 85 de vida; alcance 7,5; ataque 15) e canhão francês (300 madeira + 600 ouro; 45 s; 190 de vida; alcance 10; ataque 60). Custos, vida, alcance e tempo da SPEC §3 (uma fonte cada); ataque da tabela francesa de cerco (uma fonte). Oficina de cerco.
+- Mangonel, trabuco e springald: inglês e francês. Canhão: só francês (SPEC §3.2; "Canhão Real" tem conflito de custo, não implementado).
+- Recarga (4 s) e velocidade (1,2) do aríete: a SPEC não dá recarga e a velocidade está em outra escala. Idade mínima provisória: 3 (4 para o canhão). A SPEC marca idade e local como incerto.
+- Dano a edifícios: 0,5 como o resto das unidades não-aríete (regra do código; sem fonte). Sem dano em área.
+- Modelo provisório: o modelo do aríete. Testes: tests/civilizacoes.test.ts.

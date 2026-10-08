@@ -89,3 +89,17 @@ test('homem de armas francês: treina no quartel a partir da Feudal; inglês nã
   french.players[0].age = 2;
   assert.equal(french.train(0, barracks.id, 'manAtArms').ok, true, 'na Feudal treina');
 });
+
+// Máquinas de cerco à distância: oficina de cerco. Canhão só francês; a idade mínima das máquinas é provisória (3).
+test('máquinas de cerco à distância: inglês treina mangonel, trabuco e springald; canhão é só francês', () => {
+  const english = simFor('english');
+  for (const t of ['mangonel', 'trebuchet', 'springald'] as const) assert.ok(english.trainsOf(0, 'siegeWorkshop').includes(t), t);
+  assert.ok(!english.trainsOf(0, 'siegeWorkshop').includes('cannon'));
+  assert.ok(simFor('french').trainsOf(0, 'siegeWorkshop').includes('cannon'));
+  const workshop = english.spawnBuilding('siegeWorkshop', 0, 28, 28, true);
+  assert.equal(english.train(0, workshop.id, 'mangonel').ok, false, 'na Idade das Trevas não treina');
+  english.players[0].age = 3;
+  english.players[0].res.wood = 1000;
+  english.players[0].res.gold = 1000;
+  assert.equal(english.train(0, workshop.id, 'mangonel').ok, true, 'na Castelo treina');
+});
