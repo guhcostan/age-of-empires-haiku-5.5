@@ -5,16 +5,16 @@ import { findPath } from '../src/core/pathfind.ts';
 import { World } from '../src/core/world.ts';
 import { Simulation, WONDER_COUNTDOWN } from '../src/core/sim.ts';
 import { BotBrain } from '../src/core/ai.ts';
-import { AGE_UP, BUILDINGS, LANDMARKS_BY_CIV, UNITS } from '../src/core/config.ts';
+import { AGE_UP, BUILDINGS, LANDMARKS_BY_CIV, SACRED, UNITS } from '../src/core/config.ts';
 import type { BuildingType, Civ, DifficultyKey, Entity, Outcome, PlayerConfig } from '../src/types.ts';
 
-function makeSim({ size = 64, bots = 1, seed = 42, difficulty = 'normal' as DifficultyKey, wonderVictory = false, civ = 'english' as Civ } = {}) {
+function makeSim({ size = 64, bots = 1, seed = 42, difficulty = 'normal' as DifficultyKey, wonderVictory = false, sacredVictory = false, civ = 'english' as Civ } = {}) {
   const players: PlayerConfig[] = [{ name: 'Você', color: '#2f7de1', civ }];
   for (let i = 0; i < bots; i++) {
     players.push({ name: `Bot ${i + 1}`, color: '#e04848', isBot: true, difficulty });
   }
   const map = generateMap({ size, playerCount: players.length, seed });
-  const sim = new Simulation({ map, players, humanIndex: 0, wonderVictory });
+  const sim = new Simulation({ map, players, humanIndex: 0, wonderVictory, sacredVictory });
   const brains = players.map((p, i) => (p.isBot ? new BotBrain(sim, i) : null));
   return { sim, map, brains };
 }
@@ -554,5 +554,43 @@ test('cavaleiro real treina no estábulo francês na Feudal e não no inglês', 
   english.players[0].age = 2;
   english.players[0].res = { food: 500, wood: 0, gold: 500, stone: 0 };
   assert.equal(english.train(0, eStable.id, 'royalKnight').ok, false);
+});
+
+// Locais sagrados (SPEC §8, fonte única; números provisórios): 4 locais, captura por 10 s, vitória com 10 min.
+test('locais sagrados começam neutros e são 4', () => {
+  const { sim } = makeSim({ bots: 1, seed: 6, sacredVictory: true });
+  assert.equal(sim.sacredSites.length, 4);
+  assert.ok(sim.sacredSites.every((s) => s.owner === -1));
+});
+
+test('uma unidade sozinha num local sagrado o captura depois do tempo de captura', () => {
+  const { sim } = makeSim({ bots: 1, seed: 6, sacredVictory: true });
+  const site = sim.sacredSites[0];
+  sim.spawnUnit('swordsman', 0, site.x, site.y);
+  for (let t = 0; t < SACRED.captureTime + 1; t += 0.5) sim.update(0.5);
+  assert.equal(site.owner, 0);
+});
+
+test('locais sagrados dão ouro ao dono', () => {
+  const { sim } = makeSim({ bots: 1, seed: 6, sacredVictory: true });
+  sim.sacredSites[0].owner = 0;
+  const before = sim.players[0].res.gold;
+  for (let t = 0; t < 60; t += 0.5) sim.update(0.5);
+  assert.ok(sim.players[0].res.gold - before >= SACRED.goldPerMinute - 1, 'um minuto com um local = 100 de ouro');
+});
+
+test('quem tem todos os locais sagrados vence depois da contagem, sem inimigo dentro', () => {
+  const { sim } = makeSim({ bots: 1, seed: 6, sacredVictory: true });
+  for (const s of sim.sacredSites) s.owner = 0;
+  for (let t = 0; t < SACRED.countdown + 10 && !sim.gameOver; t += 0.5) sim.update(0.5);
+  assert.deepEqual(sim.gameOver?.result, 'victory');
+});
+
+test('inimigo dentro de um local sagrado pausa a contagem de vitória', () => {
+  const { sim } = makeSim({ bots: 1, seed: 6, sacredVictory: true });
+  for (const s of sim.sacredSites) s.owner = 0;
+  sim.spawnUnit('swordsman', 1, sim.sacredSites[0].x, sim.sacredSites[0].y);
+  for (let t = 0; t < SACRED.countdown + 10; t += 0.5) sim.update(0.5);
+  assert.equal(sim.gameOver, null, 'com inimigo dentro, a contagem não anda');
 });
 

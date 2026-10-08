@@ -3,7 +3,7 @@
 import { World, defOf, rectOf, centerOf, distToRect } from './world.ts';
 import { findPath } from './pathfind.ts';
 import {
-  UNITS, BUILDINGS, NODES, TECHS, AGE_NAMES, START_RESOURCES, START_VILLAGERS, CIV_BUILDING_COST, CIV_TRAINS,
+  UNITS, BUILDINGS, NODES, TECHS, AGE_NAMES, START_RESOURCES, START_VILLAGERS, CIV_BUILDING_COST, CIV_TRAINS, SACRED,
   CARRY_CAPACITY, MAX_POP, MAX_QUEUE, DIFFICULTY,
 } from './config.ts';
 import type {
@@ -53,6 +53,8 @@ export interface SimulationOptions {
   humanIndex?: number;
   // Vitória por maravilha ativa (desligada por padrão).
   wonderVictory?: boolean;
+  // Vitória por locais sagrados ativa (desligada por padrão).
+  sacredVictory?: boolean;
 }
 
 // Tempo que a maravilha precisa ficar de pé para dar a vitória. Valor provisório: a SPEC marca como incerto (30 min).
@@ -60,6 +62,15 @@ export const WONDER_COUNTDOWN = 1800;
 
 // Maravilhas de todas as civilizações (vitória por maravilha).
 const WONDERS = new Set<BuildingType>(['cathedral', 'notreDame']);
+
+// Local sagrado: posição no mapa, dono (-1 = neutro) e progresso da captura em segundos.
+export interface SacredSite {
+  id: number;
+  x: number;
+  y: number;
+  owner: number;
+  capture: number;
+}
 
 // Entidades vivas, separadas por tipo. Reconstruídas a cada tick em rebuildLists.
 export interface EntityLists {
@@ -89,16 +100,26 @@ export class Simulation {
   readonly wonderVictory: boolean;
   // Segundos restantes da contagem de cada jogador com maravilha de pé.
   wonderLeft = new Map<number, number>();
+  readonly sacredVictory: boolean;
+  // Locais sagrados (neutros no início). Criados a partir de SACRED.fractions.
+  sacredSites: SacredSite[] = [];
+  // Segundos restantes da contagem de cada jogador com todos os locais sagrados.
+  sacredLeft = new Map<number, number>();
   fogTimer = 0;
   lists: EntityLists = { units: [], buildings: [], nodes: [] };
   lastWarn = -Infinity;
 
-  constructor({ map, players, humanIndex = 0, wonderVictory = false }: SimulationOptions) {
+  constructor({ map, players, humanIndex = 0, wonderVictory = false, sacredVictory = false }: SimulationOptions) {
     this.wonderVictory = wonderVictory;
+    this.sacredVictory = sacredVictory;
     this.map = map;
     this.size = map.size;
     this.world = new World(map.size, map.terrain);
     this.humanIndex = humanIndex;
+    this.sacredSites = SACRED.fractions.map(([fx, fy], id) => {
+      const p = this.findWalkableNear(Math.round(fx * map.size), Math.round(fy * map.size));
+      return { id, x: p.x, y: p.y, owner: -1, capture: 0 };
+    });
     this.players = players.map((p, index): Player => ({
       index,
       civ: p.civ ?? 'english',
@@ -521,6 +542,7 @@ export class Simulation {
       this.updateFog();
     }
     this.updateWonders(dt);
+    this.updateSacred(dt);
     this.checkDefeats();
   }
 
@@ -1048,6 +1070,63 @@ export class Simulation {
       }
       this.world.remove(e);
     }
+  }
+
+  // Ponto caminhável mais próximo de (x0, y0), em espiral; usado para posicionar os locais sagrados.
+  findWalkableNear(x0: number, y0: number): Point {
+    for (let r = 0; r < 20; r++) {
+      for (let dy = -r; dy <= r; dy++) {
+        for (let dx = -r; dx <= r; dx++) {
+          if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+          const x = x0 + dx;
+          const y = y0 + dy;
+          if (this.world.inBounds(x, y) && this.world.walkable(x, y)) return { x: x + 0.5, y: y + 0.5 };
+        }
+      }
+    }
+    return { x: x0 + 0.5, y: y0 + 0.5 };
+  }
+
+  // Locais sagrados: captura por presença exclusiva; ouro por local; contagem de vitória (ver SACRED).
+  updateSacred(dt: number): void {
+    if (!this.sacredVictory || this.gameOver) return;
+    const r2 = SACRED.radius * SACRED.radius;
+    const near = (u: UnitEntity, site: SacredSite): boolean => (u.x - site.x) ** 2 + (u.y - site.y) ** 2 <= r2;
+    for (const site of this.sacredSites) {
+      const present = new Set<number>();
+      for (const u of this.lists.units) {
+        if (!u.dead && u.owner >= 0 && near(u, site)) present.add(u.owner);
+      }
+      const [only] = present;
+      if (present.size === 1 && only !== site.owner) {
+        site.capture += dt;
+        if (site.capture >= SACRED.captureTime) {
+          site.owner = only;
+          site.capture = 0;
+          this.notify(only, 'Local sagrado capturado', 'good');
+        }
+      } else {
+        site.capture = 0;
+      }
+      if (site.owner >= 0) this.players[site.owner].res.gold += (SACRED.goldPerMinute / 60) * dt;
+    }
+    // Vitória: um jogador com todos os locais, sem inimigo dentro de nenhum, por toda a contagem.
+    const holders = new Set(this.sacredSites.map((x) => x.owner));
+    const [holder] = holders;
+    if (holders.size !== 1 || holder < 0) {
+      this.sacredLeft.clear();
+      return;
+    }
+    const contested = this.sacredSites.some((site) => this.lists.units.some(
+      (u) => !u.dead && u.owner >= 0 && u.owner !== holder && near(u, site),
+    ));
+    if (contested) return;
+    const left = (this.sacredLeft.get(holder) ?? SACRED.countdown) - dt;
+    if (left <= 0) {
+      this.gameOver = { result: holder === this.humanIndex ? 'victory' : 'defeat', time: this.time };
+      return;
+    }
+    this.sacredLeft.set(holder, left);
   }
 
   // Vitória por maravilha: a maravilha precisa ficar de pé pela contagem inteira; se cair, a contagem zera.

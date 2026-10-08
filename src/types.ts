@@ -353,6 +353,8 @@ export interface Settings {
   seed: string | number;
   // Condição de vitória por maravilha (além da conquista, que está sempre ativa).
   wonderVictory?: boolean;
+  // Vitória por locais sagrados (desligada por padrão).
+  sacredVictory?: boolean;
   civ?: Civ;
 }
 

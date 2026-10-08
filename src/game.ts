@@ -116,7 +116,11 @@ export class Game {
     for (let i = 1; i < playerCount; i++) {
       players.push({ name: PLAYER_NAMES[i], color: PLAYER_COLORS[i], isBot: true, difficulty });
     }
-    const sim = new Simulation({ map, players, humanIndex: 0, wonderVictory: settings.wonderVictory ?? false });
+    const sim = new Simulation({
+      map, players, humanIndex: 0,
+      wonderVictory: settings.wonderVictory ?? false,
+      sacredVictory: settings.sacredVictory ?? false,
+    });
     this.map = map;
     this.seed = numericSeed;
     this.difficulty = difficulty;

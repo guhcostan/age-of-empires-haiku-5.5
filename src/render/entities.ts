@@ -112,6 +112,7 @@ export class EntityRenderer {
   treeMeshes: THREE.InstancedMesh[] = [];
   treeVariant = new Map<number, { v: number; slot: number }>();
   treeHidden = new Set<number>();
+  sacredMeshes: { mesh: THREE.Mesh; mat: THREE.MeshLambertMaterial }[] = [];
 
   constructor({ scene, sim, map, camera }: EntityRendererOptions) {
     this.scene = scene;
@@ -121,6 +122,14 @@ export class EntityRenderer {
     scene.add(this.root);
     scene.add(this.fx);
     this.setupTrees();
+    // Locais sagrados: um pilar por local, na cor do dono (cinza = neutro).
+    for (const site of sim.sacredSites) {
+      const mat = new THREE.MeshLambertMaterial({ color: 0x9e9e9e });
+      const mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.7, 2.4, 8), mat);
+      mesh.position.set(site.x, heightAt(map, site.x, site.y) + 1.2, site.y);
+      scene.add(mesh);
+      this.sacredMeshes.push({ mesh, mat });
+    }
   }
 
   // ---------- Árvores em instancing (muitas no mapa) ----------
@@ -203,6 +212,10 @@ export class EntityRenderer {
 
   sync(dt: number, time: number): void {
     const world = this.sim.world;
+    this.sim.sacredSites.forEach((site, i) => {
+      const color = site.owner >= 0 ? this.sim.players[site.owner].color : '#9e9e9e';
+      this.sacredMeshes[i].mat.color.set(color);
+    });
     for (const e of world.entities.values()) {
       if (e.kind === 'node' && e.type === 'tree') continue;
       let view = this.views.get(e.id);

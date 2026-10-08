@@ -296,6 +296,17 @@ export const LANDMARKS: Record<NextAge, readonly BuildingType[]> = {
   3: ['kingsPalace', 'whiteTower'],
   4: ['berkshirePalace', 'wynguardPalace'],
 };
+// Locais sagrados (SPEC §8, fonte única: post de fórum; números incertos). Provisórios: 4 locais; captura com
+// presença exclusiva de unidades por 10 s; quem tem todos vence após 10 min sem inimigo dentro de um local;
+// cada local dá 100 de ouro por minuto ao dono. Posições são frações do mapa (centro e meio dos lados).
+export const SACRED = {
+  fractions: [[0.5, 0.5], [0.5, 0.25], [0.25, 0.5], [0.75, 0.5]] as const,
+  radius: 3,
+  captureTime: 10,
+  countdown: 600,
+  goldPerMinute: 100,
+} as const;
+
 // Marcos de cada civilização, por idade que avançam (a primeira opção é a usada pelo bot).
 export const LANDMARKS_BY_CIV: Record<Civ, Record<NextAge, readonly BuildingType[]>> = {
   english: LANDMARKS,

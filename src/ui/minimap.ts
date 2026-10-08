@@ -135,6 +135,12 @@ export class Minimap {
       ctx.fillRect(x - size / 2, y - size / 2, size, size);
     }
 
+    // Locais sagrados: quadrados na cor do dono (cinza = neutro).
+    for (const site of sim.sacredSites) {
+      ctx.fillStyle = site.owner >= 0 ? sim.players[site.owner].color : '#9e9e9e';
+      ctx.fillRect(site.x * scale - 3, site.y * scale - 3, 6, 6);
+    }
+
     // Área visível da câmera.
     const v = rts.viewRect();
     ctx.strokeStyle = '#ffffff';

@@ -591,3 +591,10 @@ Fonte: https://raw.githubusercontent.com/aoe4world/data/main/buildings/english.j
 - Cavaleiro Real: Feudal (idade 2), 140 comida + 100 ouro, 35 s, 190 de vida, ataque 19 (SPEC §3, linha 159, e aoe4world: mesmos valores). Treina no estábulo e na Escola de Cavalaria francesa. Armadura 3/3 do aoe4world: não modelada, porque o combate ainda não tem armadura.
 - Provisórios: recarga 0,875 s (aoe4world), alcance e velocidade (iguais aos do Cavaleiro; o aoe4world usa outra escala de velocidade e alcance).
 - Estábulo francês treina o Cavaleiro Real em vez do Cavaleiro. O Keep francês não treina cavaleiros.
+
+### Anexo C, adendo 8: locais sagrados (implementados em 2026-10-08; números provisórios)
+
+- Fonte única: post de fórum de 20/04/2025 (SPEC §8, [R]). Usado como está, marcado como incerto.
+- Regras implementadas: 4 locais (posições provisórias: centro e meio dos lados do mapa); captura por presença exclusiva de unidades num raio de 3 tiles, em 10 s; quem tem todos vence após 10 min de contagem; contagem pausa com inimigo dentro de um local; cada local dá 100 de ouro por minuto ao dono.
+- Opção do menu: "Locais sagrados" (desligada por padrão).
+- Não confirmado: número de locais (o post não diz), raio, tempo de captura. Pilares no mapa e quadrados no minimapa mostram o dono.
