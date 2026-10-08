@@ -5,7 +5,7 @@ import { findPath } from '../src/core/pathfind.ts';
 import { World } from '../src/core/world.ts';
 import { Simulation } from '../src/core/sim.ts';
 import { BotBrain } from '../src/core/ai.ts';
-import { AGE_UP, BUILDINGS } from '../src/core/config.ts';
+import { AGE_UP, BUILDINGS, UNITS } from '../src/core/config.ts';
 import type { BuildingType, DifficultyKey, Entity, Outcome, PlayerConfig } from '../src/types.ts';
 
 function makeSim({ size = 64, bots = 1, seed = 42, difficulty = 'normal' as DifficultyKey } = {}) {
@@ -135,7 +135,8 @@ test('centro da vila treina aldeão, cobra o custo e aumenta a população', () 
   const r = sim.train(0, tc.id, 'villager');
   assert.equal(r.ok, true);
   assert.equal(sim.players[0].res.food, foodBefore - 50);
-  runFor(sim, 9);
+  // Tempo de treino confirmado (SPEC: 20 s na Inglaterra); a espera acompanha o valor de config.
+  runFor(sim, UNITS.villager.time + 1);
   const villagersAfter = [...sim.world.entities.values()].filter((e) => e.kind === 'unit').length;
   assert.equal(villagersAfter, villagersBefore + 1);
 });
@@ -266,7 +267,8 @@ test('torre atira no inimigo mais próximo dentro do alcance', () => {
   const tower = sim.placeBuilding(0, 'tower', site.x, site.y).building!;
   const villager = [...sim.world.entities.values()].find((e) => e.kind === 'unit' && e.type === 'villager')!;
   sim.command(0, [villager.id], { type: 'build', target: tower.id });
-  runFor(sim, 45);
+  // Tempo de construção confirmado (SPEC: 90 s para a torre de pedra); espera o tempo de config mais folga.
+  runFor(sim, BUILDINGS.tower.time + 5);
   assert.equal(tower.built, true);
   const enemy = sim.spawnUnit('swordsman', 1, tower.x + 3.5, tower.y + 1);
   const before = enemy.hp;
@@ -317,3 +319,24 @@ test('bots constroem campo de tiro e treinam arqueiros numa partida', () => {
   );
   assert.ok(archers.length > 0, 'algum bot treinou arqueiros no campo de tiro');
 });
+
+// Confirmados em duas fontes na rodada de 2026-10-08 (aoe4.club e aoe4world/data; ver docs/SPEC.md, anexo C).
+test('quartel custa 150 madeira, tem 1500 de vida e leva 30 s (confirmado)', () => {
+  assert.deepEqual(BUILDINGS.barracks.cost, { wood: 150 });
+  assert.equal(BUILDINGS.barracks.hp, 1500);
+  assert.equal(BUILDINGS.barracks.time, 30);
+});
+
+test('aldeão tem 50 de vida e treino de 20 s, como na Inglaterra (confirmado)', () => {
+  assert.equal(UNITS.villager.hp, 50);
+  assert.equal(UNITS.villager.time, 20);
+});
+
+test('torre de pedra: 250 pedra, 3000 de vida, ataque 60, alcance 9 (confirmado)', () => {
+  assert.deepEqual(BUILDINGS.tower.cost, { stone: 250 });
+  assert.equal(BUILDINGS.tower.hp, 3000);
+  assert.equal(BUILDINGS.tower.time, 90);
+  assert.equal(BUILDINGS.tower.attack, 60);
+  assert.equal(BUILDINGS.tower.range, 9);
+});
+

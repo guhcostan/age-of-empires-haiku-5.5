@@ -68,8 +68,8 @@ export const AGE_UP: Record<NextAge, AgeUpDef> = {
 // contra classes específicas. `age` = idade mínima. `from` = edifício que treina.
 export const UNITS: Record<UnitType, UnitDef> = {
   villager: {
-    name: 'Aldeão', civil: true, hp: 25, attack: 2, cooldown: 1.5, range: 1.0,
-    speed: 1.8, sight: 7, cost: { food: 50 }, time: 8, age: 1, from: 'towncenter',
+    name: 'Aldeão', civil: true, hp: 50, attack: 2, cooldown: 1.5, range: 1.0,
+    speed: 1.8, sight: 7, cost: { food: 50 }, time: 20, age: 1, from: 'towncenter',
   },
   swordsman: {
     name: 'Espadachim', hp: 110, attack: 9, cooldown: 1.2, range: 1.1,
@@ -126,7 +126,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     dropoff: ['gold', 'stone'], techs: ['mining', 'mining2'],
   },
   barracks: {
-    name: 'Quartel', w: 3, h: 3, hp: 900, sight: 7, cost: { wood: 175 }, time: 40, age: 1,
+    name: 'Quartel', w: 3, h: 3, hp: 1500, sight: 7, cost: { wood: 150 }, time: 30, age: 1,
     trains: ['swordsman', 'spearman', 'crossbow'],
   },
   // Campo de tiro: treina arqueiros (SPEC §2.1). Custo, vida e tempo vêm da fonte única da SPEC (linha 73).
@@ -143,8 +143,8 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     techs: ['forge1', 'forge2'],
   },
   tower: {
-    name: 'Torre', w: 2, h: 2, hp: 600, sight: 9, cost: { wood: 100, stone: 100 }, time: 40, age: 2,
-    attack: 7, range: 7, cooldown: 2.2,
+    name: 'Torre', w: 2, h: 2, hp: 3000, sight: 9, cost: { stone: 250 }, time: 90, age: 2,
+    attack: 60, range: 9, cooldown: 3.875,
   },
 };
 

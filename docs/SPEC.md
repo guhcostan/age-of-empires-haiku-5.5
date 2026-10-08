@@ -513,3 +513,22 @@ Total de fontes com conteúdo verificado: 19.
 - jeu.video e gameskeys.net: sem posições do HUD.
 - support.ageofempires.com (teclas remapeáveis): 403.
 - ageofempires.com/news (lista de patches): só itens do AoE II e III, e uma pré-venda.
+
+## Anexo C: rodada de confirmação (2026-10-08)
+
+Fontes de números: aoe4.club (páginas de civilização e de edifício), o JSON do repositório aoe4world/data (dados extraídos dos arquivos do jogo) e aoe4units.com. Nenhuma página oficial trouxe números, e nenhuma informa a versão do jogo.
+
+**Confirmados em duas fontes e aplicados ao código:**
+- Quartel: 150 madeira, 30 s, 1500 de vida (antes: 175, 40 s, 900). Fontes: aoe4.club/en/civs/english; aoe4world/data buildings/english.json.
+- Aldeão: 50 de vida; treino de 20 s na Inglaterra e 19 s na França (antes: 25 de vida e 8 s). Fontes: aoe4.club (english e french); aoe4world/data units/unified/villager.json. Conflito: aoe4units.com dá corpo a corpo 6 para a Inglaterra, e o JSON dá arco 5.
+- Torre de pedra (Stone Wall Tower): 250 pedra, 90 s, 3000 de vida, ataque à distância 60, intervalo 3,875 s, alcance 9 (antes: 100 madeira + 100 pedra, 40 s, 600 de vida, ataque 7, recarga 2,2 s). Fontes: aoe4.club/en/civs/english; aoe4world/data buildings/english.json (stone-wall-tower-2).
+
+**Confirmados, ainda não implementados** (dependem de civilização, cerco ou muralhas):
+- Keep (Inglaterra): 900 pedra, 180 s, 5000 de vida; França: 810 pedra. Idade: SPEC não especifica.
+- Posto avançado: 100 madeira, 60 s, 750 de vida, sem ataque base.
+- Oficina de cerco: 250 madeira, 45 s, 2100 de vida. Aríete: 200 madeira, 35 s, 370 de vida, dano de cerco 200 (+300 contra muros), velocidade 0,75. Fontes: aoe4.club/en/civs/english; aoe4world/data. Divergência: aoedb.net dá 420 de vida e 300 madeira, sem data.
+- Muro de pedra: 25 pedra, 16 s, 3000 de vida. Portão de pedra: 50 pedra, 30 s, 3000. Paliçada: 7 madeira, 8 s, 1350. Portão de paliçada: 25 madeira, 10 s, 1350. Fontes: aoe4.club/en/civs/english e páginas de cada edifício; aoe4world/data.
+- Lanceiro francês (idade 1): 60 comida + 20 madeira, 15 s, 80 de vida, ataque 7, velocidade 1,25. O código tem lanceiro de idade 2, com 50 comida + 35 madeira. A Inglaterra começa com o Lanceiro Endurecido (90 de vida, ataque 8). Divergência: aoedb.net dá 70 de vida e ataque 5.
+- Homem de Armas francês (idade 3): 90 comida + 20 ouro, 20,5 s, 155 de vida, ataque 12, armadura 4/4. Inglaterra: 14,65 s; Vanguarda (idade 1): 100 de vida, ataque 8, armadura 2/3.
+
+**Não encontrado:** fórmula de redução de dano por armadura. Há valores de armadura por unidade e um percentual de prévia de patch (aríete reduz 95% do dano à distância), sem data e sem fórmula. Não implementar armadura até haver fonte.
