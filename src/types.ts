@@ -11,7 +11,7 @@ export type UnitType = 'villager' | 'swordsman' | 'archer' | 'spearman' | 'cross
 
 export type BuildingType =
   | 'towncenter' | 'house' | 'storehouse' | 'farm' | 'mill' | 'lumberCamp' | 'miningCamp'
-  | 'barracks' | 'archeryRange' | 'stable' | 'blacksmith' | 'tower' | 'keep' | 'siegeWorkshop' | 'stoneWall'
+  | 'barracks' | 'archeryRange' | 'stable' | 'blacksmith' | 'tower' | 'keep' | 'siegeWorkshop' | 'stoneWall' | 'cathedral'
   // Marcos de idade (SPEC §4): o primeiro de cada idade é o da Inglaterra.
   | 'councilHall' | 'abbeyOfKings' | 'kingsPalace' | 'whiteTower' | 'berkshirePalace' | 'wynguardPalace';
 
@@ -343,6 +343,8 @@ export interface Settings {
   difficulty: DifficultyKey;
   // Texto digitado pelo jogador ou número já convertido.
   seed: string | number;
+  // Condição de vitória por maravilha (além da conquista, que está sempre ativa).
+  wonderVictory?: boolean;
 }
 
 // ---------- Comandos ----------

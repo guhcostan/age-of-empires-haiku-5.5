@@ -530,6 +530,16 @@ export function buildAdvancedBuilding(type: BuildingType, g: THREE.Group, team: 
     case 'wynguardPalace':
       buildLandmark(g, team, 0x7d7f88, 3.2);
       break;
+    case 'cathedral': {
+      part(g, box(3.6, 0.6, 3.6), 0xbdb197, 0, 0.3, 0);
+      part(g, box(3.2, 2.6, 3.2), 0xc9b99a, 0, 1.9, 0);
+      part(g, box(0.9, 2.0, 0.9), 0xb0a48a, -1.1, 3.6, -1.1);
+      part(g, box(0.9, 2.0, 0.9), 0xb0a48a, 1.1, 3.6, -1.1);
+      part(g, cone(0.7, 1.4, 6), team, -1.1, 5.3, -1.1);
+      part(g, cone(0.7, 1.4, 6), team, 1.1, 5.3, -1.1);
+      part(g, box(0.9, 1.4, 0.06), 0x3a2a1a, 0, 1.0, 1.62);
+      break;
+    }
     case 'stoneWall': {
       part(g, box(0.9, 1.2, 0.9), 0xa9a9a0, 0, 0.6, 0);
       part(g, box(0.95, 0.25, 0.95), 0x8a8a80, 0, 1.32, 0);

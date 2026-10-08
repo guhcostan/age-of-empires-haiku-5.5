@@ -162,6 +162,12 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
   stoneWall: {
     name: 'Muro de pedra', w: 1, h: 1, hp: 3000, sight: 3, cost: { stone: 25 }, time: 16, age: 2,
   },
+  // Catedral de São Tomás (maravilha inglesa). Custo, tempo e vida: aoe4world (5000 de cada, 600 s, 5000 de vida).
+  // Footprint 4x4 e visão 9 são provisórios.
+  cathedral: {
+    name: 'Catedral de São Tomás', w: 4, h: 4, hp: 5000, sight: 9,
+    cost: { food: 5000, wood: 5000, stone: 5000, gold: 5000 }, time: 600, age: 4,
+  },
   // Oficina de cerco: treina aríetes. Custo, vida e tempo batem em aoe4.club e aoe4world; idade 3 só no aoe4world.
   siegeWorkshop: {
     name: 'Oficina de cerco', w: 3, h: 3, hp: 2100, sight: 7, cost: { wood: 250 }, time: 45, age: 3,
@@ -238,7 +244,7 @@ export const TECHS: Record<TechId, TechDef> = {
 
 export const BUILD_MENU: readonly BuildingType[] = [
   'house', 'storehouse', 'farm', 'mill', 'lumberCamp', 'miningCamp',
-  'barracks', 'archeryRange', 'stable', 'blacksmith', 'tower', 'keep', 'siegeWorkshop', 'stoneWall',
+  'barracks', 'archeryRange', 'stable', 'blacksmith', 'tower', 'keep', 'siegeWorkshop', 'stoneWall', 'cathedral',
 ];
 
 // Teclas de atalho (exibidas nos botões e na ajuda).
@@ -248,7 +254,7 @@ export const UNIT_KEYS: Record<UnitType, string> = {
 // O Centro da Vila não é construído pelo menu, então não tem tecla aqui.
 export const BUILD_KEYS: Partial<Record<BuildingType, string>> = {
   house: 'h', storehouse: 'm', farm: 'f', mill: 'n', lumberCamp: 'l', miningCamp: 'o',
-  barracks: 'b', archeryRange: 'c', stable: 't', blacksmith: 'k', tower: 'y', keep: 'p', siegeWorkshop: 'g', stoneWall: 'w',
+  barracks: 'b', archeryRange: 'c', stable: 't', blacksmith: 'k', tower: 'y', keep: 'p', siegeWorkshop: 'g', stoneWall: 'w', cathedral: 'z',
 };
 // Marcos que avançam para cada idade (a primeira opção de cada idade é a da Inglaterra).
 export const LANDMARKS: Record<NextAge, readonly BuildingType[]> = {

@@ -5,7 +5,7 @@ import type { Game, EndInfo } from '../game.ts';
 import type { DifficultyKey, MapSizeKey, Settings } from '../types.ts';
 
 const SETUP_KEY = 'aoe.setup';
-const DEFAULTS: Settings = { size: 'medio', bots: 1, difficulty: 'normal', seed: '' };
+const DEFAULTS: Settings = { size: 'medio', bots: 1, difficulty: 'normal', seed: '', wonderVictory: false };
 
 type ScreenName = 'main' | 'setup' | 'help' | 'options';
 const SCREEN_NAMES: ScreenName[] = ['main', 'setup', 'help', 'options'];
@@ -103,6 +103,7 @@ export class Menus {
       bots: Number(checkedValue('bots') || DEFAULTS.bots),
       difficulty: (checkedValue('difficulty') as DifficultyKey | undefined) || DEFAULTS.difficulty,
       seed: $<HTMLInputElement>('seed').value.trim(),
+      wonderVictory: $<HTMLInputElement>('victory-wonder').checked,
     };
   }
 
@@ -115,6 +116,7 @@ export class Menus {
     set('bots', String(this.setup.bots));
     set('difficulty', this.setup.difficulty);
     $<HTMLInputElement>('seed').value = String(this.setup.seed);
+    $<HTMLInputElement>('victory-wonder').checked = Boolean(this.setup.wonderVictory);
   }
 
   startGame(): void {

@@ -3,18 +3,18 @@ import assert from 'node:assert/strict';
 import { generateMap } from '../src/core/mapgen.ts';
 import { findPath } from '../src/core/pathfind.ts';
 import { World } from '../src/core/world.ts';
-import { Simulation } from '../src/core/sim.ts';
+import { Simulation, WONDER_COUNTDOWN } from '../src/core/sim.ts';
 import { BotBrain } from '../src/core/ai.ts';
 import { AGE_UP, BUILDINGS, UNITS } from '../src/core/config.ts';
 import type { BuildingType, DifficultyKey, Entity, Outcome, PlayerConfig } from '../src/types.ts';
 
-function makeSim({ size = 64, bots = 1, seed = 42, difficulty = 'normal' as DifficultyKey } = {}) {
+function makeSim({ size = 64, bots = 1, seed = 42, difficulty = 'normal' as DifficultyKey, wonderVictory = false } = {}) {
   const players: PlayerConfig[] = [{ name: 'Você', color: '#2f7de1' }];
   for (let i = 0; i < bots; i++) {
     players.push({ name: `Bot ${i + 1}`, color: '#e04848', isBot: true, difficulty });
   }
   const map = generateMap({ size, playerCount: players.length, seed });
-  const sim = new Simulation({ map, players, humanIndex: 0 });
+  const sim = new Simulation({ map, players, humanIndex: 0, wonderVictory });
   const brains = players.map((p, i) => (p.isBot ? new BotBrain(sim, i) : null));
   return { sim, map, brains };
 }
@@ -434,5 +434,40 @@ test('muro de pedra ocupa o tile: outro prédio não pode ser colocado nele', ()
   const r = sim.placeBuilding(0, 'stoneWall', 30, 30);
   assert.equal(r.ok, true);
   assert.notEqual(sim.checkPlacement('house', 30, 30), null, 'o tile já está ocupado pelo muro');
+});
+
+// Catedral de São Tomás (aoe4world): 5000 de cada recurso, 600 s, 5000 de vida, idade 4.
+test('catedral custa 5000 de cada recurso, tem 5000 de vida e leva 600 s (confirmado)', () => {
+  assert.deepEqual(BUILDINGS.cathedral.cost, { food: 5000, wood: 5000, stone: 5000, gold: 5000 });
+  assert.equal(BUILDINGS.cathedral.hp, 5000);
+  assert.equal(BUILDINGS.cathedral.time, 600);
+  assert.equal(BUILDINGS.cathedral.age, 4);
+});
+
+test('vitória por maravilha: a catedral de pé pela contagem inteira dá a vitória ao dono', () => {
+  const { sim } = makeSim({ bots: 1, seed: 5, wonderVictory: true });
+  const tc = tcOf(sim, 0);
+  sim.spawnBuilding('cathedral', 0, tc.x + 8, tc.y + 8, true);
+  for (let t = 0; t < WONDER_COUNTDOWN + 10 && !sim.gameOver; t += 0.5) sim.update(0.5);
+  assert.deepEqual(sim.gameOver?.result, 'victory');
+});
+
+test('vitória por maravilha: se a catedral cai, a contagem zera e não há vitória', () => {
+  const { sim } = makeSim({ bots: 1, seed: 5, wonderVictory: true });
+  const tc = tcOf(sim, 0);
+  const cathedral = sim.spawnBuilding('cathedral', 0, tc.x + 8, tc.y + 8, true);
+  for (let t = 0; t < WONDER_COUNTDOWN / 2; t += 0.5) sim.update(0.5);
+  sim.world.remove(cathedral);
+  for (let t = 0; t < WONDER_COUNTDOWN / 2 + 60; t += 0.5) sim.update(0.5);
+  assert.equal(sim.gameOver, null, 'sem a maravilha, a contagem recomeça do zero');
+  assert.equal(sim.wonderLeft.has(0), false);
+});
+
+test('sem a opção de maravilha, a catedral não dá vitória', () => {
+  const { sim } = makeSim({ bots: 1, seed: 5, wonderVictory: false });
+  const tc = tcOf(sim, 0);
+  sim.spawnBuilding('cathedral', 0, tc.x + 8, tc.y + 8, true);
+  for (let t = 0; t < WONDER_COUNTDOWN + 10; t += 0.5) sim.update(0.5);
+  assert.equal(sim.gameOver, null);
 });
 

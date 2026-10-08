@@ -105,7 +105,8 @@ export class Game {
 
   // ---------- Ciclo de vida ----------
 
-  start({ size, bots, difficulty, seed }: Settings): void {
+  start(settings: Settings): void {
+    const { size, bots, difficulty, seed } = settings;
     this.stop();
     const mapSize = MAP_SIZES[size].size;
     const playerCount = 1 + bots;
@@ -115,7 +116,7 @@ export class Game {
     for (let i = 1; i < playerCount; i++) {
       players.push({ name: PLAYER_NAMES[i], color: PLAYER_COLORS[i], isBot: true, difficulty });
     }
-    const sim = new Simulation({ map, players, humanIndex: 0 });
+    const sim = new Simulation({ map, players, humanIndex: 0, wonderVictory: settings.wonderVictory ?? false });
     this.map = map;
     this.seed = numericSeed;
     this.difficulty = difficulty;

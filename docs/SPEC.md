@@ -568,3 +568,10 @@ Fonte: https://raw.githubusercontent.com/aoe4world/data/main/buildings/english.j
 - Provisórios: footprint 3x3 e visão 7 dos marcos (a SPEC não tem esses números).
 - Não implementado: marcos francês (fase 5), e o efeito do marco depois de construído (fica como edifício).
 - Bots: constroem o primeiro marco da lista quando têm aldeões e recursos suficientes.
+
+### Anexo C, adendo 5: vitória por maravilha (implementado em 2026-10-08)
+
+- Maravilha: a Catedral de São Tomás (inglesa). Idade 4, 5000 de cada recurso, 600 s, 5000 de vida: aoe4world confirma; a SPEC §8 dá os mesmos 5000 e 600 s em duas fontes. A nota de patch da SPEC (base 6000) continua em conflito: o código segue o aoe4world.
+- Vitória: a catedral precisa ficar de pé pela contagem inteira; se cai, a contagem recomeça do zero. Provisório: a contagem de 30 min vem de uma fonte de guia (SPEC §8, incerto).
+- Opção do menu: "Maravilha" (desligada por padrão). A conquista fica sempre ativa.
+- Não implementados: vitória por marcos (a regra detalhada tem uma fonte, de busca), locais sagrados (números de um post de fórum) e relíquias (sem regra confirmada).

@@ -51,7 +51,12 @@ export interface SimulationOptions {
   map: GameMap;
   players: PlayerConfig[];
   humanIndex?: number;
+  // Vitória por maravilha ativa (desligada por padrão).
+  wonderVictory?: boolean;
 }
+
+// Tempo que a maravilha precisa ficar de pé para dar a vitória. Valor provisório: a SPEC marca como incerto (30 min).
+export const WONDER_COUNTDOWN = 1800;
 
 // Entidades vivas, separadas por tipo. Reconstruídas a cada tick em rebuildLists.
 export interface EntityLists {
@@ -78,11 +83,15 @@ export class Simulation {
   time = 0;
   events: GameEvent[] = [];
   gameOver: GameOver | null = null;
+  readonly wonderVictory: boolean;
+  // Segundos restantes da contagem de cada jogador com maravilha de pé.
+  wonderLeft = new Map<number, number>();
   fogTimer = 0;
   lists: EntityLists = { units: [], buildings: [], nodes: [] };
   lastWarn = -Infinity;
 
-  constructor({ map, players, humanIndex = 0 }: SimulationOptions) {
+  constructor({ map, players, humanIndex = 0, wonderVictory = false }: SimulationOptions) {
+    this.wonderVictory = wonderVictory;
     this.map = map;
     this.size = map.size;
     this.world = new World(map.size, map.terrain);
@@ -497,6 +506,7 @@ export class Simulation {
       this.fogTimer = FOG_INTERVAL;
       this.updateFog();
     }
+    this.updateWonders(dt);
     this.checkDefeats();
   }
 
@@ -1023,6 +1033,25 @@ export class Simulation {
         this.notify(e.owner, `${BUILDINGS[e.type].name} destruído!`, 'bad');
       }
       this.world.remove(e);
+    }
+  }
+
+  // Vitória por maravilha: a maravilha precisa ficar de pé pela contagem inteira; se cair, a contagem zera.
+  updateWonders(dt: number): void {
+    if (!this.wonderVictory || this.gameOver) return;
+    for (const p of this.players) {
+      if (p.defeated) continue;
+      const standing = this.lists.buildings.some((b) => b.owner === p.index && b.type === 'cathedral' && b.built && !b.dead);
+      if (!standing) {
+        this.wonderLeft.delete(p.index);
+        continue;
+      }
+      const left = (this.wonderLeft.get(p.index) ?? WONDER_COUNTDOWN) - dt;
+      if (left <= 0) {
+        this.gameOver = { result: p.index === this.humanIndex ? 'victory' : 'defeat', time: this.time };
+        return;
+      }
+      this.wonderLeft.set(p.index, left);
     }
   }
 
