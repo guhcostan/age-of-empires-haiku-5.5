@@ -25,10 +25,10 @@ test.describe('Partida: início e pausa', () => {
     await expect(page.locator('#res-pop')).toHaveText(`${st.popUsed} / ${st.popCap}`);
 
     // Os aldeões e o Centro da Vila do jogador existem na simulação.
-    const villagers = await page.evaluate(() => [...window.aoe.game.sim.world.entities.values()]
+    const villagers = await page.evaluate(() => [...window.__game.game.sim.world.entities.values()]
       .filter((e) => e.owner === 0 && e.kind === 'unit' && e.type === 'villager').length);
     expect(villagers).toBe(cfg.START_VILLAGERS);
-    expect(await page.evaluate(() => Boolean(window.aoe.game.ownTownCenter()))).toBe(true);
+    expect(await page.evaluate(() => Boolean(window.__game.game.ownTownCenter()))).toBe(true);
   });
 
   test('Escape abre a pausa, Continuar fecha e game.paused volta a false', async ({ page }) => {
@@ -74,8 +74,47 @@ test.describe('Partida: início e pausa', () => {
     await expect(page.locator('#screen-main')).toBeVisible();
     await expect(page.locator('#overlay-pause')).toBeHidden();
     await expect(page.locator('#hud')).toBeHidden();
-    await expect.poll(() => page.evaluate(() => window.aoe.game.running)).toBe(false);
+    await expect.poll(() => page.evaluate(() => window.__game.game.running)).toBe(false);
     // Com o jogo encerrado, "Continuar partida" some do menu.
     await expect(page.locator('#btn-continue')).toBeHidden();
+  });
+
+  test('botão Ociosos seleciona os aldeões parados', async ({ page }) => {
+    await startQuickGame(page);
+    const btn = page.locator('#btn-idle');
+    await expect(btn).toBeVisible();
+    // Um aldeão recém-criado, sem tarefa, conta como ocioso.
+    await page.evaluate(() => {
+      const g = window.__game.game;
+      const tc = g.sim.entitiesOf(0).buildings.find((b) => b.type === 'towncenter');
+      g.sim.spawnUnit('villager', 0, tc.x + 5.5, tc.y + 5.5);
+    });
+    await expect(btn).toBeEnabled();
+    const expected = await page.evaluate(() => window.__game.game.idleVillagers().length);
+    await expect(page.locator('#idle-count')).toHaveText(String(expected));
+    await btn.click();
+    await expect.poll(async () => (await gameState(page)).selected.length).toBe(expected);
+  });
+
+  test('HUD mostra relógio, placar, objetivo e aldeões por recurso', async ({ page }) => {
+    await startQuickGame(page);
+    await expect(page.locator('#res-time')).toHaveText(/^\d{2}:\d{2}$/);
+    await expect(page.locator('#res-score')).toHaveText('0 / 0');
+    await expect(page.locator('#objective')).toContainText('Objetivo: marco da');
+    // Manda os aldeões para a comida mais próxima e confere a contagem na barra de cima.
+    const ordered = await page.evaluate(() => {
+      const sim = window.__game.game.sim;
+      let n = 0;
+      for (const u of sim.entitiesOf(0).units) {
+        if (u.type !== 'villager') continue;
+        const src = sim.findSource(0, u.x, u.y, 'food');
+        if (!src) continue;
+        sim.command(0, [u.id], { type: 'gather', target: src.id });
+        n++;
+      }
+      return n;
+    });
+    expect(ordered).toBeGreaterThan(0);
+    await expect(page.locator('#gat-food')).toHaveText(String(ordered));
   });
 });

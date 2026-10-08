@@ -3,6 +3,10 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "age-of-empires-haiku",
   "compatibility_date": "2026-01-01",
+  // O build (tsc + vite) escreve em public/ antes de cada deploy.
+  "build": {
+    "command": "npm run build",
+  },
   "assets": {
     "directory": "./public",
     "not_found_handling": "404-page"

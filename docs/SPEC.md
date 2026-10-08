@@ -513,3 +513,158 @@ Total de fontes com conteúdo verificado: 19.
 - jeu.video e gameskeys.net: sem posições do HUD.
 - support.ageofempires.com (teclas remapeáveis): 403.
 - ageofempires.com/news (lista de patches): só itens do AoE II e III, e uma pré-venda.
+
+## Anexo C: rodada de confirmação (2026-10-08)
+
+Fontes de números: aoe4.club (páginas de civilização e de edifício), o JSON do repositório aoe4world/data (dados extraídos dos arquivos do jogo) e aoe4units.com. Nenhuma página oficial trouxe números, e nenhuma informa a versão do jogo.
+
+**Confirmados em duas fontes e aplicados ao código:**
+- Quartel: 150 madeira, 30 s, 1500 de vida (antes: 175, 40 s, 900). Fontes: aoe4.club/en/civs/english; aoe4world/data buildings/english.json.
+- Aldeão: 50 de vida; treino de 20 s na Inglaterra e 19 s na França (antes: 25 de vida e 8 s). Fontes: aoe4.club (english e french); aoe4world/data units/unified/villager.json. Conflito: aoe4units.com dá corpo a corpo 6 para a Inglaterra, e o JSON dá arco 5.
+- Torre de pedra (Stone Wall Tower): 250 pedra, 90 s, 3000 de vida, ataque à distância 60, intervalo 3,875 s, alcance 9 (antes: 100 madeira + 100 pedra, 40 s, 600 de vida, ataque 7, recarga 2,2 s). Fontes: aoe4.club/en/civs/english; aoe4world/data buildings/english.json (stone-wall-tower-2).
+
+**Confirmados, ainda não implementados** (dependem de civilização, cerco ou muralhas):
+- Keep (Inglaterra): 900 pedra, 180 s, 5000 de vida; França: 810 pedra. Idade: SPEC não especifica.
+- Posto avançado: 100 madeira, 60 s, 750 de vida, sem ataque base.
+- Oficina de cerco: 250 madeira, 45 s, 2100 de vida. Aríete: 200 madeira, 35 s, 370 de vida, dano de cerco 200 (+300 contra muros), velocidade 0,75. Fontes: aoe4.club/en/civs/english; aoe4world/data. Divergência: aoedb.net dá 420 de vida e 300 madeira, sem data.
+- Muro de pedra: 25 pedra, 16 s, 3000 de vida. Portão de pedra: 50 pedra, 30 s, 3000. Paliçada: 7 madeira, 8 s, 1350. Portão de paliçada: 25 madeira, 10 s, 1350. Fontes: aoe4.club/en/civs/english e páginas de cada edifício; aoe4world/data.
+- Lanceiro francês (idade 1): 60 comida + 20 madeira, 15 s, 80 de vida, ataque 7, velocidade 1,25. O código tem lanceiro de idade 2, com 50 comida + 35 madeira. A Inglaterra começa com o Lanceiro Endurecido (90 de vida, ataque 8). Divergência: aoedb.net dá 70 de vida e ataque 5.
+- Homem de Armas francês (idade 3): 90 comida + 20 ouro, 20,5 s, 155 de vida, ataque 12, armadura 4/4. Inglaterra: 14,65 s; Vanguarda (idade 1): 100 de vida, ataque 8, armadura 2/3.
+
+**Não encontrado:** fórmula de redução de dano por armadura. Há valores de armadura por unidade e um percentual de prévia de patch (aríete reduz 95% do dano à distância), sem data e sem fórmula. Não implementar armadura até haver fonte.
+
+### Anexo C, adendo: idades e valores dos edifícios (aoe4world/data, 2026-10-08)
+
+Fonte: https://raw.githubusercontent.com/aoe4world/data/main/buildings/english.json (campos `age`, `costs`, `hitpoints`). Os dados vêm de extração dos arquivos do jogo, e cada edifício tem uma única fonte nesse arquivo. Uma idade só conta como confirmada quando outra fonte concorda.
+
+- Keep: idade 3, 900 pedra, 180 s, 5000 de vida. Custo, tempo e vida também batem com aoe4.club. **Implementado** (idade 3 só do aoe4world).
+- Oficina de cerco: idade 3, 250 madeira, 45 s, 2100 de vida.
+- Muro de pedra, portão de pedra e torre de pedra: idade 2.
+- Paliçada e portão de paliçada: idade 1. Posto avançado: idade 1, 100 madeira, 60 s, 750 de vida.
+- Campo de tiro: idade 2 no aoe4world. O código tem idade 1. **Não alterado**: falta a segunda fonte para a idade.
+- Ferreiro e estábulo: idade 2 no aoe4world. Conferir com o código antes de mudar.
+- Abadia dos Reis e Concílio: idade 1, 400 comida + 200 ouro, 190 s, 5000 de vida. Ou seja, o marco da Feudal tem o custo da passagem de idade (ver §4).
+
+### Anexo C, adendo 2: oficina de cerco e aríete (implementados em 2026-10-08)
+
+- Oficina de cerco: idade 3 (aoe4world), 250 madeira, 45 s, 2100 de vida (aoe4.club e aoe4world). Footprint 3x3 e visão 7 são provisórios.
+- Aríete (variação inglesa, aoe4world): idade 2, 200 madeira, 35 s, 370 de vida, dano de cerco 200, recarga 4 s, alcance 0,5375, +300 de dano de cerco contra muros, resistência a flechas 95, só ataca edifícios. Produzido na oficina de cerco e no keep.
+- Não confirmados: velocidade (aoe4world 0,75; o código usa 1,2, proporção do aldeão, não valor medido) e alcance no código (0,54, valor do aoe4world sem conversão validada).
+- Não implementados: bônus de 300 contra muros (não há muros ainda) e resistência a flechas 95 (não há armadura nem resistência no código).
+- A redução de 0,5 contra prédios, que o código aplica aos demais atacantes, não tem fonte na SPEC. Continua como estava; o aríete a ignora por ser dano de cerco.
+
+### Anexo C, adendo 3: muro de pedra (implementado em 2026-10-08)
+
+- Muro de pedra: 25 pedra, 16 s, 3000 de vida (aoe4.club e aoe4world concordam); idade 2 só no aoe4world.
+- Provisórios: footprint 1x1 e visão 3 (a SPEC não tem esses números).
+- Colocação: um tile por clique; Shift repete a colocação, como os demais edifícios.
+- Não implementados: portões (passagem para o dono), paliçada e linhas arrastadas. O muro bloqueia tiles como qualquer edifício.
+
+### Anexo C, adendo 4: idades por marco (implementado em 2026-10-08)
+
+- Avançar de idade é construir o marco da próxima idade (SPEC §4). Ao ser concluído, o jogador entra na idade. Só há um marco por idade e não se constrói marco de idade já alcançada.
+- Marcos da Inglaterra (duas opções por idade): Feudal, Concílio (idade 1, 400 comida + 200 ouro, 190 s, 5000 de vida) ou Abadia dos Reis (mesmos valores); Castelo, Palácio Real (idade 2, 1200 comida + 600 ouro, 220 s, 5000) ou Torre Branca (mesmos valores); Imperial, Palácio de Berkshire (idade 3, 2400 + 1200, 250 s, 6500 de vida) ou Palácio de Wynguard (mesmos custos e tempo, 5000 de vida).
+- Custos e tempos: aoe4world confirma os marcos da Feudal, do Castelo e da Imperial; SPEC §4 dá os mesmos valores para as passagens. O código tinha 800+400 (Castelo) e 1000+700+300 pedra (Imperial), com tempos de 60, 75 e 90 s: corrigido.
+- Provisórios: footprint 3x3 e visão 7 dos marcos (a SPEC não tem esses números).
+- Não implementado: marcos francês (fase 5), e o efeito do marco depois de construído (fica como edifício).
+- Bots: constroem o primeiro marco da lista quando têm aldeões e recursos suficientes.
+
+### Anexo C, adendo 5: vitória por maravilha (implementado em 2026-10-08)
+
+- Maravilha: a Catedral de São Tomás (inglesa). Idade 4, 5000 de cada recurso, 600 s, 5000 de vida: aoe4world confirma; a SPEC §8 dá os mesmos 5000 e 600 s em duas fontes. A nota de patch da SPEC (base 6000) continua em conflito: o código segue o aoe4world.
+- Vitória: a catedral precisa ficar de pé pela contagem inteira; se cai, a contagem recomeça do zero. Provisório: a contagem de 30 min vem de uma fonte de guia (SPEC §8, incerto).
+- Opção do menu: "Maravilha" (desligada por padrão). A conquista fica sempre ativa.
+- Não implementados: vitória por marcos (a regra detalhada tem uma fonte, de busca), locais sagrados (números de um post de fórum) e relíquias (sem regra confirmada).
+
+### Anexo C, adendo 6: economia, civilizações e marcos franceses (implementado em 2026-10-08)
+
+- Custos e tempos corrigidos (SPEC e aoe4world concordam): casa 50 madeira e 15 s; fazenda 75 madeira e 6 s; moinho, serraria e acampamento de mineração 50 madeira e 20 s; estábulo 150 madeira, 30 s e 1500 de vida.
+- Fazenda inglesa: 37 de madeira (50% menos; SPEC §6.1 e aoe4world). Implementada como tabela de custo por civilização (CIV_BUILDING_COST).
+- Menu: escolha de civilização (Inglaterra ou França). Os bots são sempre ingleses.
+- Marcos franceses, do aoe4world (custos e tempos iguais aos das idades): Câmara de Comércio e Escola de Cavalaria (Feudal, 400+200, 190 s, 5000); Sede da Guilda e Instituto Real (Castelo, 1200+600, 220 s, 5000); Palácio Vermelho e Colégio de Artilharia (Imperial, 2400+1200, 250 s, 5000).
+- Notre Dame (maravilha francesa, idade 4): 5000 de cada, 600 s, 5000 de vida (aoe4world). Conta para a vitória por maravilha.
+- Ficam para depois, porque dependem de mecânicas novas: Cavaleiro Real (Feudal), Homem de Armas Vanguarda (Idade I), aldeões com arco curto, Rede de Castelos, comerciantes e Centro da Vila mais rápido por idade.
+- Não alterado por falta de segunda fonte: vida da casa (300 no código; 750 no aoe4world), vida do moinho e dos acampamentos (350; 750 no aoe4world), tempo e vida do ferreiro (40 s e 700; 25 s e 1500 no aoe4world), vida e custo do centro da vila (2000; SPEC e aoe4world dão 2500 para o centro comum e 7000 para o capital).
+
+### Anexo C, adendo 7: Cavaleiro Real francês (implementado em 2026-10-08)
+
+- Cavaleiro Real: Feudal (idade 2), 140 comida + 100 ouro, 35 s, 190 de vida, ataque 19 (SPEC §3, linha 159, e aoe4world: mesmos valores). Treina no estábulo e na Escola de Cavalaria francesa. Armadura 3/3 do aoe4world: não modelada, porque o combate ainda não tem armadura.
+- Provisórios: recarga 0,875 s (aoe4world), alcance e velocidade (iguais aos do Cavaleiro; o aoe4world usa outra escala de velocidade e alcance).
+- Estábulo francês treina o Cavaleiro Real em vez do Cavaleiro. O Keep francês não treina cavaleiros.
+
+### Anexo C, adendo 8: locais sagrados (implementados em 2026-10-08; números provisórios)
+
+- Fonte única: post de fórum de 20/04/2025 (SPEC §8, [R]). Usado como está, marcado como incerto.
+- Regras implementadas: 4 locais (posições provisórias: centro e meio dos lados do mapa); captura por presença exclusiva de unidades num raio de 3 tiles, em 10 s; quem tem todos vence após 10 min de contagem; contagem pausa com inimigo dentro de um local; cada local dá 100 de ouro por minuto ao dono.
+- Opção do menu: "Locais sagrados" (desligada por padrão).
+- Não confirmado: número de locais (o post não diz), raio, tempo de captura. Pilares no mapa e quadrados no minimapa mostram o dono.
+
+### Anexo C, adendo 9: vitória por marcos (implementada em 2026-10-08; provisória)
+
+- Regra da SPEC §8 (fonte única, resumo de busca): destruir todos os marcos do adversário o elimina. A regra detalhada não tem segunda fonte.
+- Implementação provisória: só vale para quem já teve pelo menos um marco. Quem perde todos os marcos vivos é eliminado (unidades removidas). Se o eliminado é o humano, é derrota; se todos os adversários caem, é vitória.
+- Opção do menu: "Marcos" (desligada por padrão). Conquista continua sempre ativa.
+- Não confirmado: se contam marcos em obra, se a eliminação é imediata e se a regra vale para todas as idades. Hoje conta qualquer marco vivo, inclusive em obra.
+
+### Anexo C, adendo 10: partidas completas, bots e regras de terreno (implementado em 2026-10-08; provisório)
+
+- Toda vitória ou derrota registra o motivo (conquista, marcos, maravilha ou locais sagrados). A tela final mostra a linha "Fim por". Antes, uma regra de marcos podia ser sobrescrita pela conquista no mesmo passo; corrigido.
+- Bots constroem a maravilha da civilização na Imperial (idade 4), com 8 soldados de pé. Não há fonte para a estratégia do bot; só o acabamento técnico.
+- Com a vitória por locais sagrados ligada, o exército ocioso (3 ou mais soldados) vai ao local mais próximo que não é do bot. Os bots também atacam os locais de outros, então a contagem pode ser interrompida.
+- Economia do bot: quando a economia está pronta para a próxima idade (aldeões mínimos e, na Castelo, 4 soldados), o bot guarda recursos. Enquanto guarda, quartel, campo de tiro e estábulo não treinam. Sem isso a comida nunca juntava para o marco (medido: bots paravam na Feudal).
+- Terreno, regra provisória (a SPEC não trata disso): uma unidade nova nasce no tile livre mais próximo que esteja na região aberta do mapa, procurando em anéis de até 8 tiles ao redor do edifício. Edifício que fecharia a saída de uma unidade que está na região aberta é recusado ("Bloquearia a saída de uma unidade"). Medido antes da correção: aldeões nasciam presos num bolsão cercado por casas e fazendas e ficavam ociosos para sempre.
+- Partidas completas (tests/partidas.test.ts, em tempo de simulação): conquista entre dois bots termina em cerca de 11 a 25 min de jogo. Maravilha, locais sagrados e marcos têm início preparado (catedral de pé com 30 soldados de defesa; exército nos quatro locais; um marco do bot a destruir com 14 soldados). Depois disso o resto da partida segue as regras e o bot. Sem início preparado, bots não chegam à maravilha (a Imperial vem tarde demais) nem aos locais sagrados (a conquista acaba antes).
+- Não verificado: a duração de 30 min da contagem da maravilha (incerta na SPEC); o equilíbrio geral (bots atacam cedo); se a regra de terreno existe no AoE IV.
+
+### Anexo C, adendo 11: botão de aldeões ociosos (implementado em 2026-10-08; provisório)
+
+- Botão "Ociosos" na barra de cima, com a contagem de aldeões parados. Clicar seleciona todos e centraliza a câmera no primeiro. Apagado quando não há nenhum.
+- Posição e rótulo são provisórios: a SPEC não descreve o layout do HUD do AoE IV. Atalho de teclado ainda não existe.
+
+### Anexo C, adendo 12: relíquias e comércio (pesquisa, não implementado; 2026-10-08)
+
+Pesquisa só por resumos de busca: nenhuma página foi lida na íntegra. Tudo aqui é de comunidade ou de wiki e precisa de confirmação antes de virar código.
+
+Relíquias:
+- Ficam longe do centro da vila, no meio e nas bordas do mapa; uma relíquia achada aparece no minimapa. Fonte: https://www.pcgamesn.com/age-of-empires-4/relics (resumo).
+- Quem move a relíquia é um monge ou unidade religiosa (a aparência de regra por civilização é contraditória nos resumos; o Cavaleiro-monge do Rus e o monge básico dos ingleses e franceses aparecem como coletores). Ordem de uso relatada: ponto de reunião do mosteiro na relíquia e, com Shift, outro ponto de volta ao mosteiro. Fonte: https://forums.ageofempires.com/t/how-do-you-drop-relics-in-the-monastery/177979 (resumo).
+- O mosteiro guarda relíquias e gera ouro. Limite de 3 relíquias por mosteiro (após a Temporada 2, relatado em https://forums.ageofempires.com/t/relics-do-not-properly-cycle-through-monasteries-with-three-garrisoned-relics/287416, resumo).
+- Não achei o ouro por relíquia por minuto. Catedral de Regnitz (Sacro Império, aoe4world https://aoe4world.com/explorer/buildings/regnitz-cathedral) dá +100% de ouro às relíquias guardadas. Tecnologia "Celeiro do Dízimo" dá comida, madeira e pedra por minuto às relíquias (resumo, sem número confirmado).
+- Relato de bug (versão 16.2): com o mosteiro cheio, sai a relíquia mais antiga; a terceira pode ficar presa. Não confirmado na versão atual.
+
+Comércio:
+- Rota precisa de um edifício de origem e um de destino com a etiqueta de posto comercial (Mercado, Doca, alguns marcos). Dono do destino pode ser aliado, inimigo ou neutro. Mercado neutro dá 20% a mais (resumo; link de origem ainda não aberto: https://forums.ageofempires.com/t/time-for-a-trade-mechanics-update/259409).
+- O ganho cresce com a distância (resumo fala em aproximadamente quadrático, com exemplos por tamanho de mapa: 173 e 112 por viagem para uma rota de 90; 373 para 170). Não usar sem fonte confirmada.
+- Mudar o destino de um comerciante carregado no retorno faz perder a carga (resumo).
+- Sultanhani (Otomanos) pode guardar comerciantes e gera ouro por eles (resumo: 6 de ouro a cada 15 s por comerciante).
+- Navios de comércio na Doca trocam ouro e madeira com posto costeiro ou doca alheia; a partir de uma temporada, o ganho é dividido entre as duas paradas (resumo, https://ageofempires.fandom.com/wiki/Trade_Ship não aberto).
+- Os números de comércio mais conhecidos vêm de Age of Empires II e Chronicles e não valem para o IV.
+
+Próximo passo: abrir as páginas citadas (ou a wiki do AoE IV) e anotar um número por regra; sem isso, a implementação fica provisória e marcada, como o resto do anexo C.
+
+### Anexo C, adendo 13: bots em partidas de vitória alternativa (medido em 2026-10-08; provisório)
+
+- Com vitória por locais sagrados ou por maravilha, o bot não ataca: defende a base e manda o exército ocioso para os locais que não são seus. Medido: com ataque normal, a conquista termina as partidas antes da contagem (2 jogadores, 8 sementes: conquista em quase todas). Sem ataque, locais sagrados decidem 6 de 8 partidas.
+- Com vitória por marcos, o bot ataca normalmente. Medido: marcos decidem 7 de 8 partidas só de bots.
+- Maravilha só de bots: não decide nenhuma partida medida (3 sementes, até 2 horas de jogo). Causa medida: a Imperial exige ouro, o ouro dos mapas acaba antes disso, e o bot fica com comida, madeira e pedra sobrando. Relíquias e locais sagrados são as fontes de ouro previstas; não implementadas ainda.
+- Economia do bot, medida: o exército não consome a comida de que a idade precisa (ver adendo 10).
+
+### Anexo C, adendo 14: civilização francesa, comerciantes e centro da vila (pesquisa, não implementado; 2026-10-08)
+
+Fontes lidas só por resumo de busca (a página do aoe4world é renderizada em JavaScript, e a wiki devolveu HTTP 402):
+- Centro da vila francês: "velocidade de produção por idade" de +15%, +15%, +20%, +25% (resumo do aoe4world, https://aoe4world.com/explorer/civs/french). Não está claro se cada valor vale para a idade em que se avança ou se são acumulados; por isso não foi implementado.
+- Comerciantes: podem devolver comida, madeira ou ouro aos mercados. Navios de comércio devolvem 20% a mais (resumo). Tecnologia "Guildas de mercadores": cada comerciante ativo gera 1 de ouro a cada 6 s (resumo, https://aoe4world.com/explorer/technologies/merchant-guilds).
+- Desconto das tecnologias econômicas: 30% em um resumo e 35% em outro. Divergente; não usar.
+- Pendente: confirmar cada número numa página lida na íntegra, depois implementar com testes.
+
+### Anexo C, adendo 15: HUD com relógio, aldeões por recurso, objetivo e placar (implementado em 2026-10-08; layout provisório)
+
+- Barra de cima: relógio da partida (mm:ss), placar (abatidos / perdidos), e o número de aldeões coletando cada recurso ao lado do valor.
+- Linha de objetivo (canto superior esquerdo): o próximo marco e o progresso da condição de vitória ligada (locais sagrados ou tempo de maravilha).
+- Layout, posição e textos são provisórios. A SPEC não tem o layout do HUD do AoE IV (§7.1 e §9.8), então a comparação visual é do crítico, não de referência.
+
+### Anexo C, adendo 16: atalhos de seleção (implementados em 2026-10-08)
+
+- "." seleciona os aldeões ociosos; "," seleciona os militares ociosos (SPEC §7.2, duas e uma fonte).
+- Ctrl+A (alternativa Ctrl+K) seleciona as unidades do jogador que estão na tela; Ctrl+Shift+A (alternativa Ctrl+Shift+K), todas.
+- Ainda não implementados da §7.2: Tab (ciclar), F1–F5 (grupos de edifícios e focar), Ctrl+. (hoje igual a "."), Shift+comando para enfileirar.

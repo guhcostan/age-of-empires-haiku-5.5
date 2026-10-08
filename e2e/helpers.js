@@ -1,6 +1,6 @@
 // Utilitários compartilhados pelos testes end-to-end.
 import { test as base, expect } from '@playwright/test';
-import { BUILDINGS, BUILD_MENU, START_RESOURCES, START_VILLAGERS, UNITS } from '../public/js/core/config.js';
+import { BUILDINGS, BUILD_MENU, START_RESOURCES, START_VILLAGERS, UNITS } from '../src/core/config.ts';
 
 export const SEED = '12345';
 
@@ -19,10 +19,10 @@ export const test = base.extend({
 
 export { expect };
 
-// Abre a página e espera o módulo principal expor window.aoe.
+// Abre a página e espera o módulo principal expor window.__game.
 export async function openGame(page) {
   await page.goto('/');
-  await page.waitForFunction(() => Boolean(window.aoe?.menus));
+  await page.waitForFunction(() => Boolean(window.__game?.menus));
 }
 
 // Abre a página e inicia uma partida rápida.
@@ -46,13 +46,13 @@ export async function startFromMenu(page, opts = {}) {
 }
 
 export async function waitForRunning(page) {
-  await expect.poll(() => page.evaluate(() => Boolean(window.aoe?.game?.running && window.aoe.game.sim))).toBe(true);
+  await expect.poll(() => page.evaluate(() => Boolean(window.__game?.game?.running && window.__game.game.sim))).toBe(true);
 }
 
 // Lê um resumo do estado da partida (apenas leitura).
 export function gameState(page) {
   return page.evaluate(() => {
-    const g = window.aoe.game;
+    const g = window.__game.game;
     const sim = g.sim;
     return {
       running: g.running,
@@ -67,11 +67,11 @@ export function gameState(page) {
   });
 }
 
-// Entidades próprias de um tipo (ex.: 'villager', 'towncenter') em window.aoe.game.sim.
+// Entidades próprias de um tipo (ex.: 'villager', 'towncenter') em window.__game.game.sim.
 export function ownEntities(page, { kind, type, owner = 0 }) {
   return page.evaluate(({ kind, type, owner }) => {
     const out = [];
-    for (const e of window.aoe.game.sim.world.entities.values()) {
+    for (const e of window.__game.game.sim.world.entities.values()) {
       if (e.dead || e.owner !== owner) continue;
       if (kind && e.kind !== kind) continue;
       if (type && e.type !== type) continue;
@@ -85,7 +85,7 @@ export function ownEntities(page, { kind, type, owner = 0 }) {
 // usando o mesmo critério de seleção do jogo (Input.pickAt). Não clica.
 export function findClickPoint(page, id) {
   return page.evaluate((id) => {
-    const g = window.aoe.game;
+    const g = window.__game.game;
     const view = g.entities.views.get(id);
     if (!view) return null;
     const p = view.group.position;
@@ -123,7 +123,7 @@ export function commandButton(page, label) {
   });
 }
 
-// Valores de balanceamento lidos do próprio módulo do jogo (public/js/core/config.js, só leitura).
+// Valores de balanceamento lidos do próprio módulo do jogo (src/core/config.ts, só leitura).
 // Assim os testes acompanham mudanças de custo ou população sem ficarem desatualizados.
 export const CONFIG = {
   START_RESOURCES,
@@ -143,7 +143,7 @@ export const CONFIG = {
 export function findPlacementPoint(page, type, near = null) {
   const def = BUILDINGS[type];
   return page.evaluate(({ type, near, w, h }) => {
-    const g = window.aoe.game;
+    const g = window.__game.game;
     const cx = near ? near.x : innerWidth / 2;
     const cy = near ? near.y : innerHeight / 2;
     for (let r = 0; r <= 400; r += 12) {

@@ -1,6 +1,6 @@
-# Age of Empires — clone para teste
+# Haiku Empires — clone para teste
 
-Clone de Age of Empires feito do zero para testar capacidades de desenvolvimento.
+Clone de estilo RTS (inspirado em Age of Empires IV, sem assets originais) feito do zero para testar capacidades de desenvolvimento.
 **Projeto pessoal, sem fins comerciais, não divulgado.** Todo o código, modelos 3D e
 sons são gerados por código (primitivas do three.js e síntese WebAudio); não há arquivos
 de arte ou áudio de terceiros.
@@ -53,45 +53,52 @@ de arte ou áudio de terceiros.
   branch `claude/admiring-feynman-bxzdp3` do GitHub, buscando os arquivos no raw do repositório e
   guardando por 5 minutos. Ele precisa que o repositório seja público.
 - Por isso, cada push na branch aparece no site em até 5 minutos. Para um deploy direto com
-  `wrangler` (com assets empacotados), defina `CLOUDFLARE_API_TOKEN` e use `npm run deploy`.
+  `wrangler`, defina `CLOUDFLARE_API_TOKEN` e use `npm run deploy`: o wrangler roda `npm run build`
+  antes de enviar a pasta `public/`.
 
 ## Desenvolvimento
 
-Não há etapa de build: os módulos ES ficam em `public/` e o three.js é servido de
-`public/vendor/three.module.js` (versão 0.160.0, MIT).
+O código é TypeScript (`strict`) empacotado com Vite. O three.js vem do npm (versão 0.160.0, MIT).
 
 ```bash
 npm install
-npm test            # testes unitários da simulação (Node)
-npx playwright test # testes end-to-end no Chromium (ver e2e/)
-npm run dev         # servidor local com wrangler
-npm run deploy      # publica na Cloudflare (requer CLOUDFLARE_API_TOKEN)
+npm run dev         # servidor de desenvolvimento do Vite
+npm run build       # checagem de tipos (tsc) e build de produção
+npm test            # testes unitários da simulação (tsx + node:test)
+npx playwright test # testes end-to-end no Chromium (ver e2e/); compila antes de rodar
+npm run deploy      # publica na Cloudflare com wrangler (requer CLOUDFLARE_API_TOKEN)
 ```
+
+O build é gravado em `public/` (ver `vite.config.ts`). Essa pasta é commitada de propósito: o Worker
+publicado lê o branch do GitHub, então o `public/` do branch precisa estar atualizado. O CI falha se
+`public/` estiver diferente do que o build do código gera; rode `npm run build` e faça commit antes de enviar.
 
 ### Estrutura
 
 ```
-public/
-  index.html          menus e HUD
-  css/style.css       visual de madeira, pedra e ouro
-  js/
-    main.js           ponto de entrada
-    game.js           orquestra partida, loop, fim de jogo
-    core/             simulação pura (sem DOM nem three.js; testável no Node)
-      config.js       balanceamento: custos, tempos, estatísticas
-      mapgen.js       mapa procedural (terreno, lagos, florestas, recursos)
-      pathfind.js     A* em grade com regiões conectadas
-      world.js        entidades e grade de bloqueios
-      sim.js          economia, comandos, coleta, construção, treino, combate, névoa
-      ai.js           bots
-    render/           three.js
-      models.js       modelos 3D procedurais
-      terrain.js      malha do terreno e camada de névoa
-      entities.js     representação das entidades, projéteis, efeitos
-      camera.js       câmera RTS
-    ui/               entrada, HUD, minimapa, menus, som
-tests/                testes unitários (node --test)
-e2e/                  testes end-to-end (Playwright)
+index.html            menus e HUD (entrada do Vite)
+src/
+  main.ts             ponto de entrada: liga o jogo aos menus
+  game.ts             orquestra partida, loop de quadros, fim de jogo
+  types.ts            tipos de domínio (entidades, comandos, eventos)
+  styles/style.css    visual de madeira, pedra e ouro
+  core/               simulação pura (sem DOM nem three.js; testável no Node)
+    config.ts         balanceamento: custos, tempos, estatísticas
+    mapgen.ts         mapa procedural (terreno, lagos, florestas, recursos)
+    pathfind.ts       A* em grade com regiões conectadas
+    world.ts          entidades e grade de bloqueios
+    sim.ts            economia, comandos, coleta, construção, treino, combate, névoa
+    ai.ts             bots
+    rng.ts, noise.ts  números pseudoaleatórios determinísticos e ruído do terreno
+  render/             three.js
+    models.ts         modelos 3D procedurais
+    terrain.ts        malha do terreno e camada de névoa
+    entities.ts       representação das entidades, projéteis, efeitos
+    camera.ts         câmera RTS
+  ui/                 entrada, HUD, minimapa, menus, som, DOM
+public/               build de produção (gerado; commitado)
+tests/                testes unitários (tsx --test)
+e2e/                  testes end-to-end (Playwright, em JavaScript)
 ```
 
 ## Limitações conhecidas

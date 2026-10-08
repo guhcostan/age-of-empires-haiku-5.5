@@ -10,8 +10,8 @@ test.describe('Comandos', () => {
     await clickEntity(page, villager.id);
 
     await expect(page.locator('#sel-title')).toHaveText(cfg.villagerName);
-    await expect.poll(() => page.evaluate(() => window.aoe.game.selected.size)).toBe(1);
-    expect(await page.evaluate(() => [...window.aoe.game.selected][0])).toBe(villager.id);
+    await expect.poll(() => page.evaluate(() => window.__game.game.selected.size)).toBe(1);
+    expect(await page.evaluate(() => [...window.__game.game.selected][0])).toBe(villager.id);
 
     // Grade de comandos: todos os edifícios do menu de construção, mais "Parar".
     const labels = await page.locator('#cmd-grid button.cmd:not(.empty) .label').allTextContents();
@@ -36,14 +36,20 @@ test.describe('Comandos', () => {
     await expect(page.locator('#res-food')).toHaveText(String(before - cost));
 
     // A fila aparece na simulação e no painel de seleção.
-    const queue = await page.evaluate((id) => window.aoe.game.sim.world.get(id).queue.map((q) => q.type), tc.id);
+    const queue = await page.evaluate((id) => window.__game.game.sim.world.get(id).queue.map((q) => q.type), tc.id);
     expect(queue).toEqual(['villager']);
     await expect(page.locator('#sel-queue .queue-item')).toHaveCount(1);
     await expect(page.locator('#sel-queue .queue-item')).toContainText('Aldeão');
 
-    // O treino termina e o aldeão novo aparece (população usada sobe em 1).
-    await expect.poll(async () => (await gameState(page)).popUsed, { timeout: 60_000 }).toBe(popBefore + 1);
-    await expect.poll(async () => (await ownEntities(page, { kind: 'unit', type: 'villager' })).length, { timeout: 60_000 })
+    // O treino termina e o aldeão novo aparece (população usada sobe em 1). A simulação avança de forma
+    // determinística pelo tempo de treino (passos fixos, como em bots.spec.js): o quadro do runner é lento
+    // e o relógio do jogo acompanha os quadros, então esperar em tempo real pode não bastar.
+    await page.evaluate((seconds) => {
+      const g = window.__game.game;
+      for (let t = 0; t < seconds && !g.sim.gameOver; t += 0.05) g.sim.update(0.05);
+    }, cfg.villager.time + 1);
+    await expect.poll(async () => (await gameState(page)).popUsed).toBe(popBefore + 1);
+    await expect.poll(async () => (await ownEntities(page, { kind: 'unit', type: 'villager' })).length)
       .toBe(cfg.START_VILLAGERS + 1);
   });
 
@@ -64,7 +70,7 @@ test.describe('Comandos', () => {
     expect(spot, 'ponto livre no terreno para a casa').not.toBeNull();
     await page.mouse.move(spot.x, spot.y);
     await expect.poll(() => page.evaluate(() => {
-      const p = window.aoe.game.input.placement;
+      const p = window.__game.game.input.placement;
       return p ? p.reason : 'sem-prévia';
     })).toBeNull();
 
@@ -84,10 +90,10 @@ test.describe('Comandos', () => {
 
     // O aldeão selecionado foi mandado construir a casa; o modo de colocação foi encerrado.
     const order = await page.evaluate((id) => {
-      const u = window.aoe.game.sim.world.get(id);
+      const u = window.__game.game.sim.world.get(id);
       return { order: u.order, target: u.target };
     }, villager.id);
     expect(order).toEqual({ order: 'build', target: house.id });
-    expect(await page.evaluate(() => window.aoe.game.input.placement)).toBeNull();
+    expect(await page.evaluate(() => window.__game.game.input.placement)).toBeNull();
   });
 });
