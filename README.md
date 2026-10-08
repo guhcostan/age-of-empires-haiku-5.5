@@ -1,6 +1,6 @@
-# Age of Empires — clone para teste
+# Haiku Empires — clone para teste
 
-Clone de Age of Empires feito do zero para testar capacidades de desenvolvimento.
+Clone de estilo RTS (inspirado em Age of Empires IV, sem assets originais) feito do zero para testar capacidades de desenvolvimento.
 **Projeto pessoal, sem fins comerciais, não divulgado.** Todo o código, modelos 3D e
 sons são gerados por código (primitivas do three.js e síntese WebAudio); não há arquivos
 de arte ou áudio de terceiros.

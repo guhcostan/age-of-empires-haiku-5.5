@@ -44,6 +44,24 @@
 - 8 Menu e HUD: layout atual não é o do AoE IV. Botão "Ociosos" na barra de cima (adendo 11, provisório). Falta: layout de referência, painel de objetivos e pontuação.
 - 9 Áudio, performance, polimento: 200 unidades a 60 fps ainda não medidos em GPU real. Medido só a simulação (Node, 208 unidades, mapa 128, dois exércitos em ataque-movimento): 0,60 ms por passo em média, 10 ms no pior passo (um pico isolado). Renderização não medida.
 
+## Fidelidade: crítico independente (Haiku, 2026-10-08)
+
+Corrigido nesta rodada:
+- Grade de comandos saía da tela (8 de 18 botões fora em 1280x720). Barra de 230 px, botões de 49 px, custo recortado. Teste permanente em e2e/hud-grade.spec.js.
+- Nome do jogo: título, cabeçalho e descrição usavam o nome original. Agora "Haiku Empires" (provisório).
+- Ajuda: "U avançar de idade" não existia e o Quartel não treina arqueiros (o Campo de tiro treina, tecla X).
+
+Pendente (lista do crítico, sem alteração):
+- Roster militar: faltam 23 unidades da SPEC §3 (rei, homem de armas vanguarda, arqueiro longo, ranger, arcabuzeiro, monge, cavalaria leve, arbalétrier, homem de armas francês, mangonel, trabuco, bombarda, springald, canhão real, canhão, ribauldequin, 4 batalhões Wynguard, 3 navios). Navios estão fora de escopo.
+- Bônus de civilização: 3 de 21 implementados (SPEC §6.1–6.2).
+- Edifícios da SPEC §2.1 faltando: mercado, posto avançado, mosteiro, universidade, doca, paliçada, portões. Espadachim e armazém não estão na SPEC.
+- Marcos sem efeito (Palácio Vermelho, Concílio).
+- Técnicas: custo e tempo de 7 de 8 sem fonte; nomes inventados.
+- HUD: sem aldeões por recurso, relógio, placar e painel de objetivos. Ícones são glifos Unicode; retrato é a inicial.
+- Atalhos da SPEC §7.2 ausentes: Tab, Ctrl+A, ponto para ociosos, F1–F4. H é casa (SPEC: centralizar no Centro da Vila).
+- Centro da Vila sem custo e não construível.
+- Avançar de idade só aparece com aldeão selecionado. É decisão de desenho (o aldeão constrói o marco), não bug; registrar na SPEC.
+
 ## Balanceamento: crítico independente (Haiku, 2026-10-08)
 
 Crítico novo comparou config.ts com o anexo C. Corrigido: torre de jogador eliminado por marcos ainda atirava (teste em tests/partidas.test.ts).
