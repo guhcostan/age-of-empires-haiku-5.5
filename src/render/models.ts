@@ -186,6 +186,7 @@ export function createUnit(type: UnitType, teamColor: string): CreatedUnit {
   let rig: UnitRig;
   if (type === 'villager') rig = buildVillager(root, team);
   else if (type === 'swordsman' || type === 'vanguard' || type === 'manAtArms') rig = buildSwordsman(root, team);
+  else if (type === 'monk') rig = buildVillager(root, team);
   else if (type === 'archer' || type === 'longbowman') rig = buildArcher(root, team);
   else if (type === 'scout') rig = buildScout(root, team);
   else rig = buildAdvancedUnit(type, root, team);
@@ -465,6 +466,13 @@ function buildLandmark(g: THREE.Group, team: number, stone: number, height: numb
 // Monta edifícios desta fase; chamado por createBuilding.
 export function buildAdvancedBuilding(type: BuildingType, g: THREE.Group, team: number): void {
   switch (type) {
+    case 'monastery': {
+      part(g, box(2.8, 1.6, 2.8), 0xc9b99a, 0, 0.8, 0);
+      part(g, cone(2.0, 1.2, 4), team, 0, 2.2, 0, [0, Math.PI / 4, 0]);
+      part(g, box(0.12, 0.8, 0.12), 0x6b4a26, 0, 3.0, 0);
+      part(g, box(0.5, 0.12, 0.12), 0x6b4a26, 0, 3.2, 0);
+      break;
+    }
     case 'mill': {
       part(g, box(1.8, 1.2, 1.8), 0xb89a6a, 0, 0.6, 0);
       part(g, box(2.0, 0.14, 2.0), 0x6b4a26, 0, 1.27, 0);

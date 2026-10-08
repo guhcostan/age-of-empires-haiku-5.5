@@ -754,3 +754,10 @@ Fontes lidas só por resumo de busca (a página do aoe4world é renderizada em J
 - Idade provisória (4): a SPEC marca incerto. Recarga (4 s) e velocidade (1,2) como as outras máquinas à distância (adendo 27).
 - Modelo provisório do aríete. Testes em tests/civilizacoes.test.ts.
 - Não implementados das máquinas da SPEC: bombarda inglesa (sem valor de ataque na SPEC), canhão real (conflito de custo: 450 ou 600 de ouro).
+
+### Anexo C, adendo 29: mosteiro e monge (implementados em 2026-10-08; provisórios)
+
+- Mosteiro: 200 de madeira, 25 s, 2100 de vida (SPEC §2.1, fonte única). Idade provisória 2 (a SPEC marca incerto). Modelo próprio simples (bloco de pedra, telhado da cor do time, cruz). Tecla I.
+- Monge: 150 de ouro, 30 s, 90 de vida (SPEC §3, uma fonte). Treinado no mosteiro, a partir da Feudal (provisório). Ataque, alcance e idade não verificados: o monge não ataca. Velocidade na escala do código (2,0; a SPEC dá 1,125).
+- Relíquias ainda são nós de ouro (adendo 23): o monge não leva relíquias ao mosteiro, nem o mosteiro guarda relíquias para gerar ouro. Isso é o próximo passo da relíquia real, e depende de números de ouro por minuto que não temos (adendo 12).
+- Testes: tests/civilizacoes.test.ts.

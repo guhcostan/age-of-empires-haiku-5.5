@@ -117,3 +117,15 @@ test('ribauldequin: só o francês treina, na oficina de cerco, na Imperial', ()
   french.players[0].age = 4;
   assert.equal(french.train(0, workshop.id, 'ribauldequin').ok, true, 'na Imperial treina');
 });
+
+// Mosteiro (SPEC §2.1, fonte única) e monge (SPEC §3, 150 de ouro): treino no mosteiro a partir da Feudal (provisório).
+test('mosteiro custa 200 de madeira e treina monge; monge custa 150 de ouro e sai na Feudal', () => {
+  const english = simFor('english');
+  assert.deepEqual(english.buildingCost(0, 'monastery'), { wood: 200 });
+  assert.ok(english.trainsOf(0, 'monastery').includes('monk'));
+  const monastery = english.spawnBuilding('monastery', 0, 32, 32, true);
+  english.players[0].res.gold = 1000;
+  assert.equal(english.train(0, monastery.id, 'monk').ok, false, 'na Idade das Trevas não treina');
+  english.players[0].age = 2;
+  assert.equal(english.train(0, monastery.id, 'monk').ok, true, 'na Feudal treina');
+});

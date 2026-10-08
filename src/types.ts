@@ -7,11 +7,11 @@
 
 export type ResourceName = 'food' | 'wood' | 'gold' | 'stone';
 
-export type UnitType = 'villager' | 'swordsman' | 'vanguard' | 'archer' | 'longbowman' | 'spearman' | 'hardenedSpearman' | 'manAtArms' | 'crossbow' | 'arbalestrier' | 'mangonel' | 'trebuchet' | 'springald' | 'cannon' | 'ribauldequin' | 'scout' | 'horseman' | 'knight' | 'king' | 'ram' | 'royalKnight';
+export type UnitType = 'villager' | 'swordsman' | 'vanguard' | 'archer' | 'longbowman' | 'spearman' | 'hardenedSpearman' | 'manAtArms' | 'crossbow' | 'arbalestrier' | 'mangonel' | 'trebuchet' | 'springald' | 'cannon' | 'ribauldequin' | 'monk' | 'scout' | 'horseman' | 'knight' | 'king' | 'ram' | 'royalKnight';
 
 export type BuildingType =
   | 'towncenter' | 'house' | 'storehouse' | 'farm' | 'mill' | 'lumberCamp' | 'miningCamp'
-  | 'barracks' | 'archeryRange' | 'stable' | 'blacksmith' | 'tower' | 'keep' | 'siegeWorkshop' | 'stoneWall' | 'cathedral'
+  | 'barracks' | 'archeryRange' | 'stable' | 'blacksmith' | 'tower' | 'keep' | 'siegeWorkshop' | 'stoneWall' | 'cathedral' | 'monastery'
   // Marcos de idade (SPEC §4): o primeiro de cada idade é o da Inglaterra.
   | 'councilHall' | 'abbeyOfKings' | 'kingsPalace' | 'whiteTower' | 'berkshirePalace' | 'wynguardPalace'
   // Marcos e maravilha franceses (aoe4world e SPEC §6.2).

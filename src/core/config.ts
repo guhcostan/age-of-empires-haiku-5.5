@@ -136,6 +136,12 @@ export const UNITS: Record<UnitType, UnitDef> = {
     name: 'Ribauldequin', hp: 215, attack: 42, cooldown: 4, range: 3.75, ranged: true,
     speed: 1.2, sight: 8, cost: { wood: 350, gold: 500 }, time: 45, age: 4, from: 'siegeWorkshop',
   },
+  // Monge (SPEC §3): 150 de ouro, 30 s, 90 de vida, treinado no mosteiro. Ataque, alcance e idade não verificados:
+  // o monge não ataca aqui até haver fonte. Velocidade do arqueiro (escala do código; a SPEC dá 1,125).
+  monk: {
+    name: 'Monge', hp: 90, attack: 0, cooldown: 1.5, range: 1,
+    speed: 2.0, sight: 7, cost: { gold: 150 }, time: 30, age: 2, from: 'monastery',
+  },
   // Arbalétrier (francês, unidade única). SPEC §3: custo 80 comida + 40 ouro, 22,5 s, 80 de vida, ataque 11 à distância,
   // alcance 5; anti-pesado. Treino no campo de tiro e idade provisórios (a SPEC marca incerto).
   arbalestrier: {
@@ -207,6 +213,11 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
   miningCamp: {
     name: 'Acampamento de Mineração', w: 2, h: 2, hp: 350, sight: 6, cost: { wood: 50 }, time: 20, age: 1,
     dropoff: ['gold', 'stone'], techs: ['mining', 'mining2'],
+  },
+  // Mosteiro (SPEC §2.1, fonte única): 200 de madeira, 25 s, 2100 de vida. Idade provisória (2): a SPEC marca incerto.
+  monastery: {
+    name: 'Mosteiro', w: 3, h: 3, hp: 2100, sight: 7, cost: { wood: 200 }, time: 25, age: 2,
+    trains: ['monk'],
   },
   barracks: {
     name: 'Quartel', w: 3, h: 3, hp: 1500, sight: 7, cost: { wood: 150 }, time: 30, age: 1,
@@ -349,17 +360,17 @@ export const TECHS: Record<TechId, TechDef> = {
 
 export const BUILD_MENU: readonly BuildingType[] = [
   'house', 'storehouse', 'farm', 'mill', 'lumberCamp', 'miningCamp',
-  'barracks', 'archeryRange', 'stable', 'blacksmith', 'tower', 'keep', 'siegeWorkshop', 'stoneWall', 'cathedral',
+  'barracks', 'archeryRange', 'stable', 'blacksmith', 'tower', 'keep', 'siegeWorkshop', 'stoneWall', 'cathedral', 'monastery',
 ];
 
 // Teclas de atalho (exibidas nos botões e na ajuda).
 export const UNIT_KEYS: Record<UnitType, string> = {
-  villager: 'v', swordsman: 'z', vanguard: 'n', archer: 'x', longbowman: 'l', arbalestrier: 'b', manAtArms: 'o', mangonel: 'f', trebuchet: 't', springald: 'w', cannon: 'y', ribauldequin: 'd', spearman: 'g', hardenedSpearman: 'm', crossbow: 'd', scout: 'c', horseman: 'u', knight: 'r', king: 'k', ram: 'j', royalKnight: 'r',
+  villager: 'v', swordsman: 'z', vanguard: 'n', archer: 'x', longbowman: 'l', arbalestrier: 'b', manAtArms: 'o', monk: 'i', mangonel: 'f', trebuchet: 't', springald: 'w', cannon: 'y', ribauldequin: 'd', spearman: 'g', hardenedSpearman: 'm', crossbow: 'd', scout: 'c', horseman: 'u', knight: 'r', king: 'k', ram: 'j', royalKnight: 'r',
 };
 // O Centro da Vila não é construído pelo menu, então não tem tecla aqui.
 export const BUILD_KEYS: Partial<Record<BuildingType, string>> = {
   house: 'h', storehouse: 'm', farm: 'f', mill: 'n', lumberCamp: 'l', miningCamp: 'o',
-  barracks: 'b', archeryRange: 'c', stable: 't', blacksmith: 'k', tower: 'y', keep: 'p', siegeWorkshop: 'g', stoneWall: 'w', cathedral: 'z', notreDame: 'z',
+  barracks: 'b', archeryRange: 'c', stable: 't', blacksmith: 'k', tower: 'y', keep: 'p', siegeWorkshop: 'g', stoneWall: 'w', cathedral: 'z', notreDame: 'z', monastery: 'i',
 };
 // Marcos que avançam para cada idade (a primeira opção de cada idade é a da Inglaterra).
 export const LANDMARKS: Record<NextAge, readonly BuildingType[]> = {
