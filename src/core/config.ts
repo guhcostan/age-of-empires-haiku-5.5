@@ -130,6 +130,12 @@ export const UNITS: Record<UnitType, UnitDef> = {
     name: 'Canhão', hp: 190, attack: 60, cooldown: 4, range: 10, ranged: true,
     speed: 1.2, sight: 8, cost: { wood: 300, gold: 600 }, time: 45, age: 4, from: 'siegeWorkshop',
   },
+  // Ribauldequin (francês; SPEC §3.2): 350 madeira + 500 ouro, 45 s, 215 de vida, ataque 42 à distância, alcance 3,75.
+  // Idade provisória (4): a SPEC marca incerto. Recarga do canhão (sem valor na SPEC).
+  ribauldequin: {
+    name: 'Ribauldequin', hp: 215, attack: 42, cooldown: 4, range: 3.75, ranged: true,
+    speed: 1.2, sight: 8, cost: { wood: 350, gold: 500 }, time: 45, age: 4, from: 'siegeWorkshop',
+  },
   // Arbalétrier (francês, unidade única). SPEC §3: custo 80 comida + 40 ouro, 22,5 s, 80 de vida, ataque 11 à distância,
   // alcance 5; anti-pesado. Treino no campo de tiro e idade provisórios (a SPEC marca incerto).
   arbalestrier: {
@@ -348,7 +354,7 @@ export const BUILD_MENU: readonly BuildingType[] = [
 
 // Teclas de atalho (exibidas nos botões e na ajuda).
 export const UNIT_KEYS: Record<UnitType, string> = {
-  villager: 'v', swordsman: 'z', vanguard: 'n', archer: 'x', longbowman: 'l', arbalestrier: 'b', manAtArms: 'o', mangonel: 'f', trebuchet: 't', springald: 'w', cannon: 'y', spearman: 'g', hardenedSpearman: 'm', crossbow: 'd', scout: 'c', horseman: 'u', knight: 'r', king: 'k', ram: 'j', royalKnight: 'r',
+  villager: 'v', swordsman: 'z', vanguard: 'n', archer: 'x', longbowman: 'l', arbalestrier: 'b', manAtArms: 'o', mangonel: 'f', trebuchet: 't', springald: 'w', cannon: 'y', ribauldequin: 'd', spearman: 'g', hardenedSpearman: 'm', crossbow: 'd', scout: 'c', horseman: 'u', knight: 'r', king: 'k', ram: 'j', royalKnight: 'r',
 };
 // O Centro da Vila não é construído pelo menu, então não tem tecla aqui.
 export const BUILD_KEYS: Partial<Record<BuildingType, string>> = {
@@ -410,7 +416,7 @@ export const CIV_TRAINS: Partial<Record<Civ, Partial<Record<BuildingType, readon
     stable: ['scout', 'knight', 'horseman'],
   },
   french: {
-    siegeWorkshop: ['ram', 'mangonel', 'trebuchet', 'springald', 'cannon'],
+    siegeWorkshop: ['ram', 'mangonel', 'trebuchet', 'springald', 'cannon', 'ribauldequin'],
     archeryRange: ['archer', 'arbalestrier'],
     barracks: ['manAtArms', 'swordsman', 'spearman', 'crossbow'],
     stable: ['scout', 'royalKnight'],

@@ -747,3 +747,10 @@ Fontes lidas só por resumo de busca (a página do aoe4world é renderizada em J
 - Recarga (4 s) e velocidade (1,2) do aríete: a SPEC não dá recarga e a velocidade está em outra escala. Idade mínima provisória: 3 (4 para o canhão). A SPEC marca idade e local como incerto.
 - Dano a edifícios: 0,5 como o resto das unidades não-aríete (regra do código; sem fonte). Sem dano em área.
 - Modelo provisório: o modelo do aríete. Testes: tests/civilizacoes.test.ts.
+
+### Anexo C, adendo 28: ribauldequin francês (implementado em 2026-10-08; provisório)
+
+- Custo 350 de madeira e 500 de ouro; 45 s; 215 de vida; ataque 42 à distância; alcance 3,75 (SPEC §3.2, uma fonte). Oficina de cerco, só francês.
+- Idade provisória (4): a SPEC marca incerto. Recarga (4 s) e velocidade (1,2) como as outras máquinas à distância (adendo 27).
+- Modelo provisório do aríete. Testes em tests/civilizacoes.test.ts.
+- Não implementados das máquinas da SPEC: bombarda inglesa (sem valor de ataque na SPEC), canhão real (conflito de custo: 450 ou 600 de ouro).

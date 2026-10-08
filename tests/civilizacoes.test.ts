@@ -103,3 +103,17 @@ test('máquinas de cerco à distância: inglês treina mangonel, trabuco e sprin
   english.players[0].res.gold = 1000;
   assert.equal(english.train(0, workshop.id, 'mangonel').ok, true, 'na Castelo treina');
 });
+
+// Ribauldequin: só o francês, na oficina de cerco, idade provisória 4.
+test('ribauldequin: só o francês treina, na oficina de cerco, na Imperial', () => {
+  assert.ok(simFor('french').trainsOf(0, 'siegeWorkshop').includes('ribauldequin'));
+  assert.ok(!simFor('english').trainsOf(0, 'siegeWorkshop').includes('ribauldequin'));
+  const french = simFor('french');
+  const workshop = french.spawnBuilding('siegeWorkshop', 0, 30, 30, true);
+  french.players[0].age = 3;
+  french.players[0].res.wood = 1000;
+  french.players[0].res.gold = 1000;
+  assert.equal(french.train(0, workshop.id, 'ribauldequin').ok, false, 'na Castelo não treina (idade 4)');
+  french.players[0].age = 4;
+  assert.equal(french.train(0, workshop.id, 'ribauldequin').ok, true, 'na Imperial treina');
+});
