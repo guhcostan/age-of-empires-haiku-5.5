@@ -13,6 +13,8 @@
 - Verificações: `npm run build` (tsc strict + vite) limpo; CI checa que `public/` é igual ao build do código.
 - CI: `main` verde no commit 456d443 (job CI e job de deploy). O job de deploy pula a publicação enquanto `CLOUDFLARE_API_TOKEN` não existir.
 
+- Rodada de 2026-10-08 (gauntlet): merge de PR #3 em main depende do CI do head 5731576. Críticos de fidelidade e de balanceamento rodaram como subagentes Haiku novos (resultados em /tmp/critic-*). Medido: 1911 chamadas de desenho por quadro com 208 unidades (renderização por software, 2,8 fps); sem GPU, 60 fps não verificado.
+
 ## Decisões
 - Nome do projeto: **Haiku Empires** (provisório, sem o nome do jogo original). A UI e o README ainda citam o nome antigo; trocar na fase 8.
 - Repo: guhcostan/age-of-empires-haiku-5.5 (preenchido no lugar de [USUARIO]/[REPO]).
