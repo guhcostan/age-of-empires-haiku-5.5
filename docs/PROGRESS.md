@@ -89,7 +89,7 @@ Balanceamento medido (bots, mapa 64, duas sementes): conquista entre 1124 e 1409
 
 ## Bugs abertos
 - Job E2E do CI falhou em runs anteriores (causa não confirmada: logs não acessíveis pela API pública).
-- Bot-só de maravilha não decide nenhuma partida: falta ouro (adendo 13). Bot-só de locais sagrados decide 6 de 8 sementes sem ataque; de marcos, 7 de 8 com ataque.
+- Bot-só de maravilha não decide nenhuma partida: falta ouro; o mapa tem 2400–3600 de ouro e a maravilha mais as idades pedem 6800 (adendo 25). Decisão em aberto. Bot-só de locais sagrados decide 6 de 8 sementes sem ataque; de marcos, 7 de 8 com ataque.
 - No E2E de locais sagrados, o bot ataca os locais do jogador passivo e vence por conquista; por isso o teste de navegador só checa a tela final, e a regra está nos testes de partida completa.
 - Renderização headless por software roda a ~2,7 fps; medir 60 fps exige GPU.
 - Bundle de 567 kB (quase todo three.js) passa do limite de 500 kB do Vite; aviso esperado, sem divisão de código ainda.

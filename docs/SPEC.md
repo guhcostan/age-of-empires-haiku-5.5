@@ -726,3 +726,10 @@ Fontes lidas só por resumo de busca (a página do aoe4world é renderizada em J
 - Renda por viagem: só há exemplos de comunidade (ex.: rota de 90 tiles: 173 em mapa micro e 112 em mapa grande; 373 para rota de 170), sem patch informado, e a regra é "aproximadamente quadrática". Não usável como fonte.
 - Modificadores por civilização (bolsas otomanas +40%, Especiarias abássidas +30%, taxa de Mali) são de outras civilizações ou de patches não confirmados; não há leitura na íntegra de fonte oficial.
 - Próximo passo: ler o aoe4club ou o explorador de patches do aoe4world por civilização (páginas com JavaScript; a leitura automática falhou) e anotar custo do comerciante e renda por viagem com a versão do patch.
+
+### Anexo C, adendo 25: ouro disponível no mapa x custo da maravilha (medido em 2026-10-08)
+
+- Mapa de 64 tiles com 2 jogadores (gerador atual, sementes 1 a 3): 3300, 3600 e 2400 de ouro no total (minas neutras e de base). Uma relíquia conta como 100 de ouro.
+- Custo da catedral (maravilha inglesa): 5000 de cada recurso, incluindo 5000 de ouro. Idade Castelo: 600 de ouro. Idade Imperial: 1200 de ouro.
+- Conclusão: ouro de mina não basta para Castelo, Imperial e maravilha juntos (6800 de ouro). Por isso nenhuma partida só de bots decide a maravilha. Fontes de ouro fora das minas (locais sagrados: 100 de ouro por minuto por local; relíquias como mosteiro e monges) seriam necessárias.
+- Decisão em aberto: (a) aumentar o ouro do mapa no gerador (muda os mapas das sementes e o equilíbrio), (b) manter o mapa e aceitar que a maravilha só vence com ouro dos locais sagrados ou do mosteiro, ou (c) revisar o custo da maravilha, que a SPEC dá como 5000 em cada recurso (fonte única com nota de conflito no adendo 5).
